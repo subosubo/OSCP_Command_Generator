@@ -1,0 +1,25 @@
+http (banner / TCP connect): nc -vn <target> <port>
+http (fetch headers with curl): curl -I http://<target>:<port>/
+http (fetch full page with curl): curl http://<target>:<port>/
+http (directory discovery with feroxbuster on domain): feroxbuster -u http://<domain> -t 10 -w <wordlist> -x "txt,html,php,asp,aspx,jsp" -v -k -n -e
+http (directory discovery with feroxbuster on target): feroxbuster -u http://<target>:<port>/ -t 10 -w <wordlist> --filter-status 400,401,403,404 -L 2
+http (feroxbuster with extensions deep mode): feroxbuster -u http://<target>:<port>/ -t 10 -w <wordlist> -x "txt,html,php,asp,aspx,jsp" -v -k -L4 -e
+http (directory busting with gobuster): gobuster dir -u http://<target>:<port>/ -w <wordlist> -s 307,200,204,301,302,403 -t 50
+http (gobuster output to file): gobuster dir -u http://<target>:<port>/ -w <wordlist> -t 50 -o <filename1>
+http (gobuster with extensions): gobuster dir -u http://<target>:<port>/ -w <wordlist> -t 50 -o <filename1> -x "php,txt,aspx"
+http (gobuster vhost discovery): gobuster vhost -w <wordlist> -u http://<target>:<port>/ -o <filename1>
+http (ffuf directory discovery): ffuf -w <wordlist> -u https://<target>:<port>/FUZZ
+http (ffuf with headers and filters): ffuf -c -w "<wordlist>:FILE" -H "X-Originating-IP: 127.0.0.1, X-Forwarded-For: 127.0.0.1" -fs 5682,0 -u https://<target>:<port>/FUZZ
+http (ffuf filter by size and verbose): ffuf -w <wordlist> -u https://<target>:<port>/FUZZ -mc all -fs 42 -c -v
+http (ffuf vhost discovery using Host header): ffuf -w <wordlist> -u https://<target>:<port>/ -H "Host: FUZZ" -mc 200
+http (LFI fuzzing with ffuf): ffuf -w <wordlist>:FUZZ -u 'http://<target>:<port>/xxx.php?language=FUZZ' -fs 0
+http (wget recursive download of .git): wget -r -np -nH --cut-dirs=N http://<target>/ .git/
+http (nikto web vuln scan): nikto -h http://<target>:<port>/
+http (whatweb service fingerprinting): whatweb http://<target>:<port>/
+http (wpscan WordPress plugin scan): wpscan --url http://<target>:<port>/ --enumerate p
+http (wpscan WordPress user scan): wpscan --url http://<target>:<port>/ --enumerate u
+http (wpscan WordPress vuln scan): wpscan --url http://<target>:<port>/ --enumerate vp
+http (davtest webdav check): davtest -url http://<target>:<port>/
+wordlist (create custom wordlist from site with cewl): cewl -d 3 -m 5 -w cewl-password.txt http://<target>:<port>/
+hosts helper (generate hosts from target page): printf '<target> %s\n' "$(curl -s http://<target>:<port>/ | grep -oE 'https?://[^"' ]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Za-z]{2,}' | sed -E 's~https?://~~; s~/.*~~; s/.*@//; s/:.*$//' | sort -u | paste -sd' ' -)"
+hydra HTTP post-form example (login bruteforce): hydra -l admin -P <wordlist> <target> -s <port> http-post-form '/admin/login.php:username=^USER^&password=^PASS^&login=:Invalid password' -V

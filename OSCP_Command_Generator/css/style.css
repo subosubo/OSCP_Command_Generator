@@ -1,0 +1,172 @@
+/* ===============================
+   Global Page Layout
+   =============================== */
+body {
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  background-color: #0f172a;
+  color: #e2e8f0;
+  margin: 0;
+  display: flex;
+  height: 100vh;
+  overflow: hidden; /* Prevents double scrollbars */
+}
+
+/* ===============================
+   Sidebar
+   =============================== */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  background: #1e293b;
+  overflow-y: auto;
+  flex-shrink: 0;
+  border-right: 1px solid #263044;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar h2 {
+  margin-top: 0;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.sidebar label {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+/* Inputs and Buttons */
+.sidebar input,
+.sidebar select,
+.sidebar button {
+  width: 100%;
+  padding: 8px 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  box-sizing: border-box;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.sidebar input:focus,
+.sidebar select:focus {
+  background-color: #334155;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
+  outline: none;
+}
+
+.sidebar button {
+  background-color: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.sidebar button:hover {
+  background-color: #2563eb;
+  transform: scale(1.02);
+}
+
+.sidebar button:active {
+  background-color: #1d4ed8;
+  transform: scale(0.98);
+}
+
+/* ===============================
+   Main Content
+   =============================== */
+.main {
+  margin-left: 300px;
+  padding: 24px;
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* ===============================
+   Command Block
+   =============================== */
+.command-block {
+  position: relative;
+  background-color: #0b1220;
+  border: 1px solid #263044;
+  border-radius: 10px;
+  padding: 1rem 3.5rem 1rem 1rem;
+  margin-bottom: 1rem;
+  color: #e2e8f0;
+  font-family: "Segoe UI Semibold", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: border-color 0.2s;
+}
+
+.command-block:hover {
+  border-color: #3b82f6;
+}
+
+.command-block pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ===============================
+   Copy Button
+   =============================== */
+.copy-btn {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  background-color: #1e293b;
+  border: none;
+  color: #93c5fd;
+  cursor: pointer;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.copy-btn:hover {
+  background-color: #334155;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.copy-btn:active {
+  background-color: #475569;
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* ===============================
+   Scrollbar (Custom)
+   =============================== */
+.sidebar::-webkit-scrollbar,
+.main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.main::-webkit-scrollbar-thumb {
+  background-color: #334155;
+  border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.main::-webkit-scrollbar-thumb:hover {
+  background-color: #475569;
+}

