@@ -133,4 +133,6 @@ You may change `8000` to any free port.
 **Subo Subo**
 Built for penetration testers preparing for OSCP and similar certifications.
 
+Credits to @yuyuloke
+
 ---
