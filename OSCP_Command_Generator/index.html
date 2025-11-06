@@ -143,17 +143,43 @@
     }
 
     // ================= Load Commands =================
+    // Combines adjacent lines with the same title (text before the first colon).
+    // Combined commands are joined with ' ;' plus a newline so they appear compactly but copy as a single block.
     async function loadCommands(cat) {
       const file = 'data/' + cat + '.txt';
       try {
         const res = await fetch(file);
         if (!res.ok) throw new Error('Missing file');
         const text = await res.text();
-        return text.split(/\r?\n/).filter(Boolean).map(line => {
+
+        const rawLines = text.split(/\r?\n/);
+        const entries = [];
+
+        for (let i = 0; i < rawLines.length; i++) {
+          const line = rawLines[i].trim();
+          if (!line) continue;
+
           const idx = line.indexOf(':');
-          if (idx === -1) return { title: 'Command', cmd: line.trim() };
-          return { title: line.slice(0, idx).trim(), cmd: line.slice(idx + 1).trim() };
-        });
+          let title, cmd;
+          if (idx === -1) {
+            title = 'Command';
+            cmd = line;
+          } else {
+            title = line.slice(0, idx).trim();
+            cmd = line.slice(idx + 1).trim();
+          }
+
+          // If previous entry has the same title, combine them
+          if (entries.length && entries[entries.length - 1].title === title) {
+            // join with ' ;' and newline so both commands will appear in the same block
+            // Example result: "find / -name \"local.txt\" 2>/dev/null ;\nfind / -name \"proof.txt\" 2>/dev/null"
+            entries[entries.length - 1].cmd = entries[entries.length - 1].cmd + ' ;\n' + cmd;
+          } else {
+            entries.push({ title, cmd });
+          }
+        }
+
+        return entries;
       } catch (e) {
         console.error(e);
         return [];
@@ -210,13 +236,14 @@
         btn.className = 'copy-btn';
         btn.textContent = 'Copy';
         btn.onclick = () => {
+          // copy the applied variables version (will include newline(s) and semicolons)
           navigator.clipboard.writeText(applyVars(c.cmd));
           btn.textContent = 'Copied!';
           setTimeout(() => btn.textContent = 'Copy', 1200);
         };
 
         const pre = document.createElement('pre');
-        pre.dataset.template = c.cmd;
+        pre.dataset.template = c.cmd; // store the combined template
         pre.textContent = applyVars(c.cmd);
 
         card.appendChild(title);
