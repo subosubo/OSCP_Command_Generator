@@ -1,195 +1,143 @@
-OSCP Command Generator v1.2.1
+# OSCP Command Generator v1.2.1
 
-A lightweight browser-based command builder for penetration testers.
-Designed for OSCP-style workflows, it loads categorized command templates, substitutes user-defined variables, supports live search and updates, and groups related commands into clean, copyable blocks.
+A lightweight browser-based command builder for penetration testers. It dynamically loads categorized command templates, substitutes user-defined variables, supports live updates, search functionality, and now merges related commands for cleaner display.
 
-🚀 Features
+---
 
-Dynamic Category Loading
-Automatically loads .txt command files from the /data directory.
+## 🚀 Features
 
-Smart Command Grouping
-Consecutive lines with the same title are merged into one block (copied as a single combined command).
+- **Dynamic Command Categories** – Automatically loads `.txt` files from the `data/` folder (requires serving over HTTP).
+- **Smart Command Grouping** – Consecutive lines in a `.txt` file with the same title (e.g., `Capture the flag:`) are merged into a single command block.  
+  Combined commands are joined with a newline so they appear neatly but copy as one combined command.
+- **Live Variable Substitution** – Update sidebar inputs (like `<target>`, `<kali>`, `<domain>`) and see real-time changes in commands.
+- **Searchable Commands** – Quickly filter commands within a category.
+- **Copy-to-Clipboard** – One-click copy for ready-to-use commands.
+- **Input Validation** – Checks for valid IPv4/IPv6 and port ranges.
+- **Reset Functionality** – Quickly clear all fields and start fresh.
 
-Live Variable Substitution
-All placeholders (like <target>, <user>, <domain>) are replaced instantly as you type.
+---
 
-Search & Filter
-Quickly find commands within a selected category.
+## 🗂 Project Structure
 
-Copy-to-Clipboard
-Copy fully substituted commands with one click.
-
-Input Validation
-Prevents invalid IPs and port values before rendering.
-
-Reset Functionality
-Instantly clear all input fields and start fresh.
-
-🗂️ Project Structure
 project-root/
-├── index.html             # Main interface and JavaScript logic
+├── index.html          # Main UI and JavaScript logic
 ├── css/
-│   └── style.css          # UI styles
+│   └── style.css       # UI styling
 └── data/
-    ├── enumeration.txt
-    ├── exploitation.txt
-    ├── privilege_escalation.txt
-    └── misc.txt
+├── enumeration.txt # Example category file
+├── exploitation.txt
+├── privilege_escalation.txt
+└── ...             # Add more categories here
 
-🧩 How It Works
-1. Command Templates
+---
 
-Each .txt file inside /data defines command templates using:
+## ⚠️ Important: local HTTP server required
 
-description:command
+The app loads category files by fetching `data/*.txt` with JavaScript. For security reasons most browsers block fetch requests to local files when opening `index.html` via file://. You must serve the project over HTTP so the category loading works correctly.
 
+### Quick start (recommended) — Python 3
 
-Example:
-
-ftp (banner): nc -vn <target> <port>
-ftp (anonymous login): ftp <target>
-
-
-Multiple lines with the same title are grouped together:
-
-Capture the flag: find / -name "local.txt" 2>/dev/null
-Capture the flag: cat /path/to/local.txt
-
-
-They appear as one block:
-
-find / -name "local.txt" 2>/dev/null
-cat /path/to/local.txt
-
-2. Supported Tags
-Tag	Description
-<target>	Target IPv4
-<target6>	Target IPv6
-<port>	Target Port
-<kali>	Kali IPv4
-<kali6>	Kali IPv6
-<kaliPort>	Kali Port
-<user>	Username
-<password>	Password
-<domain>	Domain
-<dc-ip>	Domain Controller IP
-<ntlm>	NTLM Hash
-<filename1>	Filename 1
-<filename2>	Filename 2
-<wordlist1>	Wordlist 1
-<wordlist2>	Wordlist 2
-
-These tags are replaced live based on sidebar input fields.
-
-⚙️ Running Locally
-
-Modern browsers block fetch() from reading local files directly (file://).
-You must run a local HTTP server to use this app.
-
-Option 1: Python (Recommended)
-
-From the project root:
+From the project root (the directory that contains `index.html` and the `data` folder) run:
 
 python -m http.server 8000
 
+Then open in your browser:
 
-Then open:
+[http://localhost:8000](http://localhost:8000)
 
-http://localhost:8000
+You may change `8000` to any free port.
 
+### Alternatives
 
-You can change 8000 to any other port.
+* Node (http-server): `npx http-server -p 8000`
+* Node (serve): `npx serve -l 8000`
+* Python (custom port): `python -m http.server 3000`
 
-Option 2: Node.js Alternatives
-# Using http-server
-npx http-server -p 8000
+---
 
-# Using serve
-npx serve -l 8000
+## 🧩 How It Works
 
-🧠 Usage
+1. **Command Templates**
+   Each command file in the `data/` folder uses the format:
+   description:command
 
-Start the web server (python -m http.server 8000).
+   Example:
+   ftp (banner): nc -vn <target> <port>
+   ftp (anonymous login): ftp <target>
 
-Open your browser at http://localhost:8000.
+2. **Supported Tags**
+   These placeholders are automatically replaced by the sidebar inputs:
+   Tag -> Replaced By
+   `<target>` -> Target IPv4
+   `<target6>` -> Target IPv6
+   `<port>` -> Target Port
+   `<kali>` -> Kali IPv4
+   `<kali6>` -> Kali IPv6
+   `<kaliPort>` -> Kali Port
+   `<user>` -> Username
+   `<password>` -> Password
+   `<domain>` -> Domain
+   `<dc-ip>` -> Domain Controller IP
+   `<ntlm>` -> NTLM Hash
+   `<filename1>` -> Filename 1
+   `<filename2>` -> Filename 2
+   `<wordlist1>` -> Wordlist 1
+   `<wordlist2>` -> Wordlist 2
 
-Choose a category from the dropdown (auto-detected from /data).
+3. **Live Updates**
+   Once commands are loaded, any input change updates all visible commands instantly — no need to reload.
 
-Fill in target, credentials, or other fields.
+---
 
-Use Search to filter commands.
+## ⚙️ Usage (step-by-step)
 
-Click Copy to copy ready-to-run commands.
+1. Serve the project directory with a local HTTP server (see examples above).
+2. Open [http://localhost](http://localhost):<port> in a browser.
+3. Select a category from the dropdown (auto-populated from `/data`).
+4. Enter relevant inputs (target, user, password, etc.).
+5. Use the Search field to filter commands.
+6. Click **Copy** to copy a fully substituted command.
+7. Click **Reset** to clear all input fields.
 
-Use Reset to clear all inputs.
+---
 
-🪄 Adding New Commands
+## 🧱 Adding New Commands
 
-Create a new .txt file inside /data/ (e.g. smb.txt).
+* Add a new `.txt` file under `/data/` (e.g., `smb.txt`).
+* Follow the `description:command` format.
+* Use the supported tags where appropriate.
+* The file will automatically appear in the Category dropdown when you reload the page served from the HTTP server.
 
-Write commands in the description:command format.
+---
 
-Use supported tags where needed.
+## 🧰 Requirements
 
-Reload the page — your new category will appear automatically.
+* Python 3 (for `python -m http.server`) or Node.js for alternative servers.
+* Modern browser (Chrome, Edge, Firefox).
+* No other runtime dependencies.
 
-🧰 Validation Rules
+---
 
-IPv4 / IPv6 formats are validated before rendering.
+## 🪪 Version History
 
-Port fields must be between 1–65535.
+### v1.2.1 (2025-11-07)
+- Added **smart command grouping** — consecutive commands with the same title are merged into one block.
+- Commands joined with newline + semicolon for readable multi-command display.
+- Copy button now copies grouped commands as one.
+- Preserved all prior functionality (live updates, validation, etc.).
 
-Invalid fields will show alerts instead of rendering commands.
+### v1.2 (2025-10-24)
+- Added Domain Controller IP and NTLM input support.
+- Implemented live variable updates.
+- Improved category loading and validation.
+- Updated documentation to require serving over HTTP.
 
-🧾 Example
+---
 
-Input
+## 👨‍💻 Author
 
-Field	Value
-Target	192.168.1.10
-User	admin
-Password	pass123
+**Subo Subo**
+Built for penetration testers preparing for OSCP and similar certifications.
 
-Template
-
-ftp login: ftp <target> -u <user> -p <password>
-
-
-Output
-
-ftp login: ftp 192.168.1.10 -u admin -p pass123
-
-🧱 Requirements
-
-Python 3 or Node.js (for local web server)
-
-Modern web browser (Chrome, Edge, Firefox)
-
-No external dependencies
-
-🧩 Version History
-v1.2.1 — 2025-11-07
-
-Added smart command grouping
-
-Combined commands copy as single block
-
-Improved clipboard logic
-
-Preserved live updates and validation
-
-v1.2 — 2025-10-24
-
-Added <dc-ip> and <ntlm> support
-
-Enabled real-time variable updates
-
-Improved validation and documentation
-
-👨‍💻 Author
-
-Subo Subo
-Built for penetration testers and OSCP practitioners.
-
-Credits: @yuyuloke
+@credits to yuyuloke
+---
