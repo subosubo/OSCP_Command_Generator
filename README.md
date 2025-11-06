@@ -17,17 +17,17 @@ A lightweight browser-based command builder for penetration testers. It dynamica
 
 ---
 
-## 🗂 Project Structure
+🗂 Project Structure
 
 project-root/
-├── index.html          # Main UI and JavaScript logic
+├── index.html # Main UI and JavaScript logic
 ├── css/
-│   └── style.css       # UI styling
+│ └── style.css # UI styling
 └── data/
 ├── enumeration.txt # Example category file
 ├── exploitation.txt
 ├── privilege_escalation.txt
-└── ...             # Add more categories here
+└── ... # Add more categories here
 
 ---
 
