@@ -1,61 +1,46 @@
 OSCP Command Generator v1.2.1
 
 A lightweight browser-based command builder for penetration testers.
-It dynamically loads categorized command templates, substitutes user-defined variables, supports live updates, search functionality, and now merges related commands for cleaner display.
+Designed for OSCP-style workflows, it loads categorized command templates, substitutes user-defined variables, supports live search and updates, and groups related commands into clean, copyable blocks.
 
 🚀 Features
 
-Dynamic Command Categories – Automatically loads .txt files from the data/ folder (requires serving over HTTP).
+Dynamic Category Loading
+Automatically loads .txt command files from the /data directory.
 
-Smart Command Grouping – Consecutive lines in a .txt file with the same title (e.g., Capture the flag:) are merged into a single command block. Combined commands are joined with a newline so they appear neatly but copy as one combined command.
+Smart Command Grouping
+Consecutive lines with the same title are merged into one block (copied as a single combined command).
 
-Live Variable Substitution – Update sidebar inputs (like <target>, <kali>, <domain>) and see real-time changes in commands.
+Live Variable Substitution
+All placeholders (like <target>, <user>, <domain>) are replaced instantly as you type.
 
-Searchable Commands – Quickly filter commands within a category.
+Search & Filter
+Quickly find commands within a selected category.
 
-Copy-to-Clipboard – One-click copy for ready-to-use commands.
+Copy-to-Clipboard
+Copy fully substituted commands with one click.
 
-Input Validation – Checks for valid IPv4/IPv6 and port ranges.
+Input Validation
+Prevents invalid IPs and port values before rendering.
 
-Reset Functionality – Quickly clear all fields and start fresh.
+Reset Functionality
+Instantly clear all input fields and start fresh.
 
-🗂 Project Structure
+🗂️ Project Structure
 project-root/
-├── index.html             # Main UI and JavaScript logic
+├── index.html             # Main interface and JavaScript logic
 ├── css/
-│   └── style.css          # UI styling
+│   └── style.css          # UI styles
 └── data/
     ├── enumeration.txt
     ├── exploitation.txt
     ├── privilege_escalation.txt
-    └── misc.txt           # Example category file
-
-⚠️ Serving Locally (Required)
-
-Because browsers block fetch() from local files, you must serve the app over HTTP.
-
-Quick Start (Python 3)
-python -m http.server 8000
-
-
-Then open your browser at:
-
-http://localhost:8000
-
-Alternatives
-# Node.js (http-server)
-npx http-server -p 8000
-
-# Node.js (serve)
-npx serve -l 8000
-
-# Python custom port
-python -m http.server 3000
+    └── misc.txt
 
 🧩 How It Works
 1. Command Templates
 
-Each file under /data/ follows this format:
+Each .txt file inside /data defines command templates using:
 
 description:command
 
@@ -66,19 +51,19 @@ ftp (banner): nc -vn <target> <port>
 ftp (anonymous login): ftp <target>
 
 
-When two or more consecutive lines share the same title, they are grouped:
+Multiple lines with the same title are grouped together:
 
 Capture the flag: find / -name "local.txt" 2>/dev/null
 Capture the flag: cat /path/to/local.txt
 
 
-They will appear as one block:
+They appear as one block:
 
 find / -name "local.txt" 2>/dev/null
 cat /path/to/local.txt
 
 2. Supported Tags
-Tag	Replaced By
+Tag	Description
 <target>	Target IPv4
 <target6>	Target IPv6
 <port>	Target Port
@@ -94,68 +79,117 @@ Tag	Replaced By
 <filename2>	Filename 2
 <wordlist1>	Wordlist 1
 <wordlist2>	Wordlist 2
-3. Live Updates
 
-After loading commands, any change in the sidebar automatically refreshes all visible commands — no reload required.
+These tags are replaced live based on sidebar input fields.
 
-⚙️ Usage
+⚙️ Running Locally
 
-Serve the directory using an HTTP server.
+Modern browsers block fetch() from reading local files directly (file://).
+You must run a local HTTP server to use this app.
 
-Open http://localhost:<port> in your browser.
+Option 1: Python (Recommended)
 
-Select a category from the dropdown (auto-loaded from /data).
+From the project root:
 
-Enter target information or credentials.
+python -m http.server 8000
 
-Use the search box to filter commands.
 
-Click Copy to copy the ready command(s).
+Then open:
 
-Click Reset to clear all input fields.
+http://localhost:8000
 
-🧱 Adding New Commands
 
-Create a new .txt file under /data/.
+You can change 8000 to any other port.
 
-Use the format description:command.
+Option 2: Node.js Alternatives
+# Using http-server
+npx http-server -p 8000
+
+# Using serve
+npx serve -l 8000
+
+🧠 Usage
+
+Start the web server (python -m http.server 8000).
+
+Open your browser at http://localhost:8000.
+
+Choose a category from the dropdown (auto-detected from /data).
+
+Fill in target, credentials, or other fields.
+
+Use Search to filter commands.
+
+Click Copy to copy ready-to-run commands.
+
+Use Reset to clear all inputs.
+
+🪄 Adding New Commands
+
+Create a new .txt file inside /data/ (e.g. smb.txt).
+
+Write commands in the description:command format.
 
 Use supported tags where needed.
 
-Files appear automatically in the category dropdown once saved.
+Reload the page — your new category will appear automatically.
 
-🧰 Requirements
+🧰 Validation Rules
 
-Python 3 (for python -m http.server) or Node.js.
+IPv4 / IPv6 formats are validated before rendering.
 
-A modern browser (Chrome, Edge, Firefox).
+Port fields must be between 1–65535.
 
-No external dependencies.
+Invalid fields will show alerts instead of rendering commands.
 
-🪪 Version History
-v1.2.1 (2025-11-07)
+🧾 Example
 
-Added smart command grouping — consecutive commands with the same title are merged into one block.
+Input
 
-Commands joined with newline + semicolon for readable multi-command display.
+Field	Value
+Target	192.168.1.10
+User	admin
+Password	pass123
 
-Copy button now copies grouped commands as one.
+Template
 
-Preserved all prior functionality (live updates, validation, etc.).
+ftp login: ftp <target> -u <user> -p <password>
 
-v1.2 (2025-10-24)
 
-Added Domain Controller IP and NTLM input support.
+Output
 
-Implemented live variable updates.
+ftp login: ftp 192.168.1.10 -u admin -p pass123
 
-Improved category loading and validation.
+🧱 Requirements
 
-Updated documentation to require serving over HTTP.
+Python 3 or Node.js (for local web server)
+
+Modern web browser (Chrome, Edge, Firefox)
+
+No external dependencies
+
+🧩 Version History
+v1.2.1 — 2025-11-07
+
+Added smart command grouping
+
+Combined commands copy as single block
+
+Improved clipboard logic
+
+Preserved live updates and validation
+
+v1.2 — 2025-10-24
+
+Added <dc-ip> and <ntlm> support
+
+Enabled real-time variable updates
+
+Improved validation and documentation
 
 👨‍💻 Author
 
 Subo Subo
-Built for penetration testers preparing for OSCP and similar certifications.
+Built for penetration testers and OSCP practitioners.
 
 Credits: @yuyuloke
