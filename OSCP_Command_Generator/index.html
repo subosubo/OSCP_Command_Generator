@@ -3,289 +3,276 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OSCP Command Generator v1.2</title>
+  <title>OSCP Command Generator v1.2.2</title>
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .input-error {
+      border: 2px solid #ff5555 !important;
+      background-color: #ffecec;
+    }
+  </style>
 </head>
 <body>
-  <div class="sidebar">
-    <h2>Command Builder</h2>
+<div class="sidebar">
+  <h2>Command Builder</h2>
 
-    <!-- Category + Search -->
-    <label for="category">Category</label>
-    <select id="category">
-      <option value="">Select category</option>
-    </select>
+  <label for="category">Category</label>
+  <select id="category"><option value="">Select category</option></select>
 
-    <label for="search">Search Commands</label>
-    <input type="text" id="search" placeholder="Type to search commands..." />
+  <label for="search">Search Commands</label>
+  <input type="text" id="search" placeholder="Type to search commands..." />
 
-    <!-- Target Inputs -->
-    <label for="target">Target IP (IPv4)</label>
-    <input type="text" id="target" placeholder="e.g. 192.168.1.10" />
+  <!-- Target Inputs -->
+  <label for="target">Target IP (IPv4)</label>
+  <input type="text" id="target" placeholder="e.g. 192.168.1.10" />
 
-    <label for="target6">Target IP (IPv6)</label>
-    <input type="text" id="target6" placeholder="e.g. fe80::1ff:fe23:4567:890a" />
+  <label for="target6">Target IP (IPv6)</label>
+  <input type="text" id="target6" placeholder="e.g. fe80::1ff:fe23:4567:890a" />
 
-    <label for="targetPort">Target Port</label>
-    <input type="number" id="targetPort" placeholder="1–65535" min="1" max="65535" />
+  <label for="targetPort">Target Port</label>
+  <input type="number" id="targetPort" placeholder="1–65535" min="1" max="65535" />
 
-    <!-- Kali Inputs -->
-    <label for="kali">Kali IP (IPv4)</label>
-    <input type="text" id="kali" placeholder="e.g. 10.0.0.5" />
+  <!-- Kali Inputs -->
+  <label for="kali">Kali IP (IPv4)</label>
+  <input type="text" id="kali" placeholder="e.g. 10.0.0.5" />
 
-    <label for="kali6">Kali IP (IPv6)</label>
-    <input type="text" id="kali6" placeholder="e.g. fe80::1ff:fe23:abcd:1234" />
+  <label for="kali6">Kali IP (IPv6)</label>
+  <input type="text" id="kali6" placeholder="e.g. fe80::1ff:fe23:abcd:1234" />
 
-    <label for="kaliPort">Kali Port</label>
-    <input type="number" id="kaliPort" placeholder="1–65535" min="1" max="65535" />
+  <label for="kaliPort">Kali Port</label>
+  <input type="number" id="kaliPort" placeholder="1–65535" min="1" max="65535" />
 
-    <!-- Credentials -->
-    <label for="user">Username</label>
-    <input type="text" id="user" placeholder="e.g. admin" />
+  <!-- Credentials -->
+  <label for="user">Username</label>
+  <input type="text" id="user" placeholder="e.g. admin" />
 
-    <label for="password">Password</label>
-    <input type="text" id="password" placeholder="e.g. P@ssw0rd" />
+  <label for="password">Password</label>
+  <input type="text" id="password" placeholder="e.g. P@ssw0rd" />
 
-    <label for="domain">Domain</label>
-    <input type="text" id="domain" placeholder="e.g. example.com" />
+  <label for="domain">Domain</label>
+  <input type="text" id="domain" placeholder="e.g. example.com" />
 
-    <!-- Domain Controller & NTLM -->
-    <label for="dcIp">Domain Controller IP</label>
-    <input type="text" id="dcIp" placeholder="e.g. 192.168.1.1" />
+  <!-- Domain Controller & NTLM -->
+  <label for="dcIp">Domain Controller IP</label>
+  <input type="text" id="dcIp" placeholder="e.g. 192.168.1.1" />
 
-    <label for="ntlm">NTLM Hash</label>
-    <input type="text" id="ntlm" placeholder="e.g. 11223344556677889900aabbccddeeff" />
+  <label for="ntlm">NTLM Hash</label>
+  <input type="text" id="ntlm" placeholder="e.g. 11223344556677889900aabbccddeeff" />
 
-    <!-- File / Wordlists -->
-    <label for="filename1">Filename</label>
-    <input type="text" id="filename1" placeholder="e.g. secret.txt" />
+  <!-- File / Wordlists -->
+  <label for="filename1">Filename</label>
+  <input type="text" id="filename1" placeholder="e.g. secret.txt" />
 
-    <label for="filename2">Filename</label>
-    <input type="text" id="filename2" placeholder="e.g. output.txt" />
+  <label for="filename2">Filename</label>
+  <input type="text" id="filename2" placeholder="e.g. output.txt" />
 
-    <label for="wordlist1">Wordlist 1</label>
-    <input type="text" id="wordlist1" placeholder="/usr/share/wordlists/rockyou.txt" />
+  <label for="wordlist1">Wordlist 1</label>
+  <input type="text" id="wordlist1" placeholder="/usr/share/wordlists/rockyou.txt" />
 
-    <label for="wordlist2">Wordlist 2</label>
-    <input type="text" id="wordlist2" placeholder="/usr/share/wordlists/other.txt" />
+  <label for="wordlist2">Wordlist 2</label>
+  <input type="text" id="wordlist2" placeholder="/usr/share/wordlists/other.txt" />
 
-    <button id="loadBtn">Load Commands</button>
-    <button id="resetBtn">Reset</button>
-  </div>
+  <button id="loadBtn">Load Commands</button>
+  <button id="resetBtn">Reset</button>
+</div>
 
-  <div class="main">
-    <h2>Generated Commands</h2>
-    <div id="commands"></div>
-  </div>
+<div class="main">
+  <h2>Generated Commands</h2>
+  <div id="commands"></div>
+</div>
 
-  <script>
-    let currentCategory = '';
+<script>
+let currentCategory = '';
 
-    // ================= Validation =================
-    function isValidIPv4(ip) {
-      return /^(25[0-5]|2[0-4]\d|1\d\d|\d\d?)\.(25[0-5]|2[0-4]\d|1\d\d|\d\d?)\.(25[0-5]|2[0-4]\d|1\d\d|\d\d?)\.(25[0-5]|2[0-4]\d|1\d\d|\d\d?)$/.test(ip);
+// ======= Validation =======
+function isValidIPv4(ip) {
+  return /^(25[0-5]|2[0-4]\d|1\d\d|\d\d?)\.(25[0-5]|2[0-4]\d|1\d\d|\d\d?)\.(25[0-5]|2[0-4]\d|1\d\d|\d\d?)\.(25[0-5]|2[0-4]\d|1\d\d|\d\d?)$/.test(ip);
+}
+function isValidIPv6(ip) { return /^(([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4})$/.test(ip); }
+function isValidPort(port) { return /^\d+$/.test(port) && port >= 1 && port <= 65535; }
+
+function showError(input, message) {
+  input.classList.add('input-error');
+  input.title = message;
+}
+
+function clearError(input) {
+  input.classList.remove('input-error');
+  input.title = '';
+}
+
+function validateField(input) {
+  const id = input.id, val = input.value.trim();
+  if(!val){ clearError(input); return true; }
+  let valid = true;
+  if((id==='target'||id==='kali'||id==='dcIp') && !isValidIPv4(val)) { valid=false; showError(input,'Invalid IPv4 address'); }
+  if((id==='target6'||id==='kali6') && !isValidIPv6(val)) { valid=false; showError(input,'Invalid IPv6 address'); }
+  if((id==='targetPort'||id==='kaliPort') && !isValidPort(val)) { valid=false; showError(input,'Port must be 1–65535'); }
+  if(valid) clearError(input);
+  return valid;
+}
+
+function validateAllInputs() {
+  let valid = true;
+  ['target','target6','targetPort','kali','kali6','kaliPort','dcIp'].forEach(id=>{
+    const input = document.getElementById(id);
+    if(!validateField(input)) valid=false;
+  });
+  if(!valid) alert('⚠️ Some fields are invalid. Hover over red fields for details.');
+  return valid;
+}
+
+// ======= Input Restrictions =======
+function restrictIPv4Input(event) {
+  const input = event.target;
+  if(['Backspace','ArrowLeft','ArrowRight','Delete','Tab'].includes(event.key)) return;
+  if(!/[0-9.]/.test(event.key)){ event.preventDefault(); return; }
+  const cursorPos=input.selectionStart;
+  const before=input.value.slice(0,cursorPos);
+  const octets=before.split('.');
+  if(/[0-9]/.test(event.key) && octets[octets.length-1].length>=3) event.preventDefault();
+  if(event.key==='.' && (input.value[cursorPos-1]==='.' || input.value[cursorPos]==='.')) event.preventDefault();
+}
+
+function restrictIPv6Input(event) {
+  const allowed=/[0-9a-fA-F:]/;
+  if(!allowed.test(event.key) && !['Backspace','ArrowLeft','ArrowRight','Delete','Tab'].includes(event.key)) event.preventDefault();
+}
+
+function restrictPortInput(event){
+  const input = event.target;
+  if(!/[0-9]/.test(event.key) && !['Backspace','ArrowLeft','ArrowRight','Delete','Tab'].includes(event.key)) { event.preventDefault(); return; }
+  const cursorPos = input.selectionStart;
+  const prospective = input.value.slice(0,cursorPos) + event.key + input.value.slice(cursorPos);
+  if(Number(prospective) > 65535) event.preventDefault();
+}
+
+function validatePortField(input){
+  const val = input.value.trim();
+  if(!val || (Number(val)>=1 && Number(val)<=65535)) clearError(input);
+  else showError(input,'Port must be 1–65535');
+}
+
+['target','kali','dcIp'].forEach(id => document.getElementById(id).addEventListener('keydown', restrictIPv4Input));
+['target6','kali6'].forEach(id => document.getElementById(id).addEventListener('keydown', restrictIPv6Input));
+['targetPort','kaliPort'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('keydown', restrictPortInput);
+  el.addEventListener('input', ()=>validatePortField(el));
+});
+
+// ======= Tags & Commands =======
+const tagMap = {
+  target:'<target>', target6:'<target6>', targetPort:'<port>', kali:'<kali>', kali6:'<kali6>', kaliPort:'<kaliPort>',
+  user:'<user>', password:'<password>', domain:'<domain>', filename1:'<filename1>', filename2:'<filename2>',
+  wordlist1:'<wordlist1>', wordlist2:'<wordlist2>', dcIp:'<dc-ip>', ntlm:'<ntlm>'
+};
+function applyVars(cmd){ 
+  let result = cmd;
+  for(const [id,tag] of Object.entries(tagMap)){
+    const el = document.getElementById(id);
+    if(!el) continue;
+    result = result.replaceAll(tag, el.value || tag);
+  }
+  return result;
+}
+
+// ======= Fetching & Rendering =======
+async function smartFetch(url){
+  const cacheKey=`cache_${url}`, etagKey=`etag_${url}`;
+  const oldEtag = localStorage.getItem(etagKey);
+  const headers = oldEtag ? {'If-None-Match':oldEtag} : {};
+  const res = await fetch(url,{headers});
+  if(res.status===304 && localStorage.getItem(cacheKey)) return localStorage.getItem(cacheKey);
+  if(!res.ok) throw new Error(`Failed to fetch ${url}`);
+  const text = await res.text();
+  const newEtag = res.headers.get('ETag') || res.headers.get('Last-Modified') || Date.now();
+  localStorage.setItem(cacheKey,text); localStorage.setItem(etagKey,newEtag);
+  return text;
+}
+
+async function loadCategories(){
+  try{
+    const text = await smartFetch('data/');
+    const files = [...text.matchAll(/href="([^"]+\.txt)"/g)].map(m=>m[1]);
+    const names = files.map(f=>f.replace('.txt',''));
+    const select = document.getElementById('category');
+    select.innerHTML = '<option value="">Select category</option>';
+    names.forEach(name => { 
+      const opt = document.createElement('option'); opt.value = name; opt.textContent = name; 
+      select.appendChild(opt); 
+    });
+  }catch(err){ console.error(err); document.getElementById('category').innerHTML='<option value="miscellaneous">miscellaneous</option>'; }
+}
+
+async function loadCommands(cat){
+  const file = 'data/' + cat + '.txt';
+  try{
+    const text = await smartFetch(file);
+    const rawLines = text.split(/\r?\n/);
+    const entries = [];
+    for(let line of rawLines){
+      line = line.trim();
+      if(!line) continue;
+      const idx = line.indexOf(':');
+      let title = idx===-1 ? 'Command' : line.slice(0,idx).trim();
+      let cmd = idx===-1 ? line : line.slice(idx+1).trim();
+      if(entries.length && entries[entries.length-1].title===title) entries[entries.length-1].cmd += ' ;\n'+cmd;
+      else entries.push({title, cmd});
     }
+    return entries;
+  }catch(e){ console.error(e); return []; }
+}
 
-    function isValidIPv6(ip) {
-      return /^(([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4})$/.test(ip);
-    }
+async function renderCommands(){
+  const cat = document.getElementById('category').value;
+  const container = document.getElementById('commands');
+  if(!cat){ container.innerHTML='<p>Select a category.</p>'; currentCategory=''; return; }
+  if(!validateAllInputs()) return;
+  container.innerHTML='<p>Loading...</p>';
+  const commands = await loadCommands(cat);
+  const search = document.getElementById('search').value.toLowerCase();
+  const filtered = commands.filter(c=>c.title.toLowerCase().includes(search) || c.cmd.toLowerCase().includes(search));
+  container.innerHTML = '';
+  if(!filtered.length){ container.innerHTML='<p>No commands found.</p>'; currentCategory=cat; return; }
 
-    // ================= Tags Mapping =================
-    const tagMap = {
-      target: '<target>',
-      target6: '<target6>',
-      targetPort: '<port>',
-      kali: '<kali>',
-      kali6: '<kali6>',
-      kaliPort: '<kaliPort>',
-      user: '<user>',
-      password: '<password>',
-      domain: '<domain>',
-      filename1: '<filename1>',
-      filename2: '<filename2>',
-      wordlist1: '<wordlist1>',
-      wordlist2: '<wordlist2>',
-      dcIp: '<dc-ip>',
-      ntlm: '<ntlm>'
+  filtered.forEach(c=>{
+    const card = document.createElement('div'); card.className='command-block';
+    const title = document.createElement('div'); title.innerHTML='<strong>'+c.title+'</strong>';
+    const btn = document.createElement('button'); btn.className='copy-btn'; btn.textContent='Copy';
+    btn.onclick = ()=>{ navigator.clipboard.writeText(applyVars(c.cmd)); btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',1200); };
+    const pre = document.createElement('pre'); pre.dataset.template=c.cmd; pre.textContent = applyVars(c.cmd);
+    card.appendChild(title); card.appendChild(btn); card.appendChild(pre);
+    container.appendChild(card);
+  });
+  currentCategory = cat;
+}
+
+// ======= Live Updates =======
+function enableLiveUpdates(){
+  Object.keys(tagMap).forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.oninput = ()=>{
+      validateField(el);
+      const catNow = document.getElementById('category').value;
+      if(!currentCategory || catNow!==currentCategory) return;
+      document.querySelectorAll('.command-block pre').forEach(pre=>pre.textContent=applyVars(pre.dataset.template));
     };
+  });
+  document.getElementById('search').oninput = renderCommands;
+}
 
-    // ================= Apply Variables =================
-    function applyVars(cmd) {
-      let result = cmd;
-      for (const [id, tag] of Object.entries(tagMap)) {
-        const el = document.getElementById(id);
-        if (!el) continue;
-        result = result.replaceAll(tag, el.value || tag);
-      }
-      return result;
-    }
+// ======= Event Listeners =======
+document.getElementById('loadBtn').addEventListener('click', renderCommands);
+document.getElementById('category').addEventListener('change',()=>{ document.getElementById('commands').innerHTML=''; currentCategory=''; });
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  document.querySelectorAll('.sidebar input').forEach(i=>i.value=''); document.getElementById('commands').innerHTML=''; currentCategory='';
+});
 
-    // ================= Load Categories =================
-    async function loadCategories() {
-      try {
-        const res = await fetch('data/');
-        if (!res.ok) throw new Error('Cannot read data directory');
-        const text = await res.text();
-        const files = [...text.matchAll(/href="([^"]+\.txt)"/g)].map(m => m[1]);
-        const names = files.map(f => f.replace('.txt', ''));
-        const select = document.getElementById('category');
-        select.innerHTML = '<option value="">Select category</option>';
-        names.forEach(name => {
-          const opt = document.createElement('option');
-          opt.value = name;
-          opt.textContent = name;
-          select.appendChild(opt);
-        });
-      } catch (err) {
-        console.error(err);
-        document.getElementById('category').innerHTML = '<option value="miscellaneous">miscellaneous</option>';
-      }
-    }
-
-    // ================= Load Commands =================
-    // Combines adjacent lines with the same title (text before the first colon).
-    // Combined commands are joined with ' ;' plus a newline so they appear compactly but copy as a single block.
-    async function loadCommands(cat) {
-      const file = 'data/' + cat + '.txt';
-      try {
-        const res = await fetch(file);
-        if (!res.ok) throw new Error('Missing file');
-        const text = await res.text();
-
-        const rawLines = text.split(/\r?\n/);
-        const entries = [];
-
-        for (let i = 0; i < rawLines.length; i++) {
-          const line = rawLines[i].trim();
-          if (!line) continue;
-
-          const idx = line.indexOf(':');
-          let title, cmd;
-          if (idx === -1) {
-            title = 'Command';
-            cmd = line;
-          } else {
-            title = line.slice(0, idx).trim();
-            cmd = line.slice(idx + 1).trim();
-          }
-
-          // If previous entry has the same title, combine them
-          if (entries.length && entries[entries.length - 1].title === title) {
-            // join with ' ;' and newline so both commands will appear in the same block
-            // Example result: "find / -name \"local.txt\" 2>/dev/null ;\nfind / -name \"proof.txt\" 2>/dev/null"
-            entries[entries.length - 1].cmd = entries[entries.length - 1].cmd + ' ;\n' + cmd;
-          } else {
-            entries.push({ title, cmd });
-          }
-        }
-
-        return entries;
-      } catch (e) {
-        console.error(e);
-        return [];
-      }
-    }
-
-    // ================= Render Commands =================
-    async function renderCommands() {
-      const cat = document.getElementById('category').value;
-      const container = document.getElementById('commands');
-      if (!cat) {
-        container.innerHTML = '<p>Select a category.</p>';
-        currentCategory = '';
-        return;
-      }
-
-      // Validate inputs
-      const target = document.getElementById('target').value.trim();
-      const kali = document.getElementById('kali').value.trim();
-      const dcIp = document.getElementById('dcIp').value.trim();
-      const targetPort = document.getElementById('targetPort').value;
-      const kaliPort = document.getElementById('kaliPort').value;
-
-      if (target && !isValidIPv4(target)) return alert('Invalid Target IPv4');
-      if (kali && !isValidIPv4(kali)) return alert('Invalid Kali IPv4');
-      if (dcIp && !isValidIPv4(dcIp)) return alert('Invalid Domain Controller IPv4');
-      if (targetPort && (targetPort < 1 || targetPort > 65535)) return alert('Target port must be 1–65535');
-      if (kaliPort && (kaliPort < 1 || kaliPort > 65535)) return alert('Kali port must be 1–65535');
-
-      container.innerHTML = '<p>Loading...</p>';
-      const commands = await loadCommands(cat);
-      const search = document.getElementById('search').value.toLowerCase();
-
-      const filtered = commands.filter(c =>
-        c.title.toLowerCase().includes(search) ||
-        c.cmd.toLowerCase().includes(search)
-      );
-
-      container.innerHTML = '';
-      if (!filtered.length) {
-        container.innerHTML = '<p>No commands found.</p>';
-        currentCategory = cat;
-        return;
-      }
-
-      filtered.forEach(c => {
-        const card = document.createElement('div');
-        card.className = 'command-block';
-
-        const title = document.createElement('div');
-        title.innerHTML = '<strong>' + c.title + '</strong>';
-
-        const btn = document.createElement('button');
-        btn.className = 'copy-btn';
-        btn.textContent = 'Copy';
-        btn.onclick = () => {
-          // copy the applied variables version (will include newline(s) and semicolons)
-          navigator.clipboard.writeText(applyVars(c.cmd));
-          btn.textContent = 'Copied!';
-          setTimeout(() => btn.textContent = 'Copy', 1200);
-        };
-
-        const pre = document.createElement('pre');
-        pre.dataset.template = c.cmd; // store the combined template
-        pre.textContent = applyVars(c.cmd);
-
-        card.appendChild(title);
-        card.appendChild(btn);
-        card.appendChild(pre);
-        container.appendChild(card);
-      });
-
-      currentCategory = cat;
-    }
-
-    // ================= Live Updates =================
-    function enableLiveUpdates() {
-      Object.keys(tagMap).forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.oninput = () => {
-          const catNow = document.getElementById('category').value;
-          if (!currentCategory || catNow !== currentCategory) return;
-          document.querySelectorAll('.command-block pre').forEach(pre => {
-            pre.textContent = applyVars(pre.dataset.template);
-          });
-        };
-      });
-      document.getElementById('search').oninput = renderCommands;
-    }
-
-    // ================= Event Listeners =================
-    document.getElementById('loadBtn').addEventListener('click', renderCommands);
-    document.getElementById('category').addEventListener('change', () => {
-      document.getElementById('commands').innerHTML = '';
-      currentCategory = '';
-    });
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      document.querySelectorAll('.sidebar input').forEach(i => i.value = '');
-      document.getElementById('commands').innerHTML = '';
-      currentCategory = '';
-    });
-
-    // ================= Init =================
-    loadCategories();
-    enableLiveUpdates();
-  </script>
+// ======= Init =======
+loadCategories();
+enableLiveUpdates();
+</script>
 </body>
 </html>
