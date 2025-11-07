@@ -1,4 +1,4 @@
-# OSCP Command Generator v1.2.2
+# OSCP Command Generator v1.2.3
 
 A lightweight browser-based command builder for penetration testers. Dynamically loads categorized command templates, substitutes user-defined variables, and provides real-time command generation with smart grouping and improved interface.
 
@@ -84,6 +84,13 @@ Multiple consecutive commands with the same title are automatically merged.
 - No other runtime dependencies
 
 ## Version History
+
+**v1.2.3** (2025-11-08)
+- Added Help (?) button at top-right to show supported tags with live toggle.
+- Help section hidden on page load; click button or popup to toggle visibility.
+- Fixed tag display in help section so all supported tags (e.g., <user>, <target>) are clearly shown.
+- Cleaned up input validation and live updates for smoother UX.
+- Minor refactoring for better readability and maintainability of HTML/JS.
 
 **v1.2.2** (2025-11-07)
 - UI improvements for better input feedback and error highlighting
