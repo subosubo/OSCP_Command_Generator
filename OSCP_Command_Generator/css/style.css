@@ -170,3 +170,11 @@ body {
 .main::-webkit-scrollbar-thumb:hover {
   background-color: #475569;
 }
+
+/* ===============================
+   Input Validation Error
+   =============================== */
+.input-error {
+  border: 2px solid #ff5555 !important;
+  background-color: #ffecec;
+}
