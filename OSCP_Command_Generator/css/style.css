@@ -8,7 +8,7 @@ body {
   margin: 0;
   display: flex;
   height: 100vh;
-  overflow: hidden; /* Prevents double scrollbars */
+  overflow: hidden;
 }
 
 /* ===============================
@@ -44,7 +44,6 @@ body {
   color: #cbd5e1;
 }
 
-/* Inputs and Buttons */
 .sidebar input,
 .sidebar select,
 .sidebar button {
@@ -172,8 +171,47 @@ body {
 }
 
 /* ===============================
-   Input Validation Error
+   Help Popup
    =============================== */
+.help-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.help-popup {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  width: 250px;
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 12px;
+  display: none;
+  color: #e2e8f0;
+  font-size: 13px;
+  z-index: 999;
+}
+
+.help-popup code {
+  color: #60a5fa;
+  font-family: monospace;
+}
+
+/* Input error highlight */
 .input-error {
   border: 2px solid #ff5555 !important;
   background-color: #ffecec;
