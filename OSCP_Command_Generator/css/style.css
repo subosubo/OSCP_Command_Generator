@@ -109,11 +109,13 @@ body {
   font-family: "Segoe UI Semibold", Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.3s;
 }
 
 .command-block:hover {
   border-color: #3b82f6;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+  animation: pulse 1.2s infinite alternate;
 }
 
 .command-block pre {
@@ -187,6 +189,13 @@ body {
   border: none;
   cursor: pointer;
   z-index: 1000;
+  transition: box-shadow 0.3s, transform 0.2s;
+}
+
+.help-btn:hover {
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+  transform: scale(1.05);
+  animation: pulse 1.2s infinite alternate;
 }
 
 .help-popup {
@@ -211,8 +220,25 @@ body {
   font-family: monospace;
 }
 
-/* Input error highlight */
+/* ===============================
+   Input error highlight
+   =============================== */
 .input-error {
   border: 2px solid #ff5555 !important;
   background-color: #ffecec;
+}
+
+/* ===============================
+   Pulse Animation
+   =============================== */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.2);
+  }
 }
