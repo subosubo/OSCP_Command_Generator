@@ -1,98 +1,151 @@
-**OSCP Command Generator v1.2.5**
+# **OSCP Command Generator v1.2.6**
 
-A lightweight browser-based command builder for penetration testers. Dynamically loads categorized command templates, substitutes user-defined variables, and provides real-time command generation with smart grouping and improved interface.
+A lightweight, browser-based **command builder** for penetration testers.  
+It dynamically loads categorized command templates, supports variable substitution, and now includes **priority sorting**, **enhanced help UI**, and **improved UX refinements**.
 
-**Features**
-- **Dynamic Command Categories** – Automatically loads .txt files from the data/ folder
-- **Smart Command Grouping** – Consecutive commands with the same title are merged into a single block
-- **Live Variable Substitution** – Commands update in real-time as you type inputs
-- **Searchable Commands** – Instantly filter commands within categories
-- **Copy-to-Clipboard** – One-click copy for ready-to-use commands
-- **Input Validation** – Validates IPv4/IPv6 addresses and port ranges
-- **Reset Functionality** – Clear all inputs quickly and start fresh
-- **Improved UI** – Cleaner layout, responsive input feedback, and clear error highlighting
+---
 
-**Project Structure**
-project-root/
-├── index.html # Main UI and JavaScript logic
-├── css/
-│ └── style.css # UI styling
-└── data/
-├── enumeration.txt
-├── exploitation.txt
-├── privilege_escalation.txt
-└── ... # Add more categories here
+## **Features**
 
-**Quick Start**
-Local HTTP Server Required
+- **Dynamic Command Categories** – Automatically loads `.txt` files from the `data/` folder  
+- **Smart Command Grouping** – Consecutive commands with the same title are merged into one block  
+- **Priority Sorting** – Commands starting with `^` appear at the top, sorted alphabetically  
+- **Live Variable Substitution** – Commands update in real-time as you type inputs  
+- **Searchable Commands** – Instantly filter commands within categories  
+- **Copy-to-Clipboard** – One-click copy for ready-to-use commands  
+- **Input Validation** – Validates IPv4/IPv6 and port ranges dynamically  
+- **Reset Functionality** – Quickly clear all inputs and reload categories  
+- **Help Popup** – Displays supported variable tags in a clean table format  
+- **Improved UI/UX** – Cleaner layout, glowing hover states, and added margin under the last command block  
 
-Browsers block fetching local files directly. Serve the project over HTTP for full functionality:
-- python -m http.server 8000
+---
+
+## **Project Structure**
+
+project-root/  
+├── index.html          # Main UI and JavaScript logic  
+├── css/  
+│   └── style.css       # UI styling and hover glow effects  
+└── data/  
+    ├── enumeration.txt  
+    ├── exploitation.txt  
+    ├── privilege_escalation.txt  
+    └── ... # Add more categories here  
+
+---
+
+## **Quick Start**
+
+**Local HTTP Server Required**  
+Browsers block file access when opened directly — you must serve this over HTTP:
+
+python -m http.server 8000  
 
 Then open in your browser:
-http://localhost:8000
 
-**Usage**
-Serve the project directory with a local HTTP server
-- Open http://localhost:<port> in a browser
-- Select a category from the dropdown (auto-populated from /data)
-- Enter relevant inputs (target, user, password, etc.)
-- Use the Search field to filter commands
-- Click Copy to copy a fully substituted command
-- Click Reset to clear all input fields
+http://localhost:8000  
 
-Supported Variables
-Variable	Description
-<target>	Target IPv4
-<target6>	Target IPv6
-<port>	Target/Kali Port
-<kali>	Kali IPv4
-<kali6>	Kali IPv6
-<kaliPort>	Kali Port
-<user>	Username
-<password>	Password
-<domain>	Domain
-<dc-ip>	Domain Controller IP
-<ntlm>	NTLM Hash
-<filename1>	Filename 1
-<filename2>	Filename 2
-<wordlist1>	Wordlist 1
-<wordlist2>	Wordlist 2
+---
 
-**Adding New Commands**
-- Add a new .txt file under /data/ (e.g., smb.txt)
-- Follow the format: description:command
-- Use supported tags where appropriate
-- The file will automatically appear in the category dropdown when the page reloads
+## **Usage**
 
-**Command Format Examples**
-ftp (banner): nc -vn <target> <port>
-ftp (anonymous login): ftp <target>
-Multiple consecutive commands with the same title are automatically merged.
+1. Serve the project directory using a local HTTP server.  
+2. Open `http://localhost:<port>` in your browser.  
+3. Click **Load Commands** to populate the category dropdown.  
+4. Choose a category and enter inputs (target, user, password, etc.).  
+5. Use **Search** to filter commands dynamically.  
+6. Click **Copy** to copy a substituted command.  
+7. Click **Reset** to clear all inputs and start over.  
+8. Click the **?** button to view supported tag references.
 
-**Requirements**
-- Python 3 or Node.js for local HTTP server
-- Modern browser (Chrome, Edge, Firefox)
-- No other runtime dependencies
+---
 
-**Version History**
-v1.2.5 (2025-11-08)
-- Fixed bug: Category dropdown no longer resets after clicking Load Commands
-- Ensures selected category persists and commands are loaded correctly
-- Minor performance improvements for live updates and search
+## **Supported Variables**
 
-v1.2.4 (2025-11-07)
-- UI fixes and enhanced input validation
-- Help popup shows all supported tags
-- Command grouping preserved
+| Variable | Description |
+|-----------|--------------|
+| `<target>` | Target IPv4 |
+| `<target6>` | Target IPv6 |
+| `<port>` | Target/Kali Port |
+| `<kali>` | Kali IPv4 |
+| `<kali6>` | Kali IPv6 |
+| `<kaliPort>` | Kali Port |
+| `<user>` | Username |
+| `<password>` | Password |
+| `<domain>` | Domain |
+| `<dc-ip>` | Domain Controller IP |
+| `<ntlm>` | NTLM Hash |
+| `<filename1>` | Filename 1 |
+| `<filename2>` | Filename 2 |
+| `<wordlist1>` | Wordlist 1 |
+| `<wordlist2>` | Wordlist 2 |
 
-v1.2.3 (2025-10-23)
-- Added sidebar input focus on load commands
-- Live variable substitution improved
+---
 
-v1.2.2 (2025-11-07)
-- UI improvements and better input feedback
+## **Adding New Commands**
 
-**Author**
-Subo Subo – Built for penetration testers preparing for OSCP and similar certifications.
-Credits to yuyuloke
+1. Add a new `.txt` file under `/data/` (e.g., `smb.txt`).  
+2. Follow this format:  
+   description:command  
+3. Use supported tags (`<target>`, `<user>`, etc.) where needed.  
+4. Any line starting with `^` will appear at the **top of the command list** and be **sorted alphabetically**.  
+5. Reload the page to see your new category in the dropdown.
+
+---
+
+## **Command Format Examples**
+
+ftp (banner): nc -vn <target> <port>  
+ftp (anonymous login): ftp <target>  
+^nmap (quick start): nmap -sVC -p- -v -T4 -sT --open <target> -oN results_TCP  
+^nmap (quick start): sudo nmap -sU -p 1-1024 -v <target> -oA results_UDP  
+
+Commands with identical titles are merged automatically.  
+Commands starting with `^` are shown first.
+
+---
+
+## **Requirements**
+
+- **Python 3** or **Node.js** for local HTTP serving  
+- **Modern browser** (Chrome, Edge, Firefox)  
+- **No additional dependencies**  
+
+---
+
+## **Version History**
+
+**v1.2.6 (2025-11-09)**  
+- Added priority sorting (`^`) for top commands  
+- Fixed help popup display issue (clean, consistent table view)  
+- Added margin below the final command block for visual spacing  
+- Enhanced IPv4/port validation  
+- Improved glow and hover animation effects  
+- Search now clears and refocuses when loading new commands  
+- UI/UX refinements and accessibility improvements  
+
+**v1.2.5 (2025-11-08)**  
+- Fixed dropdown reset issue after reloading commands  
+- Category persistence ensured after reload  
+- Minor performance optimization for real-time updates  
+
+**v1.2.4 (2025-11-07)**  
+- Improved validation for inputs  
+- Help popup added with tag support table  
+
+**v1.2.3 (2025-10-23)**  
+- Added sidebar focus on Load Commands  
+- Improved live substitution  
+
+**v1.2.2 (2025-11-07)**  
+- UI enhancements and smoother input feedback  
+
+---
+
+## **Author**
+
+**Subo Subo**  
+Built for penetration testers preparing for **OSCP** and similar certifications.  
+Credits to **yuyuloke** for foundational UI and functional logic.
+
+---
