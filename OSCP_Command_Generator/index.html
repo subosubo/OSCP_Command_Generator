@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OSCP Command Generator v1.2.5</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>OSCP Command Generator v1.2.6</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
+    <!-- Sidebar -->
     <div class="sidebar">
       <h2>Command Builder</h2>
 
@@ -14,6 +15,8 @@
       <select id="category">
         <option value="">Select category</option>
       </select>
+
+      <button id="loadBtn">Load Commands</button>
 
       <label for="search">Search Commands</label>
       <input type="text" id="search" placeholder="Type to search commands..." />
@@ -95,37 +98,56 @@
         placeholder="/usr/share/wordlists/other.txt"
       />
 
-      <button id="loadBtn">Load Commands</button>
       <button id="resetBtn">Reset</button>
     </div>
 
+    <!-- Main Content -->
     <div class="main">
       <h2>Generated Commands</h2>
       <div id="commands"></div>
     </div>
 
+    <!-- Help Button and Popup -->
     <button id="helpBtn" class="help-btn">?</button>
-    <div id="helpPopup" class="help-popup"></div>
+    <div id="helpPopup" class="help-popup" aria-hidden="true"></div>
 
     <script>
+      /* ===============================
+   Index.html v1.2.5 - Final
+   - All features restored and verified per checklist
+   - Priority (^) lines are moved to top and sorted alphabetically
+   - Help popup displays a clean Tag / Description table
+   - Last command block spacing is preserved by CSS (.command-block:last-child)
+   =============================== */
+
       let currentCategory = "";
+
+      // Tag map used for help popup and variable replacement (keys are canonical tags)
       const tagMap = {
-        target: "<target>",
-        target6: "<target6>",
-        targetPort: "<port>",
-        kali: "<kali>",
-        kali6: "<kali6>",
-        kaliPort: "<kaliPort>",
-        user: "<user>",
-        password: "<password>",
-        domain: "<domain>",
-        filename1: "<filename1>",
-        filename2: "<filename2>",
-        wordlist1: "<wordlist1>",
-        wordlist2: "<wordlist2>",
-        dcIp: "<dc-ip>",
-        ntlm: "<ntlm>",
+        "<target>": "Target IPv4",
+        "<target6>": "Target IPv6",
+        "<port>": "Target/Kali Port",
+        "<kali>": "Kali IPv4",
+        "<kali6>": "Kali IPv6",
+        "<kaliPort>": "Kali Port",
+        "<user>": "Username",
+        "<password>": "Password",
+        "<domain>": "Domain",
+        "<dc-ip>": "Domain Controller IP",
+        "<ntlm>": "NTLM Hash",
+        "<filename1>": "Filename 1",
+        "<filename2>": "Filename 2",
+        "<wordlist1>": "Wordlist 1",
+        "<wordlist2>": "Wordlist 2",
       };
+
+      // ===== Utility =====
+      function escapeHtml(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
 
       // ===== Validation =====
       function isValidIPv4(ip) {
@@ -137,6 +159,7 @@
       function isValidPort(port) {
         return /^\d+$/.test(port) && port >= 1 && port <= 65535;
       }
+
       function showError(input, msg) {
         input.classList.add("input-error");
         input.title = msg;
@@ -145,9 +168,10 @@
         input.classList.remove("input-error");
         input.title = "";
       }
+
       function validateField(input) {
-        const id = input.id,
-          val = input.value.trim();
+        const id = input.id;
+        const val = input.value.trim();
         if (!val) {
           clearError(input);
           return true;
@@ -171,9 +195,9 @@
         if (valid) clearError(input);
         return valid;
       }
+
       function validateAllInputs() {
-        let valid = true;
-        [
+        const ids = [
           "target",
           "target6",
           "targetPort",
@@ -181,9 +205,11 @@
           "kali6",
           "kaliPort",
           "dcIp",
-        ].forEach((id) => {
-          const input = document.getElementById(id);
-          if (!validateField(input)) valid = false;
+        ];
+        let valid = true;
+        ids.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el && !validateField(el)) valid = false;
         });
         if (!valid)
           alert(
@@ -207,7 +233,6 @@
           e.preventDefault();
           return;
         }
-
         const caret = input.selectionStart;
         const next =
           input.value.slice(0, caret) + e.key + input.value.slice(caret);
@@ -239,25 +264,31 @@
         )
           e.preventDefault();
       }
-      ["target", "kali", "dcIp"].forEach((id) =>
-        document
-          .getElementById(id)
-          .addEventListener("keydown", restrictIPv4Input)
-      );
-      ["target6", "kali6"].forEach((id) =>
-        document.getElementById(id).addEventListener("keydown", (e) => {
-          const allowed = /[0-9a-fA-F:]/;
-          if (
-            !allowed.test(e.key) &&
-            !["Backspace", "ArrowLeft", "ArrowRight", "Delete", "Tab"].includes(
-              e.key
+      ["target", "kali", "dcIp"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("keydown", restrictIPv4Input);
+      });
+      ["target6", "kali6"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el)
+          el.addEventListener("keydown", (e) => {
+            const allowed = /[0-9a-fA-F:]/;
+            if (
+              !allowed.test(e.key) &&
+              ![
+                "Backspace",
+                "ArrowLeft",
+                "ArrowRight",
+                "Delete",
+                "Tab",
+              ].includes(e.key)
             )
-          )
-            e.preventDefault();
-        })
-      );
+              e.preventDefault();
+          });
+      });
       ["targetPort", "kaliPort"].forEach((id) => {
         const el = document.getElementById(id);
+        if (!el) return;
         el.addEventListener("keydown", (e) => {
           if (
             !/[0-9]/.test(e.key) &&
@@ -268,8 +299,8 @@
             e.preventDefault();
             return;
           }
-          const c = el.selectionStart,
-            p = el.value.slice(0, c) + e.key + el.value.slice(c);
+          const c = el.selectionStart;
+          const p = el.value.slice(0, c) + e.key + el.value.slice(c);
           if (Number(p) > 65535) e.preventDefault();
         });
         el.addEventListener("input", () => {
@@ -283,25 +314,56 @@
       // ===== Apply Variables =====
       function applyVars(cmd) {
         let result = cmd;
-        for (const [id, tag] of Object.entries(tagMap)) {
-          const el = document.getElementById(id);
-          if (!el) continue;
-          result = result.replaceAll(tag, el.value || tag);
-        }
+        Object.keys(tagMap).forEach((tag) => {
+          const key = tag; // e.g. "<target>"
+          const id =
+            tag === "<dc-ip>"
+              ? "dcIp" // mapping exception where dash in tag differs from element id
+              : tag === "<kaliPort>"
+              ? "kaliPort"
+              : tag.replace(/[<>-]/g, ""); // fallback mapping attempt (not used for all)
+          // safe approach: search for element by known ids map
+        });
+        // simple global replace using DOM values by known ids
+        const map = {
+          "<target>": document.getElementById("target")?.value || "",
+          "<target6>": document.getElementById("target6")?.value || "",
+          "<port>":
+            document.getElementById("targetPort")?.value ||
+            document.getElementById("kaliPort")?.value ||
+            "",
+          "<kali>": document.getElementById("kali")?.value || "",
+          "<kali6>": document.getElementById("kali6")?.value || "",
+          "<kaliPort>": document.getElementById("kaliPort")?.value || "",
+          "<user>": document.getElementById("user")?.value || "",
+          "<password>": document.getElementById("password")?.value || "",
+          "<domain>": document.getElementById("domain")?.value || "",
+          "<dc-ip>": document.getElementById("dcIp")?.value || "",
+          "<ntlm>": document.getElementById("ntlm")?.value || "",
+          "<filename1>": document.getElementById("filename1")?.value || "",
+          "<filename2>": document.getElementById("filename2")?.value || "",
+          "<wordlist1>": document.getElementById("wordlist1")?.value || "",
+          "<wordlist2>": document.getElementById("wordlist2")?.value || "",
+        };
+        Object.entries(map).forEach(([tag, val]) => {
+          // replace all occurrences
+          result = result.split(tag).join(val || tag);
+        });
         return result;
       }
 
-      // ===== Fetch with Caching =====
+      // ===== Fetch with caching & try/catch =====
       async function smartFetch(url) {
         try {
-          const cacheKey = `cache_${url}`,
-            etagKey = `etag_${url}`;
+          const cacheKey = `cache_${url}`;
+          const etagKey = `etag_${url}`;
           const oldEtag = localStorage.getItem(etagKey);
           const headers = oldEtag ? { "If-None-Match": oldEtag } : {};
           const res = await fetch(url, { headers });
           if (res.status === 304 && localStorage.getItem(cacheKey))
             return localStorage.getItem(cacheKey);
-          if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+          if (!res.ok)
+            throw new Error(`Failed to fetch ${url} (${res.status})`);
           const text = await res.text();
           const newEtag =
             res.headers.get("ETag") ||
@@ -311,13 +373,13 @@
           localStorage.setItem(etagKey, newEtag);
           return text;
         } catch (err) {
-          console.error(err);
-          return "";
+          console.error("smartFetch error:", err);
+          throw err;
         }
       }
 
       // ===== Load Categories =====
-      async function loadCategories(selected = "") {
+      async function loadCategories(preserveValue = "") {
         try {
           const text = await smartFetch("data/");
           const files = [...text.matchAll(/href="([^"]+\.txt)"/g)].map(
@@ -326,48 +388,96 @@
           const names = files.map((f) => f.replace(".txt", ""));
           const select = document.getElementById("category");
           select.innerHTML = '<option value="">Select category</option>';
-          names.forEach((n) => {
+          names.forEach((name) => {
             const opt = document.createElement("option");
-            opt.value = n;
-            opt.textContent = n;
+            opt.value = name;
+            opt.textContent = name;
             select.appendChild(opt);
           });
-          if (selected) select.value = selected;
+          if (preserveValue) {
+            // if preserveValue is a filename or category name, attempt to set it
+            select.value = preserveValue;
+          }
         } catch (err) {
-          console.error(err);
-          document.getElementById("category").innerHTML =
+          console.error("loadCategories error:", err);
+          const select = document.getElementById("category");
+          select.innerHTML =
             '<option value="miscellaneous">miscellaneous</option>';
         }
       }
 
-      // ===== Load Commands =====
+      /*
+  ===== Load Commands =====
+  - lines starting with ^ are priority lines:
+    * the leading caret is removed before parsing
+    * priority entries are collected and sorted alphabetically by title
+  - consecutive lines with same title are merged
+*/
       async function loadCommands(cat) {
         const file = "data/" + cat + ".txt";
         try {
           const text = await smartFetch(file);
-          const raw = text.split(/\r?\n/);
-          const entries = [];
-          for (let line of raw) {
-            line = line.trim();
-            if (!line) continue;
+          const rawLines = text
+            .split(/\r?\n/)
+            .map((l) => l.replace(/\r/g, ""))
+            .filter((l) => l.trim() !== "");
+          // parse lines into objects: {title, cmd, priority}
+          const parsed = [];
+          for (let raw of rawLines) {
+            let line = raw.trim();
+            let priority = false;
+            if (line.startsWith("^")) {
+              priority = true;
+              line = line.slice(1).trim();
+            }
             const idx = line.indexOf(":");
             const title = idx === -1 ? "Command" : line.slice(0, idx).trim();
             const cmd = idx === -1 ? line : line.slice(idx + 1).trim();
-            if (entries.length && entries[entries.length - 1].title === title)
-              entries[entries.length - 1].cmd += " ;\n" + cmd;
-            else entries.push({ title, cmd });
+            parsed.push({ title, cmd, priority });
           }
-          return entries;
-        } catch (e) {
-          console.error(e);
+
+          // merge consecutive same-title entries while preserving priority flag
+          const merged = [];
+          for (const item of parsed) {
+            if (
+              merged.length &&
+              merged[merged.length - 1].title === item.title
+            ) {
+              merged[merged.length - 1].cmd += " ;\n" + item.cmd;
+              merged[merged.length - 1].priority =
+                merged[merged.length - 1].priority || item.priority;
+            } else {
+              merged.push({
+                title: item.title,
+                cmd: item.cmd,
+                priority: item.priority,
+              });
+            }
+          }
+
+          // split priority vs normal
+          const priorityEntries = merged.filter((e) => e.priority);
+          const normalEntries = merged.filter((e) => !e.priority);
+
+          // alphabetical sort priority entries by title (case-insensitive)
+          priorityEntries.sort((a, b) =>
+            a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+          );
+
+          return [...priorityEntries, ...normalEntries];
+        } catch (err) {
+          console.error("loadCommands error:", err);
           return [];
         }
       }
 
       // ===== Render Commands =====
       async function renderCommands(selectedCategory = "") {
+        const selectEl = document.getElementById("category");
         const cat =
-          document.getElementById("category").value || selectedCategory;
+          selectedCategory && selectedCategory !== ""
+            ? selectedCategory
+            : selectEl.value;
         const container = document.getElementById("commands");
         if (!cat) {
           container.innerHTML = "<p>Select a category.</p>";
@@ -375,97 +485,181 @@
           return;
         }
         if (!validateAllInputs()) return;
+
         container.innerHTML = "<p>Loading...</p>";
-        const commands = await loadCommands(cat);
-        const search = document.getElementById("search").value.toLowerCase();
-        const filtered = commands.filter(
-          (c) =>
-            c.title.toLowerCase().includes(search) ||
-            c.cmd.toLowerCase().includes(search)
-        );
-        container.innerHTML = "";
-        if (!filtered.length) {
-          container.innerHTML = "<p>No commands found.</p>";
+        try {
+          const commands = await loadCommands(cat);
+          const search = document.getElementById("search").value.toLowerCase();
+
+          // filter by search across title or cmd
+          const filtered = commands.filter(
+            (c) =>
+              c.title.toLowerCase().includes(search) ||
+              c.cmd.toLowerCase().includes(search)
+          );
+          container.innerHTML = "";
+
+          if (!filtered.length) {
+            container.innerHTML = "<p>No commands found.</p>";
+            currentCategory = cat;
+            return;
+          }
+
+          // build DOM nodes
+          filtered.forEach((c, idx) => {
+            const card = document.createElement("div");
+            card.className =
+              "command-block" + (c.priority ? " top-priority" : "");
+            // title
+            const title = document.createElement("div");
+            title.innerHTML = "<strong>" + escapeHtml(c.title) + "</strong>";
+            // copy button
+            const btn = document.createElement("button");
+            btn.className = "copy-btn";
+            btn.type = "button";
+            btn.textContent = "Copy";
+            // pre (template)
+            const pre = document.createElement("pre");
+            pre.dataset.template = c.cmd;
+            pre.textContent = applyVars(c.cmd);
+            // assemble
+            card.appendChild(title);
+            card.appendChild(btn);
+            card.appendChild(pre);
+            container.appendChild(card);
+          });
+
+          // ensure last-child spacing handled by CSS (.command-block:last-child)
+          attachCopyHandlers();
           currentCategory = cat;
-          return;
+        } catch (err) {
+          console.error("renderCommands error:", err);
+          container.innerHTML =
+            "<p>Error loading commands. See console for details.</p>";
         }
-        filtered.forEach((c) => {
-          const card = document.createElement("div");
-          card.className = "command-block";
-          const title = document.createElement("div");
-          title.innerHTML = "<strong>" + c.title + "</strong>";
-          const btn = document.createElement("button");
-          btn.className = "copy-btn";
-          btn.textContent = "Copy";
-          btn.onclick = () => {
-            navigator.clipboard.writeText(applyVars(c.cmd));
-            btn.textContent = "Copied!";
-            setTimeout(() => (btn.textContent = "Copy"), 1200);
-          };
-          const pre = document.createElement("pre");
-          pre.dataset.template = c.cmd;
-          pre.textContent = applyVars(c.cmd);
-          card.appendChild(title);
-          card.appendChild(btn);
-          card.appendChild(pre);
-          container.appendChild(card);
-        });
-        currentCategory = cat;
       }
 
-      // ===== Live Updates =====
+      // ===== Copy button handlers =====
+      function attachCopyHandlers() {
+        document.querySelectorAll(".copy-btn").forEach((btn) => {
+          btn.onclick = async () => {
+            try {
+              const pre = btn.parentElement.querySelector("pre");
+              const text = pre ? pre.textContent : "";
+              await navigator.clipboard.writeText(text);
+              const original = btn.textContent;
+              btn.textContent = "Copied!";
+              setTimeout(() => (btn.textContent = original), 1200);
+            } catch (err) {
+              console.error("clipboard error", err);
+              alert("Failed to copy to clipboard");
+            }
+          };
+        });
+      }
+
+      // ===== Live updates for variable inputs =====
       function enableLiveUpdates() {
-        Object.keys(tagMap).forEach((id) => {
+        Object.keys(tagMap).forEach((tag) => {
+          // map tag -> input element id
+          // use explicit mapping for accuracy
+          const map = {
+            "<target>": "target",
+            "<target6>": "target6",
+            "<port>": "targetPort",
+            "<kali>": "kali",
+            "<kali6>": "kali6",
+            "<kaliPort>": "kaliPort",
+            "<user>": "user",
+            "<password>": "password",
+            "<domain>": "domain",
+            "<dc-ip>": "dcIp",
+            "<ntlm>": "ntlm",
+            "<filename1>": "filename1",
+            "<filename2>": "filename2",
+            "<wordlist1>": "wordlist1",
+            "<wordlist2>": "wordlist2",
+          };
+          const id = map[tag];
+          if (!id) return;
           const el = document.getElementById(id);
           if (!el) return;
-          el.oninput = () => {
+          el.addEventListener("input", () => {
             validateField(el);
+            // only update visible command blocks if category matches
             const catNow = document.getElementById("category").value;
             if (!currentCategory || catNow !== currentCategory) return;
-            document
-              .querySelectorAll(".command-block pre")
-              .forEach(
-                (pre) => (pre.textContent = applyVars(pre.dataset.template))
-              );
-          };
+            document.querySelectorAll(".command-block pre").forEach((pre) => {
+              pre.textContent = applyVars(pre.dataset.template);
+            });
+          });
         });
-        document.getElementById("search").oninput = () =>
-          renderCommands(currentCategory);
+
+        // search updates render (keeps selected category/currentCategory)
+        document
+          .getElementById("search")
+          .addEventListener("input", () => renderCommands(currentCategory));
       }
 
-      // ===== Help Popup =====
-      const helpBtn = document.getElementById("helpBtn");
-      const helpPopup = document.getElementById("helpPopup");
-
-      helpPopup.innerHTML = Object.entries(tagMap)
-        .map(([id, tag]) => {
-          const safeTag = tag.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-          return `<div><strong>${id}</strong>: <code>${safeTag}</code></div>`;
-        })
-        .join("");
-      helpPopup.style.display = "none";
+      // ===== Help popup (table layout) =====
+      (function populateHelp() {
+        const helpPopup = document.getElementById("helpPopup");
+        try {
+          const rows = Object.entries(tagMap)
+            .map(([tag, desc]) => {
+              const safeTag = escapeHtml(tag);
+              const safeDesc = escapeHtml(desc);
+              return `<tr><td><code>${safeTag}</code></td><td>${safeDesc}</td></tr>`;
+            })
+            .join("");
+          helpPopup.innerHTML = `
+      <table>
+        <thead><tr><th>Tag</th><th>Description</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+          helpPopup.style.display = "none";
+          helpPopup.setAttribute("aria-hidden", "true");
+        } catch (err) {
+          console.error("populateHelp error", err);
+          helpPopup.textContent = "Help data unavailable";
+        }
+      })();
 
       function toggleHelp() {
+        const helpPopup = document.getElementById("helpPopup");
+        const btn = document.getElementById("helpBtn");
         if (helpPopup.style.display === "block") {
-          helpPopup.style.height = "0";
-          setTimeout(() => (helpPopup.style.display = "none"), 300);
+          helpPopup.style.display = "none";
+          helpPopup.setAttribute("aria-hidden", "true");
+          btn.setAttribute("aria-expanded", "false");
         } else {
           helpPopup.style.display = "block";
-          helpPopup.style.height = "auto";
+          helpPopup.setAttribute("aria-hidden", "false");
+          btn.setAttribute("aria-expanded", "true");
         }
       }
-      helpBtn.onclick = toggleHelp;
-      helpPopup.onclick = toggleHelp;
+      document.getElementById("helpBtn").addEventListener("click", toggleHelp);
+      document
+        .getElementById("helpPopup")
+        .addEventListener("click", toggleHelp);
 
-      // ===== Event Listeners =====
+      // ===== Event listeners =====
       document.getElementById("loadBtn").addEventListener("click", async () => {
-        const search = document.getElementById("search");
-        search.value = "";
-        search.focus();
-        const selectedCategory =
+        const searchInput = document.getElementById("search");
+        searchInput.value = ""; // clear search
+        searchInput.focus(); // focus search
+        const selected =
           document.getElementById("category").value || currentCategory;
-        await loadCategories(selectedCategory);
-        renderCommands(selectedCategory);
+        try {
+          // reload categories but preserve selection (in case data/ changed)
+          await loadCategories(selected);
+        } catch (e) {
+          console.warn(
+            "loadCategories on button click failed, continuing to render with current selection"
+          );
+        }
+        await renderCommands(selected);
       });
 
       document.getElementById("category").addEventListener("change", () => {
@@ -477,13 +671,22 @@
         document
           .querySelectorAll(".sidebar input")
           .forEach((i) => (i.value = ""));
+        document
+          .querySelectorAll(".input-error")
+          .forEach((i) => i.classList.remove("input-error"));
         document.getElementById("commands").innerHTML = "";
         currentCategory = "";
       });
 
       // ===== Init =====
-      loadCategories();
-      enableLiveUpdates();
+      (async function init() {
+        try {
+          await loadCategories();
+        } catch (e) {
+          console.warn("init: loadCategories failed", e);
+        }
+        enableLiveUpdates();
+      })();
     </script>
   </body>
 </html>
