@@ -109,13 +109,24 @@ body {
   font-family: "Segoe UI Semibold", Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
-  transition: border-color 0.2s, box-shadow 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .command-block:hover {
   border-color: #3b82f6;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
-  animation: pulse 1.2s infinite alternate;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Special styling for ^ top commands */
+.command-block.top-priority {
+  border: 1px solid #60a5fa;
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.35);
+  background: #13203a;
+}
+
+/* Add bottom margin to the last block */
+.command-block:last-child {
+  margin-bottom: 2.5rem;
 }
 
 .command-block pre {
@@ -173,7 +184,7 @@ body {
 }
 
 /* ===============================
-   Help Popup
+   Help Popup and Button
    =============================== */
 .help-btn {
   position: fixed;
@@ -189,21 +200,21 @@ body {
   border: none;
   cursor: pointer;
   z-index: 1000;
-  transition: box-shadow 0.3s, transform 0.2s;
+  box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+  animation: glow-pulse 2.5s infinite;
 }
 
 .help-btn:hover {
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
   transform: scale(1.05);
-  animation: pulse 1.2s infinite alternate;
 }
 
 .help-popup {
   position: fixed;
   top: 70px;
   right: 20px;
-  width: 250px;
-  max-height: 400px;
+  width: 260px;
+  max-height: 420px;
   overflow-y: auto;
   background-color: #1e293b;
   border: 1px solid #334155;
@@ -215,30 +226,48 @@ body {
   z-index: 999;
 }
 
+.help-popup table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.help-popup th,
+.help-popup td {
+  padding: 5px 6px;
+  border-bottom: 1px solid #334155;
+  text-align: left;
+}
+
+.help-popup th {
+  color: #93c5fd;
+  font-weight: 600;
+}
+
 .help-popup code {
   color: #60a5fa;
   font-family: monospace;
 }
 
 /* ===============================
-   Input error highlight
+   Animations
    =============================== */
-.input-error {
-  border: 2px solid #ff5555 !important;
-  background-color: #ffecec;
+@keyframes glow-pulse {
+  0% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+  }
 }
 
 /* ===============================
-   Pulse Animation
+   Input Error Highlight
    =============================== */
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 6px rgba(59, 130, 246, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
-  }
-  100% {
-    box-shadow: 0 0 6px rgba(59, 130, 246, 0.2);
-  }
+.input-error {
+  border: 2px solid #ff5555 !important;
+  background-color: #3b1a1a;
 }
