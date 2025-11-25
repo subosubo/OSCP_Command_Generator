@@ -78,10 +78,10 @@
         placeholder="e.g. 11223344556677889900aabbccddeeff"
       />
 
-      <label for="filename1">Filename</label>
+      <label for="filename1">Filename 1</label>
       <input type="text" id="filename1" placeholder="e.g. secret.txt" />
 
-      <label for="filename2">Filename</label>
+      <label for="filename2">Filename 2</label>
       <input type="text" id="filename2" placeholder="e.g. output.txt" />
 
       <label for="wordlist1">Wordlist 1</label>
@@ -126,7 +126,7 @@
       const tagMap = {
         "<target>": "Target IPv4",
         "<target6>": "Target IPv6",
-        "<port>": "Target/Kali Port",
+        "<port>": "Target Port",
         "<kali>": "Kali IPv4",
         "<kali6>": "Kali IPv6",
         "<kaliPort>": "Kali Port",
@@ -328,10 +328,7 @@
         const map = {
           "<target>": document.getElementById("target")?.value || "",
           "<target6>": document.getElementById("target6")?.value || "",
-          "<port>":
-            document.getElementById("targetPort")?.value ||
-            document.getElementById("kaliPort")?.value ||
-            "",
+          "<port>": document.getElementById("targetPort")?.value || "",
           "<kali>": document.getElementById("kali")?.value || "",
           "<kali6>": document.getElementById("kali6")?.value || "",
           "<kaliPort>": document.getElementById("kaliPort")?.value || "",
