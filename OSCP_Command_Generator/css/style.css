@@ -1,273 +1,255 @@
-/* ===============================
-   Global Page Layout
-   =============================== */
+/* ========================
+   Base
+   ======================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  font-family: "Inter", "Segoe UI", Arial, sans-serif;
-  background-color: #0f172a;
-  color: #e2e8f0;
   margin: 0;
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
+  padding: 0;
+  height: 100%;
+  background: #0f1117;
+  color: #e6edf3;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* ===============================
-   Sidebar
-   =============================== */
+/* ========================
+   Layout
+   ======================== */
+.container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  height: 100vh;
+}
+
 .sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 300px;
-  height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
-  background: #1e293b;
+  background: #161b22;
+  border-right: 1px solid #30363d;
+  padding: 16px;
   overflow-y: auto;
-  flex-shrink: 0;
-  border-right: 1px solid #263044;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
 }
 
-.sidebar h2 {
-  margin-top: 0;
-  color: #f8fafc;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-.sidebar label {
-  display: block;
-  margin-top: 10px;
-  font-size: 13px;
-  color: #cbd5e1;
-}
-
-.sidebar input,
-.sidebar select,
-.sidebar button {
-  width: 100%;
-  padding: 8px 10px;
-  margin-top: 6px;
-  border-radius: 6px;
-  border: 1px solid #334155;
-  background: #1e293b;
-  color: #e2e8f0;
-  box-sizing: border-box;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
-}
-
-.sidebar input:focus,
-.sidebar select:focus {
-  background-color: #334155;
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
-  outline: none;
-}
-
-.sidebar button {
-  background-color: #3b82f6;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-}
-
-.sidebar button:hover {
-  background-color: #2563eb;
-  transform: scale(1.02);
-}
-
-.sidebar button:active {
-  background-color: #1d4ed8;
-  transform: scale(0.98);
-}
-
-/* ===============================
-   Main Content
-   =============================== */
 .main {
-  margin-left: 300px;
-  padding: 24px;
-  flex: 1;
-  height: 100vh;
+  padding: 20px;
   overflow-y: auto;
 }
 
-/* ===============================
-   Command Block
-   =============================== */
-.command-block {
-  position: relative;
-  background-color: #0b1220;
-  border: 1px solid #263044;
-  border-radius: 10px;
-  padding: 1rem 3.5rem 1rem 1rem;
-  margin-bottom: 1rem;
-  color: #e2e8f0;
-  font-family: "Segoe UI Semibold", Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  transition: border-color 0.3s, box-shadow 0.3s;
+/* ========================
+   Headings & Labels
+   ======================== */
+h1,
+h2,
+h3 {
+  margin: 0 0 10px;
+  font-weight: 600;
 }
 
-.command-block:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+h1 {
+  font-size: 1.3rem;
+}
+h2 {
+  font-size: 1.1rem;
 }
 
-/* Special styling for ^ top commands */
-.command-block.top-priority {
-  border: 1px solid #60a5fa;
-  box-shadow: 0 0 10px rgba(96, 165, 250, 0.35);
-  background: #13203a;
+label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+  color: #9da7b1;
 }
 
-/* Add bottom margin to the last block */
-.command-block:last-child {
-  margin-bottom: 2.5rem;
+/* ========================
+   Form Elements
+   ======================== */
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 6px 8px;
+  background: #0d1117;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.85rem;
 }
 
-.command-block pre {
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+input::placeholder {
+  color: #9da7b1;
+}
+
+/* ========================
+   Form Grouping
+   ======================== */
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* ========================
+   Validation
+   ======================== */
+input.invalid,
+select.invalid {
+  border-color: #f85149;
+  background: #1a0f12;
+}
+
+input.valid {
+  border-color: #3fb950;
+}
+
+.error-text {
+  margin-top: 3px;
+  font-size: 0.75rem;
+  color: #f85149;
+}
+
+/* ========================
+   Buttons
+   ======================== */
+button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background: #1f6feb;
+  color: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #58a6ff;
+}
+
+button.secondary {
+  background: #1f2633;
+}
+
+button.secondary:hover {
+  background: #2a3344;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========================
+   Category List
+   ======================== */
+.category-list {
   margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.category-item {
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.category-item:hover {
+  background: #1f2633;
+}
+
+.category-item.active {
+  background: #1f6feb;
+}
+
+/* ========================
+   Command Blocks
+   ======================== */
+.command {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+}
+
+.command-title {
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: #9da7b1;
+}
+
+.command-output {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.8rem;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-/* ===============================
+/* ========================
    Copy Button
-   =============================== */
+   ======================== */
 .copy-btn {
-  position: absolute;
-  top: 50%;
-  right: 1rem;
-  transform: translateY(-50%);
-  background-color: #1e293b;
-  border: none;
-  color: #93c5fd;
-  cursor: pointer;
-  padding: 0.4rem 0.9rem;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s;
+  float: right;
+  padding: 3px 6px;
+  font-size: 0.7rem;
 }
 
-.copy-btn:hover {
-  background-color: #334155;
-  transform: translateY(-50%) scale(1.05);
+.copy-btn.copied {
+  background: #3fb950;
 }
 
-.copy-btn:active {
-  background-color: #475569;
-  transform: translateY(-50%) scale(0.95);
-}
-
-/* ===============================
-   Scrollbar (Custom)
-   =============================== */
-.sidebar::-webkit-scrollbar,
-.main::-webkit-scrollbar {
-  width: 8px;
-}
-
-.sidebar::-webkit-scrollbar-thumb,
-.main::-webkit-scrollbar-thumb {
-  background-color: #334155;
-  border-radius: 4px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover,
-.main::-webkit-scrollbar-thumb:hover {
-  background-color: #475569;
-}
-
-/* ===============================
-   Help Popup and Button
-   =============================== */
-.help-btn {
+/* ========================
+   Modal
+   ======================== */
+.modal {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #3b82f6;
-  color: #fff;
-  font-size: 20px;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  z-index: 1000;
-  box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
-  animation: glow-pulse 2.5s infinite;
-}
-
-.help-btn:hover {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
-  transform: scale(1.05);
-}
-
-.help-popup {
-  position: fixed;
-  top: 70px;
-  right: 20px;
-  width: 260px;
-  max-height: 420px;
-  overflow-y: auto;
-  background-color: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 12px;
+  inset: 0;
   display: none;
-  color: #e2e8f0;
-  font-size: 13px;
-  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
 }
 
-.help-popup table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 0.5rem;
+.modal.active {
+  display: flex;
 }
 
-.help-popup th,
-.help-popup td {
-  padding: 5px 6px;
-  border-bottom: 1px solid #334155;
-  text-align: left;
+.modal-content {
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  padding: 16px;
+  overflow-y: auto;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
 }
 
-.help-popup th {
-  color: #93c5fd;
-  font-weight: 600;
+/* ========================
+   Utilities
+   ======================== */
+.hidden {
+  display: none !important;
 }
 
-.help-popup code {
-  color: #60a5fa;
-  font-family: monospace;
+.muted {
+  color: #9da7b1;
 }
 
-/* ===============================
-   Animations
-   =============================== */
-@keyframes glow-pulse {
-  0% {
-    box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
-  }
-  100% {
-    box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
-  }
-}
-
-/* ===============================
-   Input Error Highlight
-   =============================== */
-.input-error {
-  border: 2px solid #ff5555 !important;
-  background-color: #3b1a1a;
+.spacer {
+  height: 10px;
 }
