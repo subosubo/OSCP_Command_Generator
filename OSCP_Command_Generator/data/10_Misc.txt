@@ -1,2 +1,0 @@
-Capture the flag: find / -name "local.txt" 2>/dev/null
-Interactive shell: python3 -c "import pty; pty.spawn('/bin/bash')"
