@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>OSCP Command Generator v1.2.6</title>
+    <title>OSCP Command Generator v1.2.7</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
@@ -17,6 +17,7 @@
       </select>
 
       <button id="loadBtn">Load Commands</button>
+      <button id="resetBtn">Reset</button>
 
       <label for="search">Search Commands</label>
       <input type="text" id="search" placeholder="Type to search commands..." />
@@ -97,8 +98,6 @@
         id="wordlist2"
         placeholder="/usr/share/wordlists/other.txt"
       />
-
-      <button id="resetBtn">Reset</button>
     </div>
 
     <!-- Main Content -->
@@ -112,17 +111,8 @@
     <div id="helpPopup" class="help-popup" aria-hidden="true"></div>
 
     <script>
-      /* ===============================
-   Index.html v1.2.5 - Final
-   - All features restored and verified per checklist
-   - Priority (^) lines are moved to top and sorted alphabetically
-   - Help popup displays a clean Tag / Description table
-   - Last command block spacing is preserved by CSS (.command-block:last-child)
-   =============================== */
-
       let currentCategory = "";
 
-      // Tag map used for help popup and variable replacement (keys are canonical tags)
       const tagMap = {
         "<target>": "Target IPv4",
         "<target6>": "Target IPv6",
@@ -141,7 +131,7 @@
         "<wordlist2>": "Wordlist 2",
       };
 
-      // ===== Utility =====
+      // ===== Utilities =====
       function escapeHtml(s) {
         return s
           .replace(/&/g, "&amp;")
@@ -149,7 +139,6 @@
           .replace(/>/g, "&gt;");
       }
 
-      // ===== Validation =====
       function isValidIPv4(ip) {
         return /^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.|$)){4}$/.test(ip);
       }
@@ -176,6 +165,7 @@
           clearError(input);
           return true;
         }
+
         let valid = true;
         if (
           (id === "target" || id === "kali" || id === "dcIp") &&
@@ -218,87 +208,68 @@
         return valid;
       }
 
-      // ===== Input Restrictions =====
-      function restrictIPv4Input(e) {
-        const input = e.target;
-        const allowed = [
-          "Backspace",
-          "ArrowLeft",
-          "ArrowRight",
-          "Delete",
-          "Tab",
-        ];
-        if (allowed.includes(e.key)) return;
-        if (!/[0-9.]/.test(e.key)) {
-          e.preventDefault();
-          return;
-        }
-        const caret = input.selectionStart;
-        const next =
-          input.value.slice(0, caret) + e.key + input.value.slice(caret);
-        const parts = next.split(".");
-        if (parts.length > 4) {
-          e.preventDefault();
-          return;
-        }
-        for (const p of parts) {
-          if (p === "") continue;
-          if (p.length > 1 && p.startsWith("0")) {
-            e.preventDefault();
-            return;
-          }
-          if (p.length > 3) {
-            e.preventDefault();
-            return;
-          }
-          if (/^\d+$/.test(p) && Number(p) > 255) {
-            e.preventDefault();
-            return;
-          }
-        }
-        if (
-          e.key === "." &&
-          (caret === 0 ||
-            input.value[caret - 1] === "." ||
-            input.value[caret] === ".")
-        )
-          e.preventDefault();
-      }
-      ["target", "kali", "dcIp"].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener("keydown", restrictIPv4Input);
-      });
-      ["target6", "kali6"].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el)
-          el.addEventListener("keydown", (e) => {
-            const allowed = /[0-9a-fA-F:]/;
+      // ===== Input Restrictions + Ctrl+C / Ctrl+V support =====
+      function enableIPField(input, type) {
+        input.addEventListener("keydown", (e) => {
+          if (e.ctrlKey && (e.key === "c" || e.key === "v")) return; // allow copy/paste
+          const allowed = [
+            "Backspace",
+            "ArrowLeft",
+            "ArrowRight",
+            "Delete",
+            "Tab",
+          ];
+          if (allowed.includes(e.key)) return;
+
+          if (type === "ipv4") {
+            if (!/[0-9.]/.test(e.key)) {
+              e.preventDefault();
+              return;
+            }
+            const caret = input.selectionStart;
+            const next =
+              input.value.slice(0, caret) + e.key + input.value.slice(caret);
+            const parts = next.split(".");
             if (
-              !allowed.test(e.key) &&
-              ![
-                "Backspace",
-                "ArrowLeft",
-                "ArrowRight",
-                "Delete",
-                "Tab",
-              ].includes(e.key)
+              parts.length > 4 ||
+              parts.some(
+                (p) =>
+                  p.length > 3 ||
+                  (p.length > 1 && p.startsWith("0")) ||
+                  (p !== "" && Number(p) > 255)
+              )
             )
               e.preventDefault();
-          });
-      });
+            if (
+              e.key === "." &&
+              (caret === 0 ||
+                input.value[caret - 1] === "." ||
+                input.value[caret] === ".")
+            )
+              e.preventDefault();
+          } else if (type === "ipv6") {
+            if (!/[0-9a-fA-F:]/.test(e.key)) e.preventDefault();
+          }
+        });
+      }
+
+      ["target", "kali", "dcIp"].forEach((id) =>
+        enableIPField(document.getElementById(id), "ipv4")
+      );
+      ["target6", "kali6"].forEach((id) =>
+        enableIPField(document.getElementById(id), "ipv6")
+      );
+
       ["targetPort", "kaliPort"].forEach((id) => {
         const el = document.getElementById(id);
-        if (!el) return;
         el.addEventListener("keydown", (e) => {
           if (
             !/[0-9]/.test(e.key) &&
             !["Backspace", "ArrowLeft", "ArrowRight", "Delete", "Tab"].includes(
               e.key
             )
-          ) {
+          )
             e.preventDefault();
-            return;
-          }
           const c = el.selectionStart;
           const p = el.value.slice(0, c) + e.key + el.value.slice(c);
           if (Number(p) > 65535) e.preventDefault();
@@ -313,18 +284,6 @@
 
       // ===== Apply Variables =====
       function applyVars(cmd) {
-        let result = cmd;
-        Object.keys(tagMap).forEach((tag) => {
-          const key = tag; // e.g. "<target>"
-          const id =
-            tag === "<dc-ip>"
-              ? "dcIp" // mapping exception where dash in tag differs from element id
-              : tag === "<kaliPort>"
-              ? "kaliPort"
-              : tag.replace(/[<>-]/g, ""); // fallback mapping attempt (not used for all)
-          // safe approach: search for element by known ids map
-        });
-        // simple global replace using DOM values by known ids
         const map = {
           "<target>": document.getElementById("target")?.value || "",
           "<target6>": document.getElementById("target6")?.value || "",
@@ -342,14 +301,14 @@
           "<wordlist1>": document.getElementById("wordlist1")?.value || "",
           "<wordlist2>": document.getElementById("wordlist2")?.value || "",
         };
-        Object.entries(map).forEach(([tag, val]) => {
-          // replace all occurrences
-          result = result.split(tag).join(val || tag);
-        });
+        let result = cmd;
+        Object.entries(map).forEach(
+          ([tag, val]) => (result = result.split(tag).join(val || tag))
+        );
         return result;
       }
 
-      // ===== Fetch with caching & try/catch =====
+      // ===== Smart Fetch =====
       async function smartFetch(url) {
         try {
           const cacheKey = `cache_${url}`;
@@ -375,7 +334,7 @@
         }
       }
 
-      // ===== Load Categories =====
+      // ===== Load Categories (directory listing) =====
       async function loadCategories(preserveValue = "") {
         try {
           const text = await smartFetch("data/");
@@ -391,10 +350,7 @@
             opt.textContent = name;
             select.appendChild(opt);
           });
-          if (preserveValue) {
-            // if preserveValue is a filename or category name, attempt to set it
-            select.value = preserveValue;
-          }
+          if (preserveValue) select.value = preserveValue;
         } catch (err) {
           console.error("loadCategories error:", err);
           const select = document.getElementById("category");
@@ -403,13 +359,7 @@
         }
       }
 
-      /*
-  ===== Load Commands =====
-  - lines starting with ^ are priority lines:
-    * the leading caret is removed before parsing
-    * priority entries are collected and sorted alphabetically by title
-  - consecutive lines with same title are merged
-*/
+      // ===== Load & Render Commands =====
       async function loadCommands(cat) {
         const file = "data/" + cat + ".txt";
         try {
@@ -418,7 +368,6 @@
             .split(/\r?\n/)
             .map((l) => l.replace(/\r/g, ""))
             .filter((l) => l.trim() !== "");
-          // parse lines into objects: {title, cmd, priority}
           const parsed = [];
           for (let raw of rawLines) {
             let line = raw.trim();
@@ -432,8 +381,6 @@
             const cmd = idx === -1 ? line : line.slice(idx + 1).trim();
             parsed.push({ title, cmd, priority });
           }
-
-          // merge consecutive same-title entries while preserving priority flag
           const merged = [];
           for (const item of parsed) {
             if (
@@ -443,24 +390,14 @@
               merged[merged.length - 1].cmd += " ;\n" + item.cmd;
               merged[merged.length - 1].priority =
                 merged[merged.length - 1].priority || item.priority;
-            } else {
-              merged.push({
-                title: item.title,
-                cmd: item.cmd,
-                priority: item.priority,
-              });
-            }
+            } else merged.push({ ...item });
           }
-
-          // split priority vs normal
-          const priorityEntries = merged.filter((e) => e.priority);
+          const priorityEntries = merged
+            .filter((e) => e.priority)
+            .sort((a, b) =>
+              a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+            );
           const normalEntries = merged.filter((e) => !e.priority);
-
-          // alphabetical sort priority entries by title (case-insensitive)
-          priorityEntries.sort((a, b) =>
-            a.title.toLowerCase().localeCompare(b.title.toLowerCase())
-          );
-
           return [...priorityEntries, ...normalEntries];
         } catch (err) {
           console.error("loadCommands error:", err);
@@ -468,7 +405,6 @@
         }
       }
 
-      // ===== Render Commands =====
       async function renderCommands(selectedCategory = "") {
         const selectEl = document.getElementById("category");
         const cat =
@@ -482,51 +418,39 @@
           return;
         }
         if (!validateAllInputs()) return;
-
         container.innerHTML = "<p>Loading...</p>";
         try {
           const commands = await loadCommands(cat);
           const search = document.getElementById("search").value.toLowerCase();
-
-          // filter by search across title or cmd
           const filtered = commands.filter(
             (c) =>
               c.title.toLowerCase().includes(search) ||
               c.cmd.toLowerCase().includes(search)
           );
           container.innerHTML = "";
-
           if (!filtered.length) {
             container.innerHTML = "<p>No commands found.</p>";
             currentCategory = cat;
             return;
           }
-
-          // build DOM nodes
-          filtered.forEach((c, idx) => {
+          filtered.forEach((c) => {
             const card = document.createElement("div");
             card.className =
               "command-block" + (c.priority ? " top-priority" : "");
-            // title
             const title = document.createElement("div");
             title.innerHTML = "<strong>" + escapeHtml(c.title) + "</strong>";
-            // copy button
             const btn = document.createElement("button");
             btn.className = "copy-btn";
             btn.type = "button";
             btn.textContent = "Copy";
-            // pre (template)
             const pre = document.createElement("pre");
             pre.dataset.template = c.cmd;
             pre.textContent = applyVars(c.cmd);
-            // assemble
             card.appendChild(title);
             card.appendChild(btn);
             card.appendChild(pre);
             container.appendChild(card);
           });
-
-          // ensure last-child spacing handled by CSS (.command-block:last-child)
           attachCopyHandlers();
           currentCategory = cat;
         } catch (err) {
@@ -536,7 +460,6 @@
         }
       }
 
-      // ===== Copy button handlers =====
       function attachCopyHandlers() {
         document.querySelectorAll(".copy-btn").forEach((btn) => {
           btn.onclick = async () => {
@@ -555,11 +478,9 @@
         });
       }
 
-      // ===== Live updates for variable inputs =====
+      // ===== Live Updates =====
       function enableLiveUpdates() {
         Object.keys(tagMap).forEach((tag) => {
-          // map tag -> input element id
-          // use explicit mapping for accuracy
           const map = {
             "<target>": "target",
             "<target6>": "target6",
@@ -583,38 +504,33 @@
           if (!el) return;
           el.addEventListener("input", () => {
             validateField(el);
-            // only update visible command blocks if category matches
             const catNow = document.getElementById("category").value;
             if (!currentCategory || catNow !== currentCategory) return;
-            document.querySelectorAll(".command-block pre").forEach((pre) => {
-              pre.textContent = applyVars(pre.dataset.template);
-            });
+            document
+              .querySelectorAll(".command-block pre")
+              .forEach(
+                (pre) => (pre.textContent = applyVars(pre.dataset.template))
+              );
           });
         });
-
-        // search updates render (keeps selected category/currentCategory)
         document
           .getElementById("search")
           .addEventListener("input", () => renderCommands(currentCategory));
       }
 
-      // ===== Help popup (table layout) =====
+      // ===== Help Popup =====
       (function populateHelp() {
         const helpPopup = document.getElementById("helpPopup");
         try {
           const rows = Object.entries(tagMap)
-            .map(([tag, desc]) => {
-              const safeTag = escapeHtml(tag);
-              const safeDesc = escapeHtml(desc);
-              return `<tr><td><code>${safeTag}</code></td><td>${safeDesc}</td></tr>`;
-            })
+            .map(
+              ([tag, desc]) =>
+                `<tr><td><code>${escapeHtml(tag)}</code></td><td>${escapeHtml(
+                  desc
+                )}</td></tr>`
+            )
             .join("");
-          helpPopup.innerHTML = `
-      <table>
-        <thead><tr><th>Tag</th><th>Description</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
+          helpPopup.innerHTML = `<table><thead><tr><th>Tag</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table>`;
           helpPopup.style.display = "none";
           helpPopup.setAttribute("aria-hidden", "true");
         } catch (err) {
@@ -641,15 +557,14 @@
         .getElementById("helpPopup")
         .addEventListener("click", toggleHelp);
 
-      // ===== Event listeners =====
+      // ===== Event Listeners =====
       document.getElementById("loadBtn").addEventListener("click", async () => {
         const searchInput = document.getElementById("search");
-        searchInput.value = ""; // clear search
-        searchInput.focus(); // focus search
+        searchInput.value = "";
+        searchInput.focus();
         const selected =
           document.getElementById("category").value || currentCategory;
         try {
-          // reload categories but preserve selection (in case data/ changed)
           await loadCategories(selected);
         } catch (e) {
           console.warn(
