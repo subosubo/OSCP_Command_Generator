@@ -1,603 +1,1536 @@
-<!DOCTYPE html>
+<!-- index.html -->
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>OSCP Command Generator v1.2.7</title>
+    <title>OSCP Command Generator</title>
     <link rel="stylesheet" href="css/style.css" />
+    <!-- Prevent /favicon.ico 404 without adding a file -->
+    <link
+      rel="icon"
+      href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🛠️</text></svg>'
+    />
   </head>
+
   <body>
     <!-- Sidebar -->
-    <div class="sidebar">
+    <aside class="sidebar">
       <h2>Command Builder</h2>
 
-      <label for="category">Category</label>
-      <select id="category">
-        <option value="">Select category</option>
-      </select>
+      <details open class="panel">
+        <summary>Category & Actions</summary>
 
-      <button id="loadBtn">Load Commands</button>
-      <button id="resetBtn">Reset</button>
+        <label for="category">Category</label>
+        <select id="category">
+          <option value="">Select category</option>
+        </select>
 
-      <label for="search">Search Commands</label>
-      <input type="text" id="search" placeholder="Type to search commands..." />
+        <div class="btn-row">
+          <button id="loadBtn" type="button">Load Commands</button>
+          <button id="resetBtn" class="btn-secondary" type="button">
+            Reset
+          </button>
+        </div>
 
-      <label for="target">Target IP (IPv4)</label>
-      <input type="text" id="target" placeholder="e.g. 192.168.1.10" />
+        <label for="search">Search Commands</label>
+        <input
+          type="text"
+          id="search"
+          placeholder="Type to search commands..."
+        />
+      </details>
 
-      <label for="target6">Target IP (IPv6)</label>
-      <input
-        type="text"
-        id="target6"
-        placeholder="e.g. fe80::1ff:fe23:4567:890a"
-      />
+      <details open class="panel">
+        <summary>Target</summary>
 
-      <label for="targetPort">Target Port</label>
-      <input
-        type="number"
-        id="targetPort"
-        placeholder="1–65535"
-        min="1"
-        max="65535"
-      />
+        <label for="target">Target IP (IPv4)</label>
+        <input type="text" id="target" placeholder="e.g. 192.168.1.10" />
 
-      <label for="kali">Kali IP (IPv4)</label>
-      <input type="text" id="kali" placeholder="e.g. 10.0.0.5" />
+        <label for="target6">Target IP (IPv6)</label>
+        <input
+          type="text"
+          id="target6"
+          placeholder="e.g. fe80::1ff:fe23:4567:890a"
+        />
 
-      <label for="kali6">Kali IP (IPv6)</label>
-      <input
-        type="text"
-        id="kali6"
-        placeholder="e.g. fe80::1ff:fe23:abcd:1234"
-      />
+        <label for="targetPort">Target Port</label>
+        <input
+          type="number"
+          id="targetPort"
+          placeholder="1–65535"
+          min="1"
+          max="65535"
+        />
+      </details>
 
-      <label for="kaliPort">Kali Port</label>
-      <input
-        type="number"
-        id="kaliPort"
-        placeholder="1–65535"
-        min="1"
-        max="65535"
-      />
+      <details class="panel">
+        <summary>Kali</summary>
 
-      <label for="user">Username</label>
-      <input type="text" id="user" placeholder="e.g. admin" />
+        <label for="kali">Kali IP (IPv4)</label>
+        <input type="text" id="kali" placeholder="e.g. 10.0.0.5" />
 
-      <label for="password">Password</label>
-      <input type="text" id="password" placeholder="e.g. P@ssw0rd" />
+        <label for="kali6">Kali IP (IPv6)</label>
+        <input
+          type="text"
+          id="kali6"
+          placeholder="e.g. fe80::1ff:fe23:abcd:1234"
+        />
 
-      <label for="domain">Domain</label>
-      <input type="text" id="domain" placeholder="e.g. example.com" />
+        <label for="kaliPort">Kali Port</label>
+        <input
+          type="number"
+          id="kaliPort"
+          placeholder="1–65535"
+          min="1"
+          max="65535"
+        />
+      </details>
 
-      <label for="dcIp">Domain Controller IP</label>
-      <input type="text" id="dcIp" placeholder="e.g. 192.168.1.1" />
+      <details class="panel">
+        <summary>Auth / Domain</summary>
 
-      <label for="ntlm">NTLM Hash</label>
-      <input
-        type="text"
-        id="ntlm"
-        placeholder="e.g. 11223344556677889900aabbccddeeff"
-      />
+        <label for="user">Username</label>
+        <input type="text" id="user" placeholder="e.g. admin" />
 
-      <label for="filename1">Filename 1</label>
-      <input type="text" id="filename1" placeholder="e.g. secret.txt" />
+        <label for="password">Password</label>
+        <!-- Password masking toggle removed (no eye button/feature) -->
+        <input type="password" id="password" placeholder="e.g. P@ssw0rd" />
 
-      <label for="filename2">Filename 2</label>
-      <input type="text" id="filename2" placeholder="e.g. output.txt" />
+        <label for="domain">Domain</label>
+        <input type="text" id="domain" placeholder="e.g. example.com" />
 
-      <label for="wordlist1">Wordlist 1</label>
-      <input
-        type="text"
-        id="wordlist1"
-        placeholder="/usr/share/wordlists/rockyou.txt"
-      />
+        <label for="dcIp">Domain Controller IP</label>
+        <input type="text" id="dcIp" placeholder="e.g. 192.168.1.1" />
 
-      <label for="wordlist2">Wordlist 2</label>
-      <input
-        type="text"
-        id="wordlist2"
-        placeholder="/usr/share/wordlists/other.txt"
-      />
-    </div>
+        <label for="ntlm">NTLM Hash</label>
+        <input
+          type="text"
+          id="ntlm"
+          placeholder="e.g. 11223344556677889900aabbccddeeff"
+        />
+      </details>
+
+      <details class="panel">
+        <summary>Files / Wordlists</summary>
+
+        <label for="filename1">Filename 1</label>
+        <input type="text" id="filename1" placeholder="e.g. secret.txt" />
+
+        <label for="filename2">Filename 2</label>
+        <input type="text" id="filename2" placeholder="e.g. output.txt" />
+
+        <label for="wordlist1">Wordlist 1</label>
+        <input
+          type="text"
+          id="wordlist1"
+          placeholder="/usr/share/wordlists/rockyou.txt"
+        />
+
+        <label for="wordlist2">Wordlist 2</label>
+        <input
+          type="text"
+          id="wordlist2"
+          placeholder="/usr/share/wordlists/other.txt"
+        />
+      </details>
+
+      <details class="panel">
+        <summary>Exam Controls</summary>
+
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="toggleBlockCopy" />
+            <span>Block copy if placeholders remain</span>
+          </label>
+
+          <label class="toggle">
+            <input type="checkbox" id="toggleRemember" />
+            <span>Remember non-sensitive inputs</span>
+          </label>
+        </div>
+
+        <div class="hint">
+          Shortcuts: <kbd>/</kbd> focus search • <kbd>j</kbd>/<kbd>k</kbd> move
+          • <kbd>c</kbd> copy • <kbd>Ctrl</kbd>+<kbd>+</kbd>/<kbd>-</kbd>/<kbd
+            >0</kbd
+          >
+          font
+        </div>
+      </details>
+    </aside>
 
     <!-- Main Content -->
-    <div class="main">
-      <h2>Generated Commands</h2>
-      <div id="commands"></div>
-    </div>
+    <main class="main" id="mainScroller">
+      <div class="toolbar" id="toolbar">
+        <div class="toolbar-left">
+          <h2>Generated Commands</h2>
+          <span class="subtle" id="statusText">Ready</span>
+        </div>
 
-    <!-- Help Button and Popup -->
-    <button id="helpBtn" class="help-btn">?</button>
+        <div class="toolbar-right">
+          <!-- order requested: Credential, Non-credential, Priority, Favorites -->
+          <button
+            class="pill"
+            id="toggleCredential"
+            type="button"
+            aria-pressed="false"
+          >
+            Credential
+          </button>
+          <button
+            class="pill"
+            id="toggleNonCredential"
+            type="button"
+            aria-pressed="false"
+          >
+            Non-credential
+          </button>
+          <button
+            class="pill"
+            id="togglePriority"
+            type="button"
+            aria-pressed="false"
+          >
+            Priority
+          </button>
+          <button
+            class="pill"
+            id="toggleFavorites"
+            type="button"
+            aria-pressed="false"
+          >
+            Favorites
+          </button>
+        </div>
+      </div>
+
+      <div id="commands"></div>
+    </main>
+
+    <!-- Help -->
+    <button id="helpBtn" class="help-btn" aria-expanded="false">?</button>
     <div id="helpPopup" class="help-popup" aria-hidden="true"></div>
 
+    <!-- Scroll to top -->
+    <button
+      id="toTopBtn"
+      class="to-top"
+      type="button"
+      aria-label="Scroll to top"
+    >
+      ↑
+    </button>
+
+    <!-- Toast -->
+    <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+
     <script>
-      let currentCategory = "";
+      (() => {
+        "use strict";
 
-      const tagMap = {
-        "<target>": "Target IPv4",
-        "<target6>": "Target IPv6",
-        "<port>": "Target Port",
-        "<kali>": "Kali IPv4",
-        "<kali6>": "Kali IPv6",
-        "<kaliPort>": "Kali Port",
-        "<user>": "Username",
-        "<password>": "Password",
-        "<domain>": "Domain",
-        "<dc-ip>": "Domain Controller IP",
-        "<ntlm>": "NTLM Hash",
-        "<filename1>": "Filename 1",
-        "<filename2>": "Filename 2",
-        "<wordlist1>": "Wordlist 1",
-        "<wordlist2>": "Wordlist 2",
-      };
-
-      // ===== Utilities =====
-      function escapeHtml(s) {
-        return s
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-      }
-
-      function isValidIPv4(ip) {
-        return /^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.|$)){4}$/.test(ip);
-      }
-      function isValidIPv6(ip) {
-        return /^(([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4})$/.test(ip);
-      }
-      function isValidPort(port) {
-        return /^\d+$/.test(port) && port >= 1 && port <= 65535;
-      }
-
-      function showError(input, msg) {
-        input.classList.add("input-error");
-        input.title = msg;
-      }
-      function clearError(input) {
-        input.classList.remove("input-error");
-        input.title = "";
-      }
-
-      function validateField(input) {
-        const id = input.id;
-        const val = input.value.trim();
-        if (!val) {
-          clearError(input);
-          return true;
-        }
-
-        let valid = true;
-        if (
-          (id === "target" || id === "kali" || id === "dcIp") &&
-          !isValidIPv4(val)
-        ) {
-          valid = false;
-          showError(input, "Invalid IPv4 address");
-        }
-        if ((id === "target6" || id === "kali6") && !isValidIPv6(val)) {
-          valid = false;
-          showError(input, "Invalid IPv6 address");
-        }
-        if ((id === "targetPort" || id === "kaliPort") && !isValidPort(val)) {
-          valid = false;
-          showError(input, "Port must be 1–65535");
-        }
-        if (valid) clearError(input);
-        return valid;
-      }
-
-      function validateAllInputs() {
-        const ids = [
-          "target",
-          "target6",
-          "targetPort",
-          "kali",
-          "kali6",
-          "kaliPort",
-          "dcIp",
-        ];
-        let valid = true;
-        ids.forEach((id) => {
-          const el = document.getElementById(id);
-          if (el && !validateField(el)) valid = false;
-        });
-        if (!valid)
-          alert(
-            "⚠️ Some fields are invalid. Hover over red fields for details."
-          );
-        return valid;
-      }
-
-      // ===== Input Restrictions + Ctrl+C / Ctrl+V support =====
-      function enableIPField(input, type) {
-        input.addEventListener("keydown", (e) => {
-          if (e.ctrlKey && (e.key === "c" || e.key === "v")) return; // allow copy/paste
-          const allowed = [
-            "Backspace",
-            "ArrowLeft",
-            "ArrowRight",
-            "Delete",
-            "Tab",
-          ];
-          if (allowed.includes(e.key)) return;
-
-          if (type === "ipv4") {
-            if (!/[0-9.]/.test(e.key)) {
-              e.preventDefault();
-              return;
-            }
-            const caret = input.selectionStart;
-            const next =
-              input.value.slice(0, caret) + e.key + input.value.slice(caret);
-            const parts = next.split(".");
-            if (
-              parts.length > 4 ||
-              parts.some(
-                (p) =>
-                  p.length > 3 ||
-                  (p.length > 1 && p.startsWith("0")) ||
-                  (p !== "" && Number(p) > 255)
-              )
-            )
-              e.preventDefault();
-            if (
-              e.key === "." &&
-              (caret === 0 ||
-                input.value[caret - 1] === "." ||
-                input.value[caret] === ".")
-            )
-              e.preventDefault();
-          } else if (type === "ipv6") {
-            if (!/[0-9a-fA-F:]/.test(e.key)) e.preventDefault();
-          }
-        });
-      }
-
-      ["target", "kali", "dcIp"].forEach((id) =>
-        enableIPField(document.getElementById(id), "ipv4")
-      );
-      ["target6", "kali6"].forEach((id) =>
-        enableIPField(document.getElementById(id), "ipv6")
-      );
-
-      ["targetPort", "kaliPort"].forEach((id) => {
-        const el = document.getElementById(id);
-        el.addEventListener("keydown", (e) => {
-          if (
-            !/[0-9]/.test(e.key) &&
-            !["Backspace", "ArrowLeft", "ArrowRight", "Delete", "Tab"].includes(
-              e.key
-            )
-          )
-            e.preventDefault();
-          const c = el.selectionStart;
-          const p = el.value.slice(0, c) + e.key + el.value.slice(c);
-          if (Number(p) > 65535) e.preventDefault();
-        });
-        el.addEventListener("input", () => {
-          const val = el.value.trim();
-          if (!val || (Number(val) >= 1 && Number(val) <= 65535))
-            clearError(el);
-          else showError(el, "Port must be 1–65535");
-        });
-      });
-
-      // ===== Apply Variables =====
-      function applyVars(cmd) {
-        const map = {
-          "<target>": document.getElementById("target")?.value || "",
-          "<target6>": document.getElementById("target6")?.value || "",
-          "<port>": document.getElementById("targetPort")?.value || "",
-          "<kali>": document.getElementById("kali")?.value || "",
-          "<kali6>": document.getElementById("kali6")?.value || "",
-          "<kaliPort>": document.getElementById("kaliPort")?.value || "",
-          "<user>": document.getElementById("user")?.value || "",
-          "<password>": document.getElementById("password")?.value || "",
-          "<domain>": document.getElementById("domain")?.value || "",
-          "<dc-ip>": document.getElementById("dcIp")?.value || "",
-          "<ntlm>": document.getElementById("ntlm")?.value || "",
-          "<filename1>": document.getElementById("filename1")?.value || "",
-          "<filename2>": document.getElementById("filename2")?.value || "",
-          "<wordlist1>": document.getElementById("wordlist1")?.value || "",
-          "<wordlist2>": document.getElementById("wordlist2")?.value || "",
+        // =========================
+        // Config / Maps
+        // =========================
+        const TAG_MAP = {
+          "<target>": "Target IPv4",
+          "<target6>": "Target IPv6",
+          "<port>": "Target Port",
+          "<kali>": "Kali IPv4",
+          "<kali6>": "Kali IPv6",
+          "<kaliPort>": "Kali Port",
+          "<user>": "Username",
+          "<password>": "Password",
+          "<domain>": "Domain",
+          "<dc-ip>": "Domain Controller IP",
+          "<ntlm>": "NTLM Hash",
+          "<filename1>": "Filename 1",
+          "<filename2>": "Filename 2",
+          "<wordlist1>": "Wordlist 1",
+          "<wordlist2>": "Wordlist 2",
         };
-        let result = cmd;
-        Object.entries(map).forEach(
-          ([tag, val]) => (result = result.split(tag).join(val || tag))
-        );
-        return result;
-      }
 
-      // ===== Smart Fetch =====
-      async function smartFetch(url) {
-        try {
-          const cacheKey = `cache_${url}`;
-          const etagKey = `etag_${url}`;
+        const TAG_TO_ID = {
+          "<target>": "target",
+          "<target6>": "target6",
+          "<port>": "targetPort",
+          "<kali>": "kali",
+          "<kali6>": "kali6",
+          "<kaliPort>": "kaliPort",
+          "<user>": "user",
+          "<password>": "password",
+          "<domain>": "domain",
+          "<dc-ip>": "dcIp",
+          "<ntlm>": "ntlm",
+          "<filename1>": "filename1",
+          "<filename2>": "filename2",
+          "<wordlist1>": "wordlist1",
+          "<wordlist2>": "wordlist2",
+        };
+
+        const STORAGE = {
+          favorites: "oscp_favorites_v1",
+          ui: "oscp_ui_v2",
+          inputs: "oscp_inputs_v1",
+          fetchCache: (url) => `cache_${url}`,
+          fetchEtag: (url) => `etag_${url}`,
+        };
+
+        // =========================
+        // DOM helpers
+        // =========================
+        const $ = (id) => document.getElementById(id);
+        const qs = (sel, root = document) => root.querySelector(sel);
+        const qsa = (sel, root = document) =>
+          Array.from(root.querySelectorAll(sel));
+
+        const dom = {
+          category: () => $("category"),
+          loadBtn: () => $("loadBtn"),
+          resetBtn: () => $("resetBtn"),
+          search: () => $("search"),
+          commands: () => $("commands"),
+          status: () => $("statusText"),
+          helpBtn: () => $("helpBtn"),
+          helpPopup: () => $("helpPopup"),
+          toTopBtn: () => $("toTopBtn"),
+          toast: () => $("toast"),
+          main: () => $("mainScroller"),
+          toggleCredential: () => $("toggleCredential"),
+          toggleNonCredential: () => $("toggleNonCredential"),
+          togglePriority: () => $("togglePriority"),
+          toggleFavorites: () => $("toggleFavorites"),
+          toggleBlockCopy: () => $("toggleBlockCopy"),
+          toggleRemember: () => $("toggleRemember"),
+        };
+
+        // =========================
+        // State
+        // =========================
+        let currentCategory = "";
+        let selectedIndex = 0;
+
+        const state = {
+          credentialOnly: false,
+          nonCredentialOnly: false,
+          priorityOnly: false,
+          favoritesOnly: false,
+          // Wider default view:
+          fontScale: -1, // -2..+3
+        };
+
+        // DOM-plan caches for smooth filtering
+        let currentEntries = []; // parsed command objects for category
+        let cardIndex = []; // { entry, el, key, priority, isCred, searchText }
+        let filterScheduled = false;
+
+        // =========================
+        // UI feedback
+        // =========================
+        function setStatus(text) {
+          const el = dom.status();
+          if (el) el.textContent = text;
+        }
+
+        function toast(msg) {
+          const el = dom.toast();
+          if (!el) return;
+          el.textContent = msg;
+          el.classList.add("show");
+          clearTimeout(el._t);
+          el._t = setTimeout(() => el.classList.remove("show"), 1400);
+        }
+
+        // =========================
+        // Storage
+        // =========================
+        function safeJsonParse(s, fallback) {
+          try {
+            return JSON.parse(s);
+          } catch {
+            return fallback;
+          }
+        }
+
+        function getFavorites() {
+          return safeJsonParse(
+            localStorage.getItem(STORAGE.favorites) || "[]",
+            [],
+          );
+        }
+
+        function setFavorites(arr) {
+          localStorage.setItem(STORAGE.favorites, JSON.stringify(arr));
+        }
+
+        function favKey(cat, title, cmd) {
+          const sig = (cmd || "").slice(0, 60);
+          return `${cat}||${title}||${sig}`;
+        }
+
+        function isFav(key) {
+          return getFavorites().includes(key);
+        }
+
+        function toggleFav(key) {
+          const favs = getFavorites();
+          const idx = favs.indexOf(key);
+          if (idx >= 0) favs.splice(idx, 1);
+          else favs.unshift(key);
+          setFavorites(favs.slice(0, 250));
+          return idx < 0;
+        }
+
+        function loadUI() {
+          const saved = safeJsonParse(
+            localStorage.getItem(STORAGE.ui) || "{}",
+            {},
+          );
+          Object.assign(state, saved);
+          applyUI();
+        }
+
+        function saveUI() {
+          localStorage.setItem(STORAGE.ui, JSON.stringify(state));
+        }
+
+        function applyUI() {
+          document.body.dataset.font = String(state.fontScale);
+          dom
+            .toggleCredential()
+            .setAttribute("aria-pressed", String(!!state.credentialOnly));
+          dom
+            .toggleNonCredential()
+            .setAttribute("aria-pressed", String(!!state.nonCredentialOnly));
+          dom
+            .togglePriority()
+            .setAttribute("aria-pressed", String(!!state.priorityOnly));
+          dom
+            .toggleFavorites()
+            .setAttribute("aria-pressed", String(!!state.favoritesOnly));
+        }
+
+        // =========================
+        // Validation
+        // =========================
+        const reIPv4 = /^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.|$)){4}$/;
+        const reIPv6 = /^(([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4})$/;
+
+        function isValidIPv4(ip) {
+          return reIPv4.test(ip);
+        }
+        function isValidIPv6(ip) {
+          return reIPv6.test(ip);
+        }
+        function isValidPort(p) {
+          return /^\d+$/.test(p) && p >= 1 && p <= 65535;
+        }
+
+        function showError(input, msg) {
+          input.classList.add("input-error");
+          input.title = msg;
+        }
+        function clearError(input) {
+          input.classList.remove("input-error");
+          input.title = "";
+        }
+
+        function validateField(input) {
+          const id = input.id;
+          const val = input.value.trim();
+          if (!val) {
+            clearError(input);
+            return true;
+          }
+
+          let ok = true;
+
+          if (
+            (id === "target" || id === "kali" || id === "dcIp") &&
+            !isValidIPv4(val)
+          ) {
+            ok = false;
+            showError(input, "Invalid IPv4 address");
+          }
+          if ((id === "target6" || id === "kali6") && !isValidIPv6(val)) {
+            ok = false;
+            showError(input, "Invalid IPv6 address");
+          }
+          if (
+            (id === "targetPort" || id === "kaliPort") &&
+            !isValidPort(Number(val))
+          ) {
+            ok = false;
+            showError(input, "Port must be 1–65535");
+          }
+
+          if (ok) clearError(input);
+          return ok;
+        }
+
+        function validateAllInputs() {
+          const ids = [
+            "target",
+            "target6",
+            "targetPort",
+            "kali",
+            "kali6",
+            "kaliPort",
+            "dcIp",
+          ];
+          let ok = true;
+          for (const id of ids) {
+            const el = $(id);
+            if (el && !validateField(el)) ok = false;
+          }
+          if (!ok)
+            alert(
+              "⚠️ Some fields are invalid. Hover over red fields for details.",
+            );
+          return ok;
+        }
+
+        // =========================
+        // Input restrictions
+        // =========================
+        function enableIPField(input, type) {
+          input.addEventListener("keydown", (e) => {
+            if (e.ctrlKey && ["c", "v", "a", "x"].includes(e.key.toLowerCase()))
+              return;
+
+            const allowed = [
+              "Backspace",
+              "ArrowLeft",
+              "ArrowRight",
+              "Delete",
+              "Tab",
+              "Home",
+              "End",
+            ];
+            if (allowed.includes(e.key)) return;
+
+            if (type === "ipv4") {
+              if (!/[0-9.]/.test(e.key)) return e.preventDefault();
+
+              const caret = input.selectionStart;
+              const next =
+                input.value.slice(0, caret) + e.key + input.value.slice(caret);
+              const parts = next.split(".");
+              if (
+                parts.length > 4 ||
+                parts.some(
+                  (p) =>
+                    p.length > 3 ||
+                    (p.length > 1 && p.startsWith("0")) ||
+                    (p !== "" && Number(p) > 255),
+                )
+              )
+                return e.preventDefault();
+
+              if (
+                e.key === "." &&
+                (caret === 0 ||
+                  input.value[caret - 1] === "." ||
+                  input.value[caret] === ".")
+              ) {
+                return e.preventDefault();
+              }
+            }
+
+            if (type === "ipv6") {
+              if (!/[0-9a-fA-F:]/.test(e.key)) return e.preventDefault();
+            }
+          });
+        }
+
+        function enablePortField(el) {
+          el.addEventListener("keydown", (e) => {
+            const allowed = [
+              "Backspace",
+              "ArrowLeft",
+              "ArrowRight",
+              "Delete",
+              "Tab",
+              "Home",
+              "End",
+            ];
+            if (allowed.includes(e.key)) return;
+            if (!/[0-9]/.test(e.key)) return e.preventDefault();
+
+            const c = el.selectionStart;
+            const p = el.value.slice(0, c) + e.key + el.value.slice(c);
+            if (Number(p) > 65535) return e.preventDefault();
+          });
+
+          el.addEventListener("input", () => {
+            const val = el.value.trim();
+            if (!val || (Number(val) >= 1 && Number(val) <= 65535))
+              clearError(el);
+            else showError(el, "Port must be 1–65535");
+          });
+        }
+
+        // =========================
+        // Template substitution + needs
+        // =========================
+        function applyVars(template) {
+          const map = {};
+          for (const [tag, id] of Object.entries(TAG_TO_ID)) {
+            map[tag] = $(id)?.value || "";
+          }
+          let out = template;
+          for (const [tag, val] of Object.entries(map)) {
+            out = out.split(tag).join(val || tag);
+          }
+          return out;
+        }
+
+        function escapeRegex(s) {
+          return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
+
+        // robust tag extraction (handles <<< <target>, etc.)
+        const TAG_REGEX = new RegExp(
+          Object.keys(TAG_MAP).map(escapeRegex).join("|"),
+          "g",
+        );
+
+        function extractTags(template) {
+          const tags = new Set();
+          const matches = template.match(TAG_REGEX) || [];
+          for (const t of matches) tags.add(t);
+          return [...tags];
+        }
+
+        function missingTags(template) {
+          const tags = extractTags(template);
+          const missing = [];
+          for (const t of tags) {
+            const id = TAG_TO_ID[t];
+            const el = id ? $(id) : null;
+            if (el && !String(el.value || "").trim()) missing.push(t);
+          }
+          return missing;
+        }
+
+        function shouldBlockCopy(missing) {
+          return dom.toggleBlockCopy()?.checked && missing.length > 0;
+        }
+
+        function isCredentialedTemplate(templateAll) {
+          const tags = extractTags(templateAll);
+          return tags.includes("<user>") && tags.includes("<password>");
+        }
+
+        // =========================
+        // Highlighting
+        // =========================
+        function escapeHtml(s) {
+          return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        }
+
+        function highlightTitle(title) {
+          const esc = escapeHtml(title);
+          // highlight hashtags as comments only if NOT followed by a digit
+          return esc.replace(
+            /(^|\s)(#(?!\d)[^\r\n]*)$/gm,
+            `$1<span class="comment">$2</span>`,
+          );
+        }
+
+        function highlightCommand(text) {
+          let out = escapeHtml(text);
+
+          // placeholders
+          out = out.replace(/(&lt;[^&]+&gt;)/g, `<span class="ph">$1</span>`);
+
+          // flags
+          out = out.replace(
+            /(^|\s)(--?[a-zA-Z0-9][a-zA-Z0-9-]*)/g,
+            `$1<span class="flag">$2</span>`,
+          );
+
+          // operators
+          out = out.replace(
+            /(\||&gt;|&lt;|&amp;&amp;|\|\|)/g,
+            `<span class="op">$1</span>`,
+          );
+
+          // comments (#...) but NOT numbering like #1, #2, #123
+          out = out.replace(
+            /(^|\s)(#(?!\d)[^\r\n]*)$/gm,
+            `$1<span class="comment">$2</span>`,
+          );
+
+          return out;
+        }
+
+        // =========================
+        // Fetch + caching
+        // =========================
+        async function smartFetch(url) {
+          const cacheKey = STORAGE.fetchCache(url);
+          const etagKey = STORAGE.fetchEtag(url);
+
           const oldEtag = localStorage.getItem(etagKey);
           const headers = oldEtag ? { "If-None-Match": oldEtag } : {};
+
           const res = await fetch(url, { headers });
           if (res.status === 304 && localStorage.getItem(cacheKey))
             return localStorage.getItem(cacheKey);
+
           if (!res.ok)
             throw new Error(`Failed to fetch ${url} (${res.status})`);
+
           const text = await res.text();
           const newEtag =
             res.headers.get("ETag") ||
             res.headers.get("Last-Modified") ||
-            Date.now();
+            String(Date.now());
           localStorage.setItem(cacheKey, text);
           localStorage.setItem(etagKey, newEtag);
           return text;
-        } catch (err) {
-          console.error("smartFetch error:", err);
-          throw err;
         }
-      }
 
-      // ===== Load Categories (directory listing) =====
-      async function loadCategories(preserveValue = "") {
-        try {
-          const text = await smartFetch("data/");
-          const files = [...text.matchAll(/href="([^"]+\.txt)"/g)].map(
-            (m) => m[1]
-          );
-          const names = files.map((f) => f.replace(".txt", ""));
-          const select = document.getElementById("category");
-          select.innerHTML = '<option value="">Select category</option>';
-          names.forEach((name) => {
-            const opt = document.createElement("option");
-            opt.value = name;
-            opt.textContent = name;
-            select.appendChild(opt);
-          });
-          if (preserveValue) select.value = preserveValue;
-        } catch (err) {
-          console.error("loadCategories error:", err);
-          const select = document.getElementById("category");
-          select.innerHTML =
-            '<option value="miscellaneous">miscellaneous</option>';
+        // =========================
+        // Load categories & commands
+        // =========================
+        async function loadCategories(preserveValue = "") {
+          try {
+            const html = await smartFetch("data/");
+            const files = [...html.matchAll(/href="([^"]+\.txt)"/g)].map(
+              (m) => m[1],
+            );
+            const names = files.map((f) => f.replace(".txt", ""));
+            const select = dom.category();
+            select.innerHTML = '<option value="">Select category</option>';
+            for (const name of names) {
+              const opt = document.createElement("option");
+              opt.value = name;
+              opt.textContent = name;
+              select.appendChild(opt);
+            }
+            if (preserveValue) select.value = preserveValue;
+          } catch (err) {
+            console.error("loadCategories error:", err);
+            const select = dom.category();
+            select.innerHTML =
+              '<option value="miscellaneous">miscellaneous</option>';
+          }
         }
-      }
 
-      // ===== Load & Render Commands =====
-      async function loadCommands(cat) {
-        const file = "data/" + cat + ".txt";
-        try {
-          const text = await smartFetch(file);
+        function parseCommandsText(text) {
           const rawLines = text
             .split(/\r?\n/)
             .map((l) => l.replace(/\r/g, ""))
             .filter((l) => l.trim() !== "");
+
           const parsed = [];
           for (let raw of rawLines) {
             let line = raw.trim();
             let priority = false;
+
             if (line.startsWith("^")) {
               priority = true;
               line = line.slice(1).trim();
             }
+
             const idx = line.indexOf(":");
             const title = idx === -1 ? "Command" : line.slice(0, idx).trim();
             const cmd = idx === -1 ? line : line.slice(idx + 1).trim();
+
             parsed.push({ title, cmd, priority });
           }
+
+          // merge identical titles into cards (multi-step via " ;\n")
           const merged = [];
           for (const item of parsed) {
-            if (
-              merged.length &&
-              merged[merged.length - 1].title === item.title
-            ) {
-              merged[merged.length - 1].cmd += " ;\n" + item.cmd;
-              merged[merged.length - 1].priority =
-                merged[merged.length - 1].priority || item.priority;
-            } else merged.push({ ...item });
+            const last = merged[merged.length - 1];
+            if (last && last.title === item.title) {
+              last.cmd += " ;\n" + item.cmd;
+              last.priority = last.priority || item.priority;
+            } else {
+              merged.push({ ...item });
+            }
           }
-          const priorityEntries = merged
+
+          const pri = merged
             .filter((e) => e.priority)
             .sort((a, b) =>
-              a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+              a.title.toLowerCase().localeCompare(b.title.toLowerCase()),
             );
-          const normalEntries = merged.filter((e) => !e.priority);
-          return [...priorityEntries, ...normalEntries];
-        } catch (err) {
-          console.error("loadCommands error:", err);
-          return [];
-        }
-      }
+          const norm = merged.filter((e) => !e.priority);
 
-      async function renderCommands(selectedCategory = "") {
-        const selectEl = document.getElementById("category");
-        const cat =
-          selectedCategory && selectedCategory !== ""
-            ? selectedCategory
-            : selectEl.value;
-        const container = document.getElementById("commands");
-        if (!cat) {
-          container.innerHTML = "<p>Select a category.</p>";
-          currentCategory = "";
-          return;
+          return [...pri, ...norm];
         }
-        if (!validateAllInputs()) return;
-        container.innerHTML = "<p>Loading...</p>";
-        try {
-          const commands = await loadCommands(cat);
-          const search = document.getElementById("search").value.toLowerCase();
-          const filtered = commands.filter(
-            (c) =>
-              c.title.toLowerCase().includes(search) ||
-              c.cmd.toLowerCase().includes(search)
-          );
-          container.innerHTML = "";
-          if (!filtered.length) {
-            container.innerHTML = "<p>No commands found.</p>";
-            currentCategory = cat;
-            return;
+
+        async function loadCommands(cat) {
+          try {
+            const text = await smartFetch(`data/${cat}.txt`);
+            return parseCommandsText(text);
+          } catch (err) {
+            console.error("loadCommands error:", err);
+            return [];
           }
-          filtered.forEach((c) => {
-            const card = document.createElement("div");
-            card.className =
-              "command-block" + (c.priority ? " top-priority" : "");
-            const title = document.createElement("div");
-            title.innerHTML = "<strong>" + escapeHtml(c.title) + "</strong>";
-            const btn = document.createElement("button");
-            btn.className = "copy-btn";
-            btn.type = "button";
-            btn.textContent = "Copy";
-            const pre = document.createElement("pre");
-            pre.dataset.template = c.cmd;
-            pre.textContent = applyVars(c.cmd);
-            card.appendChild(title);
-            card.appendChild(btn);
-            card.appendChild(pre);
-            container.appendChild(card);
-          });
-          attachCopyHandlers();
-          currentCategory = cat;
-        } catch (err) {
-          console.error("renderCommands error:", err);
-          container.innerHTML =
-            "<p>Error loading commands. See console for details.</p>";
         }
-      }
 
-      function attachCopyHandlers() {
-        document.querySelectorAll(".copy-btn").forEach((btn) => {
-          btn.onclick = async () => {
+        // =========================
+        // Tool detection
+        // =========================
+        function toolBadgeFromCmd(cmd) {
+          const c = cmd.toLowerCase();
+          const tools = [
+            "nmap",
+            "ffuf",
+            "gobuster",
+            "feroxbuster",
+            "nikto",
+            "curl",
+            "wget",
+            "nc",
+            "netcat",
+            "ftp",
+            "ssh",
+            "smbclient",
+            "rpcclient",
+            "crackmapexec",
+            "cme",
+            "impacket",
+            "wmiexec",
+            "psexec",
+            "evil-winrm",
+            "hydra",
+            "medusa",
+            "john",
+            "hashcat",
+            "dig",
+            "nslookup",
+            "snmpwalk",
+            "onesixtyone",
+            "ldapsearch",
+          ];
+          for (const t of tools) {
+            if (c.includes(t)) return t === "netcat" ? "nc" : t;
+          }
+          return "";
+        }
+
+        function splitSteps(cmd) {
+          const delim = " ;\n";
+          if (!cmd.includes(delim)) return [cmd];
+          return cmd
+            .split(delim)
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+
+        // =========================
+        // Rendering (build once)
+        // =========================
+        function getSearchTerm() {
+          return (dom.search()?.value || "").trim().toLowerCase();
+        }
+
+        function buildBadges(cat, entry, missingAll, tool) {
+          const badges = [];
+          if (tool)
+            badges.push(`<span class="badge tool">${escapeHtml(tool)}</span>`);
+          if (entry.priority)
+            badges.push(`<span class="badge pri">priority</span>`);
+          badges.push(`<span class="badge cat">${escapeHtml(cat)}</span>`);
+          if (missingAll.length) {
+            const needs = missingAll
+              .map((t) => escapeHtml(TAG_MAP[t] || t))
+              .join(", ");
+            badges.push(`<span class="badge warn">needs: ${needs}</span>`);
+          }
+          return badges.join(" ");
+        }
+
+        function renderCard(cat, entry, index) {
+          const key = favKey(cat, entry.title, entry.cmd);
+          const tool = toolBadgeFromCmd(entry.cmd);
+          const steps = splitSteps(entry.cmd);
+          const missingAll = missingTags(entry.cmd);
+          const blockAll = shouldBlockCopy(missingAll);
+          const isCred = isCredentialedTemplate(entry.cmd);
+
+          const card = document.createElement("div");
+          card.className =
+            "command-block" + (entry.priority ? " top-priority" : "");
+          card.tabIndex = 0;
+          card.dataset.index = String(index);
+          card.dataset.templateAll = entry.cmd;
+          card.dataset.credential = isCred ? "1" : "0";
+
+          const header = document.createElement("div");
+          header.className = "card-header";
+
+          const left = document.createElement("div");
+          left.className = "card-title";
+
+          const title = document.createElement("div");
+          title.className = "title-line";
+          title.innerHTML = `<strong>${highlightTitle(entry.title)}</strong>`;
+
+          const meta = document.createElement("div");
+          meta.className = "meta-line";
+          meta.innerHTML = buildBadges(cat, entry, missingAll, tool);
+
+          left.appendChild(title);
+          left.appendChild(meta);
+
+          const right = document.createElement("div");
+          right.className = "card-actions";
+
+          const favBtn = document.createElement("button");
+          favBtn.className = "icon-btn star-btn";
+          favBtn.type = "button";
+          favBtn.title = "Favorite";
+          favBtn.setAttribute("aria-pressed", String(isFav(key)));
+          favBtn.textContent = isFav(key) ? "★" : "☆";
+          favBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const nowFav = toggleFav(key);
+            favBtn.textContent = nowFav ? "★" : "☆";
+            favBtn.setAttribute("aria-pressed", String(nowFav));
+            toast(nowFav ? "Added to favorites" : "Removed from favorites");
+            scheduleFilter(); // re-apply favorites filter without rerender
+          });
+
+          const copyBtn = document.createElement("button");
+          copyBtn.className = "copy-btn";
+          copyBtn.type = "button";
+          copyBtn.textContent = "Copy";
+          copyBtn.disabled = !!blockAll;
+          copyBtn.title = blockAll
+            ? "Fill required fields to copy"
+            : "Copy all (c)";
+          copyBtn.addEventListener("click", async (e) => {
+            e.stopPropagation();
             try {
-              const pre = btn.parentElement.querySelector("pre");
-              const text = pre ? pre.textContent : "";
-              await navigator.clipboard.writeText(text);
-              const original = btn.textContent;
-              btn.textContent = "Copied!";
-              setTimeout(() => (btn.textContent = original), 1200);
+              await navigator.clipboard.writeText(applyVars(entry.cmd));
+              toast(`Copied: ${entry.title}`);
             } catch (err) {
               console.error("clipboard error", err);
               alert("Failed to copy to clipboard");
             }
-          };
-        });
-      }
-
-      // ===== Live Updates =====
-      function enableLiveUpdates() {
-        Object.keys(tagMap).forEach((tag) => {
-          const map = {
-            "<target>": "target",
-            "<target6>": "target6",
-            "<port>": "targetPort",
-            "<kali>": "kali",
-            "<kali6>": "kali6",
-            "<kaliPort>": "kaliPort",
-            "<user>": "user",
-            "<password>": "password",
-            "<domain>": "domain",
-            "<dc-ip>": "dcIp",
-            "<ntlm>": "ntlm",
-            "<filename1>": "filename1",
-            "<filename2>": "filename2",
-            "<wordlist1>": "wordlist1",
-            "<wordlist2>": "wordlist2",
-          };
-          const id = map[tag];
-          if (!id) return;
-          const el = document.getElementById(id);
-          if (!el) return;
-          el.addEventListener("input", () => {
-            validateField(el);
-            const catNow = document.getElementById("category").value;
-            if (!currentCategory || catNow !== currentCategory) return;
-            document
-              .querySelectorAll(".command-block pre")
-              .forEach(
-                (pre) => (pre.textContent = applyVars(pre.dataset.template))
-              );
           });
-        });
-        document
-          .getElementById("search")
-          .addEventListener("input", () => renderCommands(currentCategory));
-      }
 
-      // ===== Help Popup =====
-      (function populateHelp() {
-        const helpPopup = document.getElementById("helpPopup");
-        try {
-          const rows = Object.entries(tagMap)
-            .map(
-              ([tag, desc]) =>
-                `<tr><td><code>${escapeHtml(tag)}</code></td><td>${escapeHtml(
-                  desc
-                )}</td></tr>`
-            )
-            .join("");
-          helpPopup.innerHTML = `<table><thead><tr><th>Tag</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table>`;
-          helpPopup.style.display = "none";
-          helpPopup.setAttribute("aria-hidden", "true");
-        } catch (err) {
-          console.error("populateHelp error", err);
-          helpPopup.textContent = "Help data unavailable";
+          right.appendChild(favBtn);
+          right.appendChild(copyBtn);
+
+          header.appendChild(left);
+          header.appendChild(right);
+
+          const body = document.createElement("div");
+          body.className = "card-body";
+
+          if (steps.length === 1) {
+            const pre = document.createElement("pre");
+            pre.dataset.template = entry.cmd;
+            pre.innerHTML = `<code>${highlightCommand(applyVars(entry.cmd))}</code>`;
+            body.appendChild(pre);
+          } else {
+            const stepsWrap = document.createElement("div");
+            stepsWrap.className = "steps";
+
+            steps.forEach((tpl, i) => {
+              const row = document.createElement("div");
+              row.className = "step";
+
+              const num = document.createElement("div");
+              num.className = "step-num";
+              num.textContent = String(i + 1);
+
+              const pre = document.createElement("pre");
+              pre.dataset.template = tpl;
+              pre.innerHTML = `<code>${highlightCommand(applyVars(tpl))}</code>`;
+
+              const btn = document.createElement("button");
+              btn.className = "step-copy";
+              btn.type = "button";
+              btn.textContent = "Copy";
+
+              const miss = missingTags(tpl);
+              const block = shouldBlockCopy(miss);
+              btn.disabled = !!block;
+              btn.title = block
+                ? `Needs: ${miss.map((t) => TAG_MAP[t] || t).join(", ")}`
+                : "Copy this step";
+
+              btn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                try {
+                  await navigator.clipboard.writeText(applyVars(tpl));
+                  toast(`Copied step ${i + 1}: ${entry.title}`);
+                } catch (err) {
+                  console.error("clipboard error", err);
+                  alert("Failed to copy to clipboard");
+                }
+              });
+
+              row.appendChild(num);
+              row.appendChild(pre);
+              row.appendChild(btn);
+              stepsWrap.appendChild(row);
+            });
+
+            body.appendChild(stepsWrap);
+          }
+
+          card.appendChild(header);
+          card.appendChild(body);
+
+          return { el: card, key, priority: !!entry.priority, isCred };
         }
-      })();
 
-      function toggleHelp() {
-        const helpPopup = document.getElementById("helpPopup");
-        const btn = document.getElementById("helpBtn");
-        if (helpPopup.style.display === "block") {
-          helpPopup.style.display = "none";
-          helpPopup.setAttribute("aria-hidden", "true");
-          btn.setAttribute("aria-expanded", "false");
-        } else {
-          helpPopup.style.display = "block";
-          helpPopup.setAttribute("aria-hidden", "false");
-          btn.setAttribute("aria-expanded", "true");
+        async function buildCategory(cat) {
+          const container = dom.commands();
+          container.innerHTML = "<p class='empty'>Loading...</p>";
+          setStatus("Loading…");
+
+          currentEntries = await loadCommands(cat);
+
+          container.innerHTML = "";
+          cardIndex = [];
+
+          if (!currentEntries.length) {
+            container.innerHTML = "<p class='empty'>No commands found.</p>";
+            setStatus("0 results");
+            return;
+          }
+
+          const frag = document.createDocumentFragment();
+          currentEntries.forEach((entry, i) => {
+            const built = renderCard(cat, entry, i);
+            // precompute searchable text (lowercase) once
+            const searchText = (entry.title + " " + entry.cmd).toLowerCase();
+            built.el.dataset.search = searchText;
+            built.el.dataset.favkey = built.key;
+            cardIndex.push({ entry, ...built, searchText });
+            frag.appendChild(built.el);
+          });
+
+          container.appendChild(frag);
+
+          // Select first card visually, but do NOT focus-steal
+          selectedIndex = 0;
+          const first = qs(".command-block", container);
+          if (first) first.classList.add("selected");
+
+          currentCategory = cat;
+          scheduleFilter();
         }
-      }
-      document.getElementById("helpBtn").addEventListener("click", toggleHelp);
-      document
-        .getElementById("helpPopup")
-        .addEventListener("click", toggleHelp);
 
-      // ===== Event Listeners =====
-      document.getElementById("loadBtn").addEventListener("click", async () => {
-        const searchInput = document.getElementById("search");
-        searchInput.value = "";
-        searchInput.focus();
-        const selected =
-          document.getElementById("category").value || currentCategory;
-        try {
-          await loadCategories(selected);
-        } catch (e) {
-          console.warn(
-            "loadCategories on button click failed, continuing to render with current selection"
+        // =========================
+        // DOM-plan filtering (no rerender)
+        // =========================
+        function credentialFilterAllows(cardEl) {
+          if (!state.credentialOnly && !state.nonCredentialOnly) return true;
+          const isCred = cardEl.dataset.credential === "1";
+          if (state.credentialOnly) return isCred;
+          return !isCred; // non-credential only
+        }
+
+        function priorityFilterAllows(item) {
+          if (!state.priorityOnly) return true;
+          return item.priority;
+        }
+
+        function favoritesFilterAllows(item) {
+          if (!state.favoritesOnly) return true;
+          return isFav(item.key);
+        }
+
+        function termFilterAllows(item, term) {
+          if (!term) return true;
+          return item.searchText.includes(term);
+        }
+
+        function scheduleFilter() {
+          if (filterScheduled) return;
+          filterScheduled = true;
+          requestAnimationFrame(() => {
+            filterScheduled = false;
+            applyFilters();
+          });
+        }
+
+        function applyFilters() {
+          const term = getSearchTerm();
+          const container = dom.commands();
+
+          let shown = 0;
+
+          // keep existing selected index if possible, but don't focus-steal
+          const activeEl = document.activeElement;
+          const keepInputFocus =
+            activeEl &&
+            (activeEl.tagName === "INPUT" ||
+              activeEl.tagName === "TEXTAREA" ||
+              activeEl.tagName === "SELECT");
+
+          for (const item of cardIndex) {
+            const ok =
+              termFilterAllows(item, term) &&
+              priorityFilterAllows(item) &&
+              favoritesFilterAllows(item) &&
+              credentialFilterAllows(item.el);
+
+            item.el.style.display = ok ? "" : "none";
+            if (ok) shown++;
+          }
+
+          // Update status text
+          setStatus(`${shown} result${shown === 1 ? "" : "s"}`);
+
+          // Ensure at least one visible card is "selected" for j/k navigation
+          const visibles = cardIndex.filter(
+            (x) => x.el.style.display !== "none",
           );
+          qsa(".command-block.selected", container).forEach((c) =>
+            c.classList.remove("selected"),
+          );
+
+          if (visibles.length) {
+            selectedIndex = 0;
+            visibles[0].el.classList.add("selected");
+          }
+
+          // If user is typing, do not shift focus
+          if (keepInputFocus) return;
         }
-        await renderCommands(selected);
-      });
 
-      document.getElementById("category").addEventListener("change", () => {
-        document.getElementById("commands").innerHTML = "";
-        currentCategory = "";
-      });
+        // =========================
+        // Live updates for placeholder substitution (no rebuild)
+        // =========================
+        function updateRenderedCards() {
+          for (const item of cardIndex) {
+            // skip hidden cards? (optional) - keep it simple and update all
+            const card = item.el;
+            const templateAll = card.dataset.templateAll || "";
+            const missAll = missingTags(templateAll);
 
-      document.getElementById("resetBtn").addEventListener("click", () => {
-        document
-          .querySelectorAll(".sidebar input")
-          .forEach((i) => (i.value = ""));
-        document
-          .querySelectorAll(".input-error")
-          .forEach((i) => i.classList.remove("input-error"));
-        document.getElementById("commands").innerHTML = "";
-        currentCategory = "";
-      });
+            // update needs badge
+            const meta = qs(".meta-line", card);
+            if (meta) {
+              const warn = qs(".badge.warn", meta);
+              if (warn) warn.remove();
+              if (missAll.length) {
+                const span = document.createElement("span");
+                span.className = "badge warn";
+                span.textContent =
+                  "needs: " + missAll.map((t) => TAG_MAP[t] || t).join(", ");
+                meta.appendChild(document.createTextNode(" "));
+                meta.appendChild(span);
+              }
+            }
 
-      // ===== Init =====
-      (async function init() {
-        try {
+            // update code display
+            qsa("pre", card).forEach((pre) => {
+              const tpl = pre.dataset.template || "";
+              pre.innerHTML = `<code>${highlightCommand(applyVars(tpl))}</code>`;
+            });
+
+            // update copy buttons
+            const copyBtn = qs(".copy-btn", card);
+            if (copyBtn) {
+              const block = shouldBlockCopy(missAll);
+              copyBtn.disabled = !!block;
+              copyBtn.title = block
+                ? "Fill required fields to copy"
+                : "Copy all (c)";
+            }
+
+            qsa(".step", card).forEach((stepEl) => {
+              const pre = qs("pre", stepEl);
+              const btn = qs("button", stepEl);
+              if (!pre || !btn) return;
+              const tpl = pre.dataset.template || "";
+              const miss = missingTags(tpl);
+              const block = shouldBlockCopy(miss);
+              btn.disabled = !!block;
+              btn.title = block
+                ? `Needs: ${miss.map((t) => TAG_MAP[t] || t).join(", ")}`
+                : "Copy this step";
+            });
+          }
+        }
+
+        // throttle input-driven updates (to avoid flicker)
+        let updateScheduled = false;
+        function scheduleRenderedUpdate() {
+          if (updateScheduled) return;
+          updateScheduled = true;
+          requestAnimationFrame(() => {
+            updateScheduled = false;
+            updateRenderedCards();
+          });
+        }
+
+        // =========================
+        // Card selection + keyboard
+        // =========================
+        function getVisibleCards() {
+          return cardIndex
+            .filter((x) => x.el.style.display !== "none")
+            .map((x) => x.el);
+        }
+
+        function selectVisibleCardByIndex(i) {
+          const cards = getVisibleCards();
+          if (!cards.length) return;
+
+          selectedIndex = Math.min(Math.max(0, i), cards.length - 1);
+          cards.forEach((c) => c.classList.remove("selected"));
+
+          const card = cards[selectedIndex];
+          card.classList.add("selected");
+          card.focus({ preventScroll: true });
+          card.scrollIntoView({ block: "center" });
+        }
+
+        function copySelectedCard() {
+          const cards = getVisibleCards();
+          const card = cards[selectedIndex];
+          if (!card) return;
+          const btn = qs(".copy-btn", card);
+          if (btn && !btn.disabled) btn.click();
+          else toast("Fill required fields to copy");
+        }
+
+        function setFontScale(next) {
+          state.fontScale = Math.min(3, Math.max(-2, next));
+          saveUI();
+          applyUI();
+          toast(`Font: ${state.fontScale >= 0 ? "+" : ""}${state.fontScale}`);
+        }
+
+        // =========================
+        // Remember inputs (non-sensitive)
+        // =========================
+        function saveNonSensitiveInputs() {
+          const payload = {
+            target: $("target")?.value || "",
+            target6: $("target6")?.value || "",
+            targetPort: $("targetPort")?.value || "",
+            kali: $("kali")?.value || "",
+            kali6: $("kali6")?.value || "",
+            kaliPort: $("kaliPort")?.value || "",
+            user: $("user")?.value || "",
+            domain: $("domain")?.value || "",
+            dcIp: $("dcIp")?.value || "",
+            filename1: $("filename1")?.value || "",
+            filename2: $("filename2")?.value || "",
+            wordlist1: $("wordlist1")?.value || "",
+            wordlist2: $("wordlist2")?.value || "",
+          };
+          localStorage.setItem(STORAGE.inputs, JSON.stringify(payload));
+        }
+
+        function loadNonSensitiveInputs() {
+          const payload = safeJsonParse(
+            localStorage.getItem(STORAGE.inputs) || "{}",
+            {},
+          );
+          for (const [id, val] of Object.entries(payload)) {
+            const el = $(id);
+            if (el && typeof val === "string") el.value = val;
+          }
+        }
+
+        // =========================
+        // Help popup
+        // =========================
+        function populateHelp() {
+          const popup = dom.helpPopup();
+          const rows = Object.entries(TAG_MAP)
+            .map(([tag, desc]) => {
+              const t = escapeHtml(tag);
+              const d = escapeHtml(desc);
+              return `<tr data-tag="${t}"><td><code>${t}</code></td><td>${d}</td></tr>`;
+            })
+            .join("");
+
+          popup.innerHTML = `
+            <div class="help-head">
+              <div class="help-title">Placeholders</div>
+              <div class="help-sub">Click a row to focus its input.</div>
+            </div>
+            <table>
+              <thead><tr><th>Tag</th><th>Description</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          `;
+
+          popup.style.display = "none";
+          popup.setAttribute("aria-hidden", "true");
+
+          popup.addEventListener("click", (e) => {
+            const tr = e.target.closest("tr");
+            if (!tr) return toggleHelp();
+            const tag = tr.getAttribute("data-tag");
+            const id = TAG_TO_ID[tag];
+            if (id) {
+              const el = $(id);
+              if (el) {
+                el.focus();
+                el.scrollIntoView({ block: "center" });
+                toast(`Focused: ${TAG_MAP[tag] || tag}`);
+              }
+            }
+            toggleHelp();
+          });
+        }
+
+        function toggleHelp() {
+          const popup = dom.helpPopup();
+          const btn = dom.helpBtn();
+          const open = popup.style.display === "block";
+          popup.style.display = open ? "none" : "block";
+          popup.setAttribute("aria-hidden", String(open));
+          btn.setAttribute("aria-expanded", String(!open));
+        }
+
+        // =========================
+        // Scroll-to-top
+        // =========================
+        function bindScrollToTop() {
+          const btn = dom.toTopBtn();
+          const scroller = dom.main();
+
+          function update() {
+            const y = scroller ? scroller.scrollTop : 0;
+            if (y > 500) btn.classList.add("show");
+            else btn.classList.remove("show");
+          }
+
+          btn.addEventListener("click", () => {
+            if (!scroller) return;
+            scroller.scrollTo({ top: 0, behavior: "smooth" });
+          });
+
+          if (scroller) {
+            scroller.addEventListener("scroll", update, { passive: true });
+            update();
+          }
+        }
+
+        // =========================
+        // Event wiring
+        // =========================
+        function bindLiveUpdates() {
+          // validate & update commands as inputs change
+          for (const id of Object.values(TAG_TO_ID)) {
+            const el = $(id);
+            if (!el) continue;
+
+            el.addEventListener("input", () => {
+              validateField(el);
+              if (dom.toggleRemember()?.checked) saveNonSensitiveInputs();
+              if (!currentCategory) return;
+              scheduleRenderedUpdate();
+              scheduleFilter(); // if needs badges change can affect copying
+            });
+          }
+
+          // SEARCH: filter only, DO NOT rebuild, DO NOT focus cards
+          dom.search().addEventListener("input", () => {
+            scheduleFilter();
+          });
+
+          dom.toggleBlockCopy().addEventListener("change", () => {
+            if (!currentCategory) return;
+            scheduleRenderedUpdate();
+          });
+        }
+
+        function bindButtons() {
+          dom.helpBtn().addEventListener("click", toggleHelp);
+
+          dom.toggleCredential().addEventListener("click", () => {
+            const next = !state.credentialOnly;
+            state.credentialOnly = next;
+            if (next) state.nonCredentialOnly = false;
+            saveUI();
+            applyUI();
+            scheduleFilter();
+          });
+
+          dom.toggleNonCredential().addEventListener("click", () => {
+            const next = !state.nonCredentialOnly;
+            state.nonCredentialOnly = next;
+            if (next) state.credentialOnly = false;
+            saveUI();
+            applyUI();
+            scheduleFilter();
+          });
+
+          dom.togglePriority().addEventListener("click", () => {
+            state.priorityOnly = !state.priorityOnly;
+            saveUI();
+            applyUI();
+            scheduleFilter();
+          });
+
+          dom.toggleFavorites().addEventListener("click", () => {
+            state.favoritesOnly = !state.favoritesOnly;
+            saveUI();
+            applyUI();
+            scheduleFilter();
+          });
+
+          dom.loadBtn().addEventListener("click", async () => {
+            const search = dom.search();
+            search.value = "";
+            const selected = dom.category().value || currentCategory;
+
+            try {
+              await loadCategories(selected);
+            } catch {
+              // ok
+            }
+
+            if (!selected) {
+              dom.commands().innerHTML =
+                "<p class='empty'>Select a category.</p>";
+              setStatus("Ready");
+              search.focus();
+              return;
+            }
+
+            if (!validateAllInputs()) return;
+
+            await buildCategory(selected);
+
+            // Focus sidebar search and keep it there
+            search.focus();
+          });
+
+          dom.resetBtn().addEventListener("click", () => {
+            qsa(".sidebar input").forEach((i) => (i.value = ""));
+            qsa(".input-error").forEach((i) =>
+              i.classList.remove("input-error"),
+            );
+            dom.commands().innerHTML = "";
+            currentCategory = "";
+            currentEntries = [];
+            cardIndex = [];
+            setStatus("Ready");
+            dom.search().value = "";
+          });
+
+          dom.category().addEventListener("change", () => {
+            dom.commands().innerHTML = "";
+            currentCategory = "";
+            currentEntries = [];
+            cardIndex = [];
+            setStatus("Ready");
+          });
+
+          dom.toggleRemember().addEventListener("change", (e) => {
+            if (e.target.checked) {
+              saveNonSensitiveInputs();
+              toast("Will remember non-sensitive inputs");
+            } else {
+              localStorage.removeItem(STORAGE.inputs);
+              toast("Stopped remembering inputs");
+            }
+          });
+        }
+
+        function bindKeyboard() {
+          document.addEventListener("keydown", (e) => {
+            const active = document.activeElement;
+            const inInput =
+              active &&
+              (active.tagName === "INPUT" ||
+                active.tagName === "TEXTAREA" ||
+                active.tagName === "SELECT");
+
+            if (!inInput && e.key === "/") {
+              e.preventDefault();
+              dom.search().focus();
+              return;
+            }
+
+            if (e.key === "Escape") {
+              if (dom.helpPopup().style.display === "block") toggleHelp();
+              return;
+            }
+
+            if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
+              e.preventDefault();
+              return setFontScale(state.fontScale + 1);
+            }
+            if (e.ctrlKey && e.key === "-") {
+              e.preventDefault();
+              return setFontScale(state.fontScale - 1);
+            }
+            if (e.ctrlKey && e.key === "0") {
+              e.preventDefault();
+              return setFontScale(0);
+            }
+
+            // IMPORTANT: never interrupt typing in inputs
+            if (inInput) return;
+
+            if (e.key === "j")
+              return selectVisibleCardByIndex(selectedIndex + 1);
+            if (e.key === "k")
+              return selectVisibleCardByIndex(selectedIndex - 1);
+            if (e.key === "c") return copySelectedCard();
+          });
+
+          document.addEventListener("click", (e) => {
+            const card = e.target.closest(".command-block");
+            if (!card) return;
+            const visibles = getVisibleCards();
+            const idx = visibles.indexOf(card);
+            if (idx >= 0) selectVisibleCardByIndex(idx);
+          });
+        }
+
+        function bindInputRestrictions() {
+          ["target", "kali", "dcIp"].forEach((id) =>
+            enableIPField($(id), "ipv4"),
+          );
+          ["target6", "kali6"].forEach((id) => enableIPField($(id), "ipv6"));
+          ["targetPort", "kaliPort"].forEach((id) => enablePortField($(id)));
+        }
+
+        // =========================
+        // Init
+        // =========================
+        async function init() {
           await loadCategories();
-        } catch (e) {
-          console.warn("init: loadCategories failed", e);
+
+          populateHelp();
+          loadUI();
+          applyUI();
+
+          bindInputRestrictions();
+          bindButtons();
+          bindKeyboard();
+          bindLiveUpdates();
+          bindScrollToTop();
+
+          if (localStorage.getItem(STORAGE.inputs)) {
+            dom.toggleRemember().checked = true;
+            loadNonSensitiveInputs();
+          }
+
+          setStatus("Ready");
         }
-        enableLiveUpdates();
+
+        init().catch((err) => {
+          console.error("Init error:", err);
+          setStatus("Error");
+        });
       })();
     </script>
   </body>
