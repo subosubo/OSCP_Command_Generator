@@ -781,40 +781,109 @@
         // Tool detection
         // =========================
         function toolBadgeFromCmd(cmd) {
-          const c = cmd.toLowerCase();
-          const tools = [
-            "nmap",
-            "ffuf",
-            "gobuster",
-            "feroxbuster",
-            "nikto",
-            "curl",
-            "wget",
-            "nc",
-            "netcat",
-            "ftp",
-            "ssh",
-            "smbclient",
-            "rpcclient",
-            "crackmapexec",
-            "cme",
-            "impacket",
-            "wmiexec",
-            "psexec",
-            "evil-winrm",
-            "hydra",
-            "medusa",
-            "john",
-            "hashcat",
-            "dig",
-            "nslookup",
-            "snmpwalk",
-            "onesixtyone",
-            "ldapsearch",
-          ];
-          for (const t of tools) {
-            if (c.includes(t)) return t === "netcat" ? "nc" : t;
+          const raw = (cmd || "").trim();
+          if (!raw) return "";
+
+          // Tokenize while preserving quoted strings
+          const tokens = raw.match(/"[^"]*"|'[^']*'|\S+/g) || [];
+          const tokensLower = tokens.map((t) => t.toLowerCase());
+
+          // Find the "invoked" command by skipping common wrappers
+          const WRAPPERS = new Set([
+            "sudo",
+            "doas",
+            "env",
+            "command",
+            "stdbuf",
+            "timeout",
+            "nohup",
+          ]);
+
+          let i = 0;
+          while (i < tokensLower.length && WRAPPERS.has(tokensLower[i])) {
+            if (tokensLower[i] === "env") {
+              // env VAR=VAL VAR2=VAL2 cmd ...
+              i++;
+              while (i < tokens.length && /^[a-z_][a-z0-9_]*=/i.test(tokens[i]))
+                i++;
+              continue;
+            }
+            i++;
           }
+
+          const first = tokensLower[i] || "";
+
+          // PowerShell detection (badge as "pwsh")
+          // - command starts with pwsh/powershell
+          // - or looks like $var=... style (often PS one-liners)
+          if (
+            first === "pwsh" ||
+            first === "powershell" ||
+            first === "powershell.exe"
+          )
+            return "pwsh";
+          if (raw.startsWith("$")) return "pwsh";
+
+          // Exact first-token matching only (prevents substring hits)
+          const FIRST_TOKEN_TO_BADGE = new Map([
+            ["nc", "nc"],
+            ["netcat", "nc"],
+
+            ["nmap", "nmap"],
+            ["ffuf", "ffuf"],
+            ["gobuster", "gobuster"],
+            ["feroxbuster", "feroxbuster"],
+            ["nikto", "nikto"],
+            ["curl", "curl"],
+            ["wget", "wget"],
+            ["ftp", "ftp"],
+            ["ssh", "ssh"],
+            ["smbclient", "smbclient"],
+            ["rpcclient", "rpcclient"],
+            ["crackmapexec", "cme"],
+            ["cme", "cme"],
+
+            // Impacket entrypoints
+            ["wmiexec.py", "impacket"],
+            ["psexec.py", "impacket"],
+            ["smbexec.py", "impacket"],
+            ["secretsdump.py", "impacket"],
+
+            ["evil-winrm", "evil-winrm"],
+            ["hydra", "hydra"],
+            ["medusa", "medusa"],
+            ["john", "john"],
+            ["hashcat", "hashcat"],
+            ["dig", "dig"],
+            ["nslookup", "nslookup"],
+            ["snmpwalk", "snmpwalk"],
+            ["onesixtyone", "onesixtyone"],
+            ["ldapsearch", "ldapsearch"],
+          ]);
+
+          const direct = FIRST_TOKEN_TO_BADGE.get(first);
+          if (direct) return direct;
+
+          // Optional fallback:
+          // Only match whole tokens (never substrings), for cases where the tool isn't the first token.
+          // Example: python3 /path/to/wmiexec.py ...
+          const TOKEN_TO_BADGE = new Map([
+            ["wmiexec.py", "impacket"],
+            ["psexec.py", "impacket"],
+            ["smbexec.py", "impacket"],
+            ["secretsdump.py", "impacket"],
+            ["ldapsearch", "ldapsearch"],
+            ["nmap", "nmap"],
+            ["evil-winrm", "evil-winrm"],
+            ["nc", "nc"],
+            ["netcat", "nc"],
+          ]);
+
+          for (const t of tokensLower) {
+            const b = TOKEN_TO_BADGE.get(t);
+            if (b) return b;
+          }
+
           return "";
         }
 
