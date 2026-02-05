@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>OSCP Command Generator</title>
     <link rel="stylesheet" href="css/style.css" />
+    <!-- Prevent /favicon.ico 404 without adding a file -->
     <link
       rel="icon"
       href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🛠️</text></svg>'
@@ -25,25 +26,22 @@
           <option value="">Select category</option>
         </select>
 
-        <!-- Search row with Reset button (convenient placement) -->
-        <div class="search-row">
-          <div class="search-wrap">
-            <label for="search">Search Commands</label>
-            <input
-              type="text"
-              id="search"
-              placeholder="Type to search commands..."
-            />
-          </div>
+        <button id="resetBtn" class="btn-secondary reset-btn" type="button">
+          Reset
+        </button>
 
-          <button
-            id="resetBtn"
-            class="btn-secondary btn-reset"
-            type="button"
-            title="Clear inputs and reset filters"
-          >
-            Reset
-          </button>
+        <label for="search">Search Commands</label>
+        <input
+          type="text"
+          id="search"
+          placeholder="Type to search commands..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+
+        <div class="mini-hint">
+          Dropdown loads commands automatically. Reset clears inputs + filters
+          only.
         </div>
       </details>
 
@@ -100,6 +98,7 @@
         <input type="text" id="user" placeholder="e.g. admin" />
 
         <label for="password">Password</label>
+        <!-- No password eye / masking toggle feature -->
         <input type="password" id="password" placeholder="e.g. P@ssw0rd" />
 
         <label for="domain">Domain</label>
@@ -210,7 +209,9 @@
         </div>
       </div>
 
-      <div id="commands"></div>
+      <div id="commands">
+        <p class="empty">Select a category to load commands.</p>
+      </div>
     </main>
 
     <!-- Help -->
@@ -275,7 +276,7 @@
 
         const STORAGE = {
           favorites: "oscp_favorites_v1",
-          ui: "oscp_ui_v2",
+          ui: "oscp_ui_v3",
           inputs: "oscp_inputs_v1",
           fetchCache: (url) => `cache_${url}`,
           fetchEtag: (url) => `etag_${url}`,
@@ -319,12 +320,13 @@
           nonCredentialOnly: false,
           priorityOnly: false,
           favoritesOnly: false,
+          // Wider default view:
           fontScale: -1, // -2..+3
         };
 
-        // DOM-plan caches
+        // DOM-plan caches (smooth filtering without rerender)
         let currentEntries = [];
-        let cardIndex = [];
+        let cardIndex = []; // { entry, el, key, priority, isCred, searchText }
         let filterScheduled = false;
 
         // =========================
@@ -413,12 +415,12 @@
             .setAttribute("aria-pressed", String(!!state.favoritesOnly));
         }
 
-        function resetAllFilters() {
+        function clearAllFilters({ save = true } = {}) {
           state.credentialOnly = false;
           state.nonCredentialOnly = false;
           state.priorityOnly = false;
           state.favoritesOnly = false;
-          saveUI();
+          if (save) saveUI();
           applyUI();
         }
 
@@ -477,6 +479,28 @@
           }
 
           if (ok) clearError(input);
+          return ok;
+        }
+
+        function validateAllInputs() {
+          const ids = [
+            "target",
+            "target6",
+            "targetPort",
+            "kali",
+            "kali6",
+            "kaliPort",
+            "dcIp",
+          ];
+          let ok = true;
+          for (const id of ids) {
+            const el = $(id);
+            if (el && !validateField(el)) ok = false;
+          }
+          if (!ok)
+            alert(
+              "⚠️ Some fields are invalid. Hover over red fields for details.",
+            );
           return ok;
         }
 
@@ -579,6 +603,7 @@
           return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         }
 
+        // robust tag extraction (handles <<< <target>, etc.)
         const TAG_REGEX = new RegExp(
           Object.keys(TAG_MAP).map(escapeRegex).join("|"),
           "g",
@@ -623,6 +648,7 @@
 
         function highlightTitle(title) {
           const esc = escapeHtml(title);
+          // highlight hashtags as comments only if NOT followed by a digit
           return esc.replace(
             /(^|\s)(#(?!\d)[^\r\n]*)$/gm,
             `$1<span class="comment">$2</span>`,
@@ -632,15 +658,22 @@
         function highlightCommand(text) {
           let out = escapeHtml(text);
 
+          // placeholders
           out = out.replace(/(&lt;[^&]+&gt;)/g, `<span class="ph">$1</span>`);
+
+          // flags
           out = out.replace(
             /(^|\s)(--?[a-zA-Z0-9][a-zA-Z0-9-]*)/g,
             `$1<span class="flag">$2</span>`,
           );
+
+          // operators
           out = out.replace(
             /(\||&gt;|&lt;|&amp;&amp;|\|\|)/g,
             `<span class="op">$1</span>`,
           );
+
+          // comments (#...) but NOT numbering like #1, #2, #123
           out = out.replace(
             /(^|\s)(#(?!\d)[^\r\n]*)$/gm,
             `$1<span class="comment">$2</span>`,
@@ -726,6 +759,7 @@
             parsed.push({ title, cmd, priority });
           }
 
+          // merge identical titles into cards (multi-step via " ;\n")
           const merged = [];
           for (const item of parsed) {
             const last = merged[merged.length - 1];
@@ -758,15 +792,17 @@
         }
 
         // =========================
-        // Tool detection
+        // Tool detection (token-based, no substring false positives)
         // =========================
         function toolBadgeFromCmd(cmd) {
           const raw = (cmd || "").trim();
           if (!raw) return "";
 
+          // Tokenize while preserving quoted strings
           const tokens = raw.match(/"[^"]*"|'[^']*'|\S+/g) || [];
           const tokensLower = tokens.map((t) => t.toLowerCase());
 
+          // Skip wrappers to find invoked command
           const WRAPPERS = new Set([
             "sudo",
             "doas",
@@ -790,6 +826,7 @@
 
           const first = tokensLower[i] || "";
 
+          // PowerShell badge
           if (
             first === "pwsh" ||
             first === "powershell" ||
@@ -798,6 +835,7 @@
             return "pwsh";
           if (raw.startsWith("$")) return "pwsh";
 
+          // Exact first-token mapping
           const FIRST_TOKEN_TO_BADGE = new Map([
             ["nc", "nc"],
             ["netcat", "nc"],
@@ -833,6 +871,7 @@
           const direct = FIRST_TOKEN_TO_BADGE.get(first);
           if (direct) return direct;
 
+          // Whole-token fallback only (never substrings)
           const TOKEN_TO_BADGE = new Map([
             ["wmiexec.py", "impacket"],
             ["psexec.py", "impacket"],
@@ -841,8 +880,6 @@
             ["ldapsearch", "ldapsearch"],
             ["nmap", "nmap"],
             ["evil-winrm", "evil-winrm"],
-            ["nc", "nc"],
-            ["netcat", "nc"],
           ]);
 
           for (const t of tokensLower) {
@@ -967,9 +1004,7 @@
           if (steps.length === 1) {
             const pre = document.createElement("pre");
             pre.dataset.template = entry.cmd;
-            pre.innerHTML = `<code>${highlightCommand(
-              applyVars(entry.cmd),
-            )}</code>`;
+            pre.innerHTML = `<code>${highlightCommand(applyVars(entry.cmd))}</code>`;
             body.appendChild(pre);
           } else {
             const stepsWrap = document.createElement("div");
@@ -985,9 +1020,7 @@
 
               const pre = document.createElement("pre");
               pre.dataset.template = tpl;
-              pre.innerHTML = `<code>${highlightCommand(
-                applyVars(tpl),
-              )}</code>`;
+              pre.innerHTML = `<code>${highlightCommand(applyVars(tpl))}</code>`;
 
               const btn = document.createElement("button");
               btn.className = "step-copy";
@@ -1024,7 +1057,7 @@
           card.appendChild(header);
           card.appendChild(body);
 
-          return { el: card, key, priority: !!entry.priority };
+          return { el: card, key, priority: !!entry.priority, isCred };
         }
 
         async function buildCategory(cat) {
@@ -1048,12 +1081,14 @@
             const built = renderCard(cat, entry, i);
             const searchText = (entry.title + " " + entry.cmd).toLowerCase();
             built.el.dataset.search = searchText;
+            built.el.dataset.favkey = built.key;
             cardIndex.push({ entry, ...built, searchText });
             frag.appendChild(built.el);
           });
 
           container.appendChild(frag);
 
+          // Select first card visually but never steal focus
           selectedIndex = 0;
           const first = qs(".command-block", container);
           if (first) first.classList.add("selected");
@@ -1063,7 +1098,7 @@
         }
 
         // =========================
-        // Filtering
+        // DOM-plan filtering (no rerender)
         // =========================
         function credentialFilterAllows(cardEl) {
           if (!state.credentialOnly && !state.nonCredentialOnly) return true;
@@ -1098,16 +1133,7 @@
 
         function applyFilters() {
           const term = getSearchTerm();
-          const container = dom.commands();
-
           let shown = 0;
-
-          const activeEl = document.activeElement;
-          const keepInputFocus =
-            activeEl &&
-            (activeEl.tagName === "INPUT" ||
-              activeEl.tagName === "TEXTAREA" ||
-              activeEl.tagName === "SELECT");
 
           for (const item of cardIndex) {
             const ok =
@@ -1122,22 +1148,21 @@
 
           setStatus(`${shown} result${shown === 1 ? "" : "s"}`);
 
+          // keep a "selected" visible card for j/k, but never focus-steal
           const visibles = cardIndex.filter(
             (x) => x.el.style.display !== "none",
           );
-          qsa(".command-block.selected", container).forEach((c) =>
+          qsa(".command-block.selected", dom.commands()).forEach((c) =>
             c.classList.remove("selected"),
           );
           if (visibles.length) {
             selectedIndex = 0;
             visibles[0].el.classList.add("selected");
           }
-
-          if (keepInputFocus) return;
         }
 
         // =========================
-        // Render update (placeholders)
+        // Live updates for placeholder substitution
         // =========================
         function updateRenderedCards() {
           for (const item of cardIndex) {
@@ -1145,6 +1170,7 @@
             const templateAll = card.dataset.templateAll || "";
             const missAll = missingTags(templateAll);
 
+            // update needs badge
             const meta = qs(".meta-line", card);
             if (meta) {
               const warn = qs(".badge.warn", meta);
@@ -1159,13 +1185,13 @@
               }
             }
 
+            // update code display
             qsa("pre", card).forEach((pre) => {
               const tpl = pre.dataset.template || "";
-              pre.innerHTML = `<code>${highlightCommand(
-                applyVars(tpl),
-              )}</code>`;
+              pre.innerHTML = `<code>${highlightCommand(applyVars(tpl))}</code>`;
             });
 
+            // update copy buttons
             const copyBtn = qs(".copy-btn", card);
             if (copyBtn) {
               const block = shouldBlockCopy(missAll);
@@ -1197,6 +1223,7 @@
           requestAnimationFrame(() => {
             updateScheduled = false;
             updateRenderedCards();
+            scheduleFilter();
           });
         }
 
@@ -1349,65 +1376,31 @@
         }
 
         // =========================
-        // Category loading (dropdown-driven)
+        // Reset behaviour (per spec)
         // =========================
-        async function loadSelectedCategory() {
-          const selected = dom.category().value;
+        function resetInputsAndFiltersOnly() {
+          // Clear all text/number/password inputs in sidebar EXCEPT category dropdown
+          qsa(".sidebar input").forEach((i) => (i.value = ""));
+          qsa(".input-error").forEach((i) => i.classList.remove("input-error"));
 
-          if (!selected) {
-            dom.commands().innerHTML =
-              "<p class='empty'>Select a category.</p>";
-            currentCategory = "";
-            currentEntries = [];
-            cardIndex = [];
-            setStatus("Ready");
-            return;
-          }
+          // Deselect the 4 filter buttons
+          clearAllFilters();
 
-          await buildCategory(selected);
-          dom.search().focus();
-        }
-
-        // =========================
-        // Reset behavior (NEW SPEC)
-        // =========================
-        function clearInputsAndResetFiltersKeepCategory() {
-          // Clear all sidebar input fields (including password/number), but keep select dropdown
-          qsa(".sidebar input").forEach((el) => {
-            // keep checkboxes as-is (Exam Controls)
-            if (el.type === "checkbox") return;
-            el.value = "";
-            // remove error styling
-            el.classList.remove("input-error");
-            el.title = "";
-          });
-
-          // Also clear search explicitly (already included above, but keep intent clear)
-          dom.search().value = "";
-
-          // Deselect 4 filter buttons
-          resetAllFilters();
-
-          // Update rendered commands to show placeholders again & recalc needs/copy state
+          // Keep dropdown and rendered commands intact; just refresh substitutions + filters
           if (currentCategory) {
             scheduleRenderedUpdate();
             scheduleFilter();
           }
 
-          // If "remember inputs" is on, update stored payload to blank values
-          if (dom.toggleRemember()?.checked) {
-            saveNonSensitiveInputs();
-          }
-
-          // Keep cursor in search (nice UX)
+          toast("Cleared inputs + filters");
           dom.search().focus();
-          toast("Cleared inputs and filters");
         }
 
         // =========================
         // Event wiring
         // =========================
         function bindLiveUpdates() {
+          // validate & update commands as inputs change
           for (const id of Object.values(TAG_TO_ID)) {
             const el = $(id);
             if (!el) continue;
@@ -1417,10 +1410,10 @@
               if (dom.toggleRemember()?.checked) saveNonSensitiveInputs();
               if (!currentCategory) return;
               scheduleRenderedUpdate();
-              scheduleFilter();
             });
           }
 
+          // SEARCH: filter only, no rebuild, no focus steal
           dom.search().addEventListener("input", () => scheduleFilter());
 
           dom.toggleBlockCopy().addEventListener("change", () => {
@@ -1464,31 +1457,35 @@
             scheduleFilter();
           });
 
-          // ✅ Reset now follows your spec
-          dom.resetBtn().addEventListener("click", () => {
-            clearInputsAndResetFiltersKeepCategory();
-          });
+          dom.resetBtn().addEventListener("click", resetInputsAndFiltersOnly);
+        }
 
-          // ✅ Dropdown loads commands automatically
-          dom.category().addEventListener("change", () => {
-            dom.commands().innerHTML = "<p class='empty'>Loading...</p>";
-            setStatus("Loading…");
-            loadSelectedCategory().catch((err) => {
-              console.error("Category load failed:", err);
-              setStatus("Error");
+        function bindCategoryDropdownLoadsCommands() {
+          dom.category().addEventListener("change", async () => {
+            const selected = dom.category().value;
+
+            if (!selected) {
+              currentCategory = "";
+              currentEntries = [];
+              cardIndex = [];
               dom.commands().innerHTML =
-                "<p class='empty'>Failed to load commands.</p>";
-            });
-          });
-
-          dom.toggleRemember().addEventListener("change", (e) => {
-            if (e.target.checked) {
-              saveNonSensitiveInputs();
-              toast("Will remember non-sensitive inputs");
-            } else {
-              localStorage.removeItem(STORAGE.inputs);
-              toast("Stopped remembering inputs");
+                "<p class='empty'>Select a category to load commands.</p>";
+              setStatus("Ready");
+              return;
             }
+
+            // Requirement: category change => show full list (filters off)
+            clearAllFilters();
+
+            // Clear search so user knows it's full list
+            dom.search().value = "";
+
+            if (!validateAllInputs()) return;
+
+            await buildCategory(selected);
+
+            // Focus search for immediate typing
+            dom.search().focus();
           });
         }
 
@@ -1512,6 +1509,7 @@
               return;
             }
 
+            // Keep font controls (no UI buttons)
             if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
               e.preventDefault();
               return setFontScale(state.fontScale + 1);
@@ -1525,6 +1523,7 @@
               return setFontScale(0);
             }
 
+            // Never interrupt typing in inputs
             if (inInput) return;
 
             if (e.key === "j")
@@ -1566,13 +1565,13 @@
           bindKeyboard();
           bindLiveUpdates();
           bindScrollToTop();
+          bindCategoryDropdownLoadsCommands();
 
           if (localStorage.getItem(STORAGE.inputs)) {
             dom.toggleRemember().checked = true;
             loadNonSensitiveInputs();
           }
 
-          dom.commands().innerHTML = "<p class='empty'>Select a category.</p>";
           setStatus("Ready");
         }
 
