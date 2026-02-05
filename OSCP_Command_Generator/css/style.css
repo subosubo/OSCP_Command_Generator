@@ -687,3 +687,24 @@ kbd {
   border: 2px solid var(--danger) !important;
   background-color: #3b1a1a !important;
 }
+
+/* Search + Reset row */
+.search-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 8px;
+}
+
+.search-wrap label {
+  margin-top: 0;
+}
+
+.btn-reset {
+  width: auto !important;
+  padding: 9px 12px !important;
+  border-radius: 10px !important;
+  height: 40px; /* aligns nicely with input height */
+  white-space: nowrap;
+}
