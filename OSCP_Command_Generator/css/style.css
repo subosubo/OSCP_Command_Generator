@@ -17,7 +17,7 @@
   --commentBg: rgba(34, 197, 94, 0.1);
   --commentBorder: rgba(34, 197, 94, 0.18);
 
-  /* Card outline tokens (intelligent names) */
+  /* Card outline intent tokens */
   --outline-priority: rgba(96, 165, 250, 0.85);
   --outline-active: rgba(167, 139, 250, 0.95);
 }
@@ -136,11 +136,12 @@ body[data-font="3"] {
   outline: none;
 }
 
-.btn-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 10px;
+.reset-btn {
+  margin-top: 10px !important;
+  height: 40px;
+  width: 100%;
+  padding: 0 14px !important;
+  border-radius: 10px !important;
 }
 
 .sidebar button {
@@ -197,6 +198,13 @@ body[data-font="3"] {
   line-height: 1.35;
 }
 
+.mini-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(226, 232, 240, 0.65);
+  line-height: 1.35;
+}
+
 kbd {
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
@@ -215,7 +223,7 @@ kbd {
   flex: 1;
   height: 100vh;
   overflow-y: auto;
-  scroll-padding-top: 84px;
+  scroll-padding-top: 110px; /* allow sticky toolbar + top gap */
 }
 
 .empty {
@@ -223,7 +231,7 @@ kbd {
   padding: 16px;
 }
 
-/* Sticky toolbar */
+/* Sticky toolbar (never truncated; reserves help button area) */
 .toolbar {
   position: sticky;
   top: 12px;
@@ -245,7 +253,7 @@ kbd {
   justify-content: space-between;
   gap: 14px;
 
-  padding-right: 84px; /* keep clear under help button */
+  padding-right: 96px; /* keep clear under help button */
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
@@ -281,17 +289,16 @@ kbd {
   cursor: pointer;
   font-weight: 650;
 }
-
 .pill[aria-pressed="true"] {
   border-color: rgba(96, 165, 250, 0.7);
   background: rgba(59, 130, 246, 0.25);
 }
 
 #commands {
-  padding-top: 6px;
+  padding-top: 10px; /* matches bottom spacing feel */
 }
 #commands .command-block:first-child {
-  margin-top: 10px;
+  margin-top: 10px; /* first block gap */
 }
 
 /* Command blocks */
@@ -314,7 +321,7 @@ kbd {
   background: #13203a;
 }
 
-/* Active always wins (even for priority) */
+/* Active always wins (hover/selected/focus-within overrides priority outline) */
 .command-block:hover,
 .command-block.selected,
 .command-block:focus-within,
@@ -328,7 +335,7 @@ kbd {
 }
 
 .command-block:last-child {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2.5rem; /* last block gap */
 }
 
 .card-header {
@@ -686,25 +693,4 @@ kbd {
 .input-error {
   border: 2px solid var(--danger) !important;
   background-color: #3b1a1a !important;
-}
-
-/* Search + Reset row */
-.search-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-  align-items: end;
-  margin-top: 8px;
-}
-
-.search-wrap label {
-  margin-top: 0;
-}
-
-.btn-reset {
-  width: auto !important;
-  padding: 9px 12px !important;
-  border-radius: 10px !important;
-  height: 40px; /* aligns nicely with input height */
-  white-space: nowrap;
 }
