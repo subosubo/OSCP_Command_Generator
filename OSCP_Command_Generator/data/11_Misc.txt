@@ -1,8 +1,0 @@
-Capture the flag: find / -name "local.txt" 2>/dev/null
-Capture the flag: find / -name "proof.txt" 2>/dev/null
-
-grep (search for 'pass' recursively names only, exclude .git): grep -Ril --exclude-dir=.git 'pass' <filename1>
-grep (search for 'pass' recursively with line numbers, exclude .git): grep -Rin --exclude-dir=.git 'pass' <filename1>
-
-rdp-oneliner:xfreerdp3 /u:<user> /p:<password> /v:<target> /dynamic-resolution /compression /network:auto /gfx:AVC420:on +clipboard -themes /bpp:8 -themes -wallpaper /auto-reconnect
-/drive:share,/home/kali
