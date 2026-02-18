@@ -58,6 +58,7 @@ dns:dig @<target> -p <port> <domain> +short && dig @8.8.8.8 <domain> +short #com
 ^nmap (quick start-udp):sudo nmap -sU -p 1-1024 -v <target> -oA results_UDP #kali-machine
 ^nmap (quick start-udp-ligolo):sudo nmap -sU -p 1-1024 -v <target> -oA results_UDP_internal #kali-machine
 ^nmap (hbp-tcp):nmap -p- -Pn <target> -v -T5 --min-rate 1500 --max-rtt-timeout 500ms --max-retries 3 --open -oN results_TCP_fast
+^nmap (hbp-tcp):nmap -p- -Pn <target> -v --min-rate 1000 --max-rtt-timeout 1000ms --max-retries 5 -oN nmap_ports.txt && sleep 5 && nmap -Pn <target> -sVC -v -oN nmapsVsC.txt && sleep 5 && nmap -T5 -Pn <target> -v --script vuln -oN nmap_vuln.txt
 nmap:nmap -sV -p- -T4 <target> #full TCP port scan with service detection; kali-machine
 nmap:nmap --top-ports 100 -sV -T4 <target> #top 100 ports service scan; kali-machine
 nmap:nmap -p <port> -sV --script=default,vuln <target> #service + default and vuln scripts on port; kali-machine
