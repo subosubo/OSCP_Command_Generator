@@ -26,19 +26,38 @@ export function populateHelp() {
   popup.style.display = "none";
   popup.setAttribute("aria-hidden", "true");
 
+  // Helper: open all ancestor <details> elements so collapsed panels expand
+  function openAncestorDetails(el) {
+    let node = el;
+    while (node) {
+      const d = node.closest ? node.closest("details") : null;
+      if (!d) break;
+      d.open = true;
+      node = d.parentElement;
+    }
+  }
+
   popup.addEventListener("click", (e) => {
     const tr = e.target.closest("tr");
     if (!tr) return toggleHelp();
+
     const tag = tr.getAttribute("data-tag");
     const id = TAG_TO_ID[tag];
-    if (id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.focus();
-        el.scrollIntoView({ block: "center" });
-        toast(`Focused: ${TAG_MAP[tag] || tag}`);
-      }
-    }
+    if (!id) return toggleHelp();
+
+    const el = document.getElementById(id);
+    if (!el) return toggleHelp();
+
+    // ✅ Expand collapsed section(s) and focus the input field
+    openAncestorDetails(el);
+
+    // Wait a frame so <details> layout updates before scroll/focus
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+      el.focus({ preventScroll: true });
+      toast(`Focused: ${TAG_MAP[tag] || tag}`);
+    });
+
     toggleHelp();
   });
 }
