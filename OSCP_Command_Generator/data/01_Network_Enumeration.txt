@@ -9,6 +9,7 @@
 ^Network notes:Scan UDP Ports
 ^Network notes:If any username is confirmed, do dictionary attack. If any password is confirmed, do password spray # might lockout user and will need to revert machine
 ^Network notes:Rescan if stuck, verify tools are working properly and commands are correct
+Autorecon:autorecon -v -t <filename1> --nmap # run AutoRecon against target and perform Nmap-based service enumeration; kali-machine
 ftp:nc -vn <target> <port> # nc banner grab; kali-machine
 ftp:ftp <target> # anonymous login. When prompted, use anonymous/anonymous; kali-machine
 ftp:ftp <target> # connect; kali-machine
@@ -92,6 +93,8 @@ nmap:nmap -f <target>/24 # fragment packets for evasion; kali-machine
 nmap:nmap --script malware <target> # malware detection scripts; kali-machine
 nmap:nmap --script vuln <target> # quick vulnerability scan; kali-machine
 nmap:nmap -sV --script nfs-showmount <target> # NFS share enumeration; kali-machine
+nmap:nmap -6 -sV -p- <target6> # full IPv6 port scan; kali-machine
+nmap:nmap -6 --script=ipv6* <target6> # run IPv6-related NSE scripts; kali-machine
 netcat:nc -nv <target> <port> # generic connect; kali-machine
 smtp:nc -vn <target> <port> # banner/ehlo; kali-machine
 smtp:swaks --server <target> --port <port> --command "VRFY <user>" # VRFY/EXPN check with swaks; kali-machine
@@ -168,3 +171,10 @@ enum4linux:enum4linux-ng <target> # kali-machine
 pingsweep # 1:for i in {1..255}; do (ping -c 1 "$(echo <target>| cut -d. -f1-3).$i" | grep "bytes from" | cut -d' ' -f4 | tr -d ':' &); done # kali-machine
 pingsweep # 2:net=$(cut -d. -f1-3 <<< <target>); for i in {1..255}; do ping -c 1 -W 1 "$net.$i" >/dev/null && echo "$net.$i"; done # kali-machine
 Telnet Port Check:telnet <target> <port> # manually test TCP connectivity to target port using Telnet; target-machine
+dns:dnsrecon -d <domain> -t std,axfr,goo,bing,crtsh,snoop # comprehensive DNS enumeration with multiple techniques; kali-machine
+dns:dnsrecon -d <domain> -D <wordlist1> -t brt # DNS brute force with wordlist; kali-machine
+dns:nmap --script dns-brute --script-args dns-brute.domain=<domain>,dns-brute.threads=10 <target> # DNS brute force with nmap; kali-machine
+dns:host -t TXT <domain> <target> # retrieve TXT records (often contain SPF, verification keys); kali-machine
+dns:host -t SRV _kerberos._tcp.<domain> <target> # query Kerberos SRV records; kali-machine
+dns:host -t SRV _ldap._tcp.<domain> <target> # query LDAP SRV records; kali-machine
+dns:dig _ldap._tcp.dc._msdcs.<domain> SRV @<target> # find all domain controllers via SRV records; kali-machine

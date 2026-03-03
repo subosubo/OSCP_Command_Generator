@@ -333,3 +333,19 @@ Kill Process by PID (Linux):sudo kill -9 <PID> #force terminate process by PID; 
 Restart vmtoolsd Service (Linux):sudo systemctl restart vmtoolsd #restart VMware tools service; kali-machine
 Reboot System (Linux):sudo reboot #reboot system; kali-machine
 PowerShell Command Discovery:Get-Command sc #check what “sc” resolves to in PowerShell (alias, cmdlet, or executable); target-machine
+bash:env # list all environment variables in current session; linux-target
+bash:printenv # print all environment variables; linux-target
+bash:set # display all shell variables (includes environment + local shell vars); linux-target
+cmd:set # list all environment variables in current cmd session; target-machine
+powershell:Get-ChildItem Env: # list all environment variables in PowerShell; target-machine
+powershell:gci Env: # short alias to list all environment variables; target-machine
+powershell:[System.Environment]::GetEnvironmentVariables() # display all environment variables using .NET method; target-machine
+bash:echo $PATH # display PATH environment variable; target-machine
+bash:printenv PATH # print PATH variable only; target-machine
+cmd:echo %PATH% # display PATH environment variable; target-machine
+powershell:echo $env:PATH # display PATH variable in PowerShell; target-machine
+powershell:$env:PATH # output PATH variable directly; target-machine
+powershell:[System.Environment]::GetEnvironmentVariable("PATH") # retrieve PATH variable using .NET method; target-machine
+ipv6:ip addr show | grep inet6 # check IPv6 addresses on Linux; target-machine
+ipv6:netsh interface ipv6 show addresses # check IPv6 addresses on Windows; target-machine
+ipv6:ping6 -c 2 <target6> # test IPv6 connectivity; kali-machine

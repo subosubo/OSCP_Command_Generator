@@ -122,5 +122,3 @@ nxc rdp:nxc rdp <target> -u <user> -p '<password>' --verbose # validate creds ag
 nxc winrm:nxc winrm <target> -u <user> -p '<password>' --verbose # validate creds for WinRM remote shell
 username-generation:/home/kali/Tools/git-tools/username-anarchy/username-anarchy -i <wordlist1> # generate username permutations from a list of names (first/last/full); kali-machine
 username-generation:/home/kali/Tools/git-tools/username-anarchy/username-anarchy --recognise <user> # analyze an existing username to infer naming scheme and likely permutations; kali-machine
-AD CS vulnerability enumeration:certipy-ad find -u '<user>' -p '<password>' -dc-ip <target> -vulnerable # enumerate Active Directory Certificate Services objects and identify misconfigurations/vulnerable templates (ESC paths); kali-machine
-Domain user enumeration (RID brute):nxc smb <target> -u '<user>' -p '<password>' --rid-brute | grep -i 'sidtypeuser' | awk '{print $6}' | cut -d '\' -f2 | tee users.txt # enumerate all domain user accounts via RID brute-force and extract usernames; kali-machine

