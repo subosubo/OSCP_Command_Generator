@@ -59,6 +59,16 @@ export function scheduleCommandLookup() {
       info.textContent = "No category match.";
       return;
     }
-    info.textContent = `Found in: ${hits.join(", ")}`;
+
+    // Render clickable chips so user can jump straight to a category.
+    const chips = hits
+      .map(
+        (c) =>
+          `<button type="button" class="hit-chip" data-cat="${encodeURIComponent(
+            c,
+          )}">${c}</button>`,
+      )
+      .join(" ");
+    info.innerHTML = `Found in: ${chips}`;
   }, 220);
 }

@@ -7,7 +7,7 @@ import {
 } from "./validate.js";
 import { clearAllFilters, saveUI, saveNonSensitiveInputs } from "./storage.js";
 import { applyUI } from "./ui_state.js";
-import { scheduleFilter } from "./filters.js";
+import { scheduleFilter, selectVisibleCardByIndex } from "./filters.js";
 import { buildCategory, updateRenderedCardsAndBadges } from "./render.js";
 import { toast } from "./ui.js";
 import { clearCommandInfo, scheduleCommandLookup } from "./lookup.js";
@@ -143,6 +143,25 @@ export function bindLiveUpdates() {
     scheduleCommandLookup();
   });
 
+  // Global search: click a hit chip to jump to that category (preserving the search term).
+  const info = dom.commandInfo?.();
+  if (info) {
+    info.addEventListener("click", (e) => {
+      const btn = e.target?.closest?.(".hit-chip");
+      if (!btn) return;
+
+      const cat = decodeURIComponent(btn.getAttribute("data-cat") || "").trim();
+      if (!cat) return;
+
+      const term = dom.search()?.value?.trim() || "";
+      app.pendingJump = { category: cat, term };
+
+      const sel = dom.category();
+      sel.value = cat;
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  }
+
   dom.toggleBlockCopy().addEventListener("change", () => {
     if (!app.currentCategory) return;
     scheduleRenderedUpdate();
@@ -165,14 +184,27 @@ export function bindCategoryDropdownLoadsCommands() {
     }
 
     clearAllFilters();
-    dom.search().value = "";
+
+    // If a global-search jump is in progress, preserve the term and re-apply it after load.
+    const jump = app.pendingJump && app.pendingJump.category === selected ? app.pendingJump : null;
+    if (!jump) dom.search().value = "";
     clearCommandInfo();
 
     if (!validateAllInputs()) return;
 
     await buildCategory(selected);
     scheduleRenderedUpdate();
-    scheduleFilter();
+
+    if (jump && jump.term) {
+      dom.search().value = jump.term;
+      app.pendingJump = null;
+      scheduleFilter();
+      // Auto-scroll to the first visible hit (fastest exam workflow)
+      requestAnimationFrame(() => selectVisibleCardByIndex(0));
+    } else {
+      scheduleFilter();
+    }
+
     dom.search().focus();
   });
 }

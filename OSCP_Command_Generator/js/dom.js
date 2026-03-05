@@ -28,4 +28,10 @@ export const dom = {
   toggleRemember: () => $("toggleRemember"),
 
   commandInfo: () => $("command"),
+
+  timer20: () => $("timer20"),
+  timer40: () => $("timer40"),
+  timer90: () => $("timer90"),
+  timerStop: () => $("timerStop"),
+  timerReadout: () => $("timerReadout"),
 };

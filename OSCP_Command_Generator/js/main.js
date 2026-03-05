@@ -7,6 +7,7 @@ import { bindButtons, bindLiveUpdates, bindCategoryDropdownLoadsCommands } from 
 import { loadUI, enableRememberToggleIfSaved, migrateStorage } from "./storage.js";
 import { applyUI } from "./ui_state.js";
 import { setStatus } from "./ui.js";
+import { bindExamTimers } from "./timer.js";
 
 async function init() {
   migrateStorage();
@@ -21,6 +22,7 @@ async function init() {
   bindButtons({ toggleHelp });
   bindKeyboard({ toggleHelp });
   bindLiveUpdates();
+  bindExamTimers();
   bindScrollToTop();
   bindCategoryDropdownLoadsCommands();
 

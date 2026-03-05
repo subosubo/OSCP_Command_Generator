@@ -226,6 +226,25 @@ body[data-font="3"] {
   display: none;
 }
 
+.hit-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 4px 0 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(30, 41, 59, 0.45);
+  color: rgba(226, 232, 240, 0.92);
+  cursor: pointer;
+  font-weight: 650;
+  font-size: 12px;
+}
+
+.hit-chip:hover {
+  filter: brightness(1.05);
+}
+
 kbd {
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
@@ -298,6 +317,59 @@ kbd {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+/* Exam timers (visual only) */
+.timer-controls {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin-left: 6px;
+}
+
+.timer-btn {
+  width: auto;
+  padding: 9px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(30, 41, 59, 0.45);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.timer-btn:hover {
+  filter: brightness(1.05);
+}
+
+.timer-readout {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  opacity: 0.75;
+  min-width: 56px;
+  text-align: right;
+}
+
+@keyframes timerFlash {
+  0% {
+    background: rgba(30, 41, 59, 0.45);
+    color: var(--text);
+    border-color: rgba(148, 163, 184, 0.22);
+  }
+  50% {
+    background: #ff3b3b;
+    color: #111;
+    border-color: #ff3b3b;
+  }
+  100% {
+    background: rgba(30, 41, 59, 0.45);
+    color: var(--text);
+    border-color: rgba(148, 163, 184, 0.22);
+  }
+}
+
+.timer-controls.alarm .timer-btn {
+  animation: timerFlash 0.9s linear infinite;
 }
 
 .pill {
@@ -732,4 +804,10 @@ kbd {
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.28);
   min-height: 18px;
+}
+
+/* Active timer button */
+.timer-btn.active{
+  background: rgba(220,38,38,0.18);
+  border: 2px solid #dc2626;
 }
