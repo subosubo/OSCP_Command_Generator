@@ -8,8 +8,6 @@
   "07_Linux_enum_privesc",
   "08_Windows_enum_privesc",
   "09_Tunneling_Port_forwarding",
-  "10_Windows_ad_enumeration",
-  "11_Windows_ad_attacks",
-  "12_Windows_ad_post_exploit",
-  "13_Misc"
+  "10_Windows_AD",
+  "11_Misc"
 ]

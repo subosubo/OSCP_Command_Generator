@@ -1,180 +1,231 @@
-^Network notes:Scan all TCP Ports
-^Network notes:Do proper fingerprinting with -sV -sC,  nmap vuln scan, wappalyzer, check CMS, check server headers, nc -nvv, check every TCP port etc. 
-^Network notes:Even when nmap doesn’t have detailed service version, always “nc -nv ip ports” to fingerprint. 
+^Network notes:Scan all TCP ports - complete full port scan (1-65535) on every target
+^Network notes:Do proper fingerprinting with -sV -sC, nmap vuln scan, wappalyzer, check CMS, check server headers, nc -nvv, check every TCP port etc.
+^Network notes:Even when nmap doesn't have detailed service version, always “nc -nv ip ports” to fingerprint.
 ^Network notes:Use common help commands to bring out the help menu: /?, ?, -h, —help, help, etc
-^Network notes:For SNMP MIB tree, don’t give up on huge chunk of text - look for .exe,  version, ver. ALWAYS remember to  NET-SNMP-EXTEND-MIB::nsExtendOutputFull and NET-SNMP-EXTEND-MIB::nsExtendObjects for snmpwalk
+^Network notes:For SNMP MIB tree, don't give up on huge chunk of text - look for .exe, version, ver. ALWAYS remember to NET-SNMP-EXTEND-MIB::nsExtendOutputFull and NET-SNMP-EXTEND-MIB::nsExtendObjects for snmpwalk
 ^Network notes:If FTP anon login doesn't work, remember to use hydra
 ^Network notes:Common/Default Credentials (admin:admin)
-^Network notes:Identify unpatched services (E.g: SMB, RDP, Apache, MySQL). Check for public exploits on searchploit, exploitDB, google, github.com, etc. if one github exploit for a particular CVE fails, find max 2 more then move on. 
+^Network notes:Identify unpatched services (E.g: SMB, RDP, Apache, MySQL). Check for public exploits on searchploit, exploitDB, google, github.com, etc. if one github exploit for a particular CVE fails, find max 2 more then move on.
 ^Network notes:Scan UDP Ports
 ^Network notes:If any username is confirmed, do dictionary attack. If any password is confirmed, do password spray # might lockout user and will need to revert machine
 ^Network notes:Rescan if stuck, verify tools are working properly and commands are correct
-Autorecon:autorecon -v -t <filename1> --nmap # run AutoRecon against target and perform Nmap-based service enumeration; kali-machine
-ftp:nc -vn <target> <port> # nc banner grab; kali-machine
-ftp:ftp <target> # anonymous login. When prompted, use anonymous/anonymous; kali-machine
-ftp:ftp <target> # connect; kali-machine
-ftp:ftp <target> -p <port> # connect with port; kali-machine
-ftp:ftp> ls -la # list files including hidden; kali-machine
-ftp:ftp> binary # switch to binary mode for exe/zip/img; kali-machine
-ftp:ftp> get <filename1> # download a single file; kali-machine
-ftp:ftp> mget * # download all files in current dir; kali-machine
-ftp:passive off # force active mode; kali-machine
-ftp:ftp> put <filename1> /upload/<filename2> # upload a single file from local cwd to remote path - use just the filename <filename1> if file is in current dir, otherwise supply absolute path (eg ftp> get /path/to/<filename1>) ; kali-machine
-ftp:wget -m --no-passive ftp://<target>:<port>/ # recursive mirror anonymous with wget; kali-machine
-ftp:wget -m --no-passive ftp://<user>:<password>@<target>:<port>/ # recursive mirror authenticated with wget; kali-machine
-ftp:lftp -u <user>,<password> <target>:<port> -e "mirror -c -e / ./downloaded && bye" # recursive mirror with lftp, resume + control; kali-machine
-ftp:ncftpget -R -v -u <user> -p <password> <target> ./download / # recursive mirror with ncftpget; kali-machine
-ftp:medusa -h <target> -u <user> -P <wordlist1> -p <port> -M ftp # brute-force with medusa; kali-machine
-ssh:nc -vn <target> <port> # banner; kali-machine
-ssh:nmap -p <port> -sV --script=ssh-auth-methods,ssh-run <target> # SSH enumeration scripts; kali-machine
-ssh:ssh -i <filename1> <user>@<target> -p <port> # connect; kali-machine
-ssh:ssh -i <filename1> <user>@<target> -p <port> # login with identity key file - ensure chmod 400 <filename1>; kali-machine
-ssh:hydra -s <port> -l <user> -P <wordlist1> -t 10 <target> ssh # brute-force with hydra, single user; kali-machine
-ssh:hydra -s <port> -L <wordlist1> -p '<password>' -t 10 <target> ssh # password spray with hydra, many users one pass; kali-machine
-ssh:nmap -sV -p <port> --script=ssh-auth-methods,ssh-run <target> # nmap SSH scripts/service detection; kali-machine
-generate SSH ed25519 keypair (high iterations) and copy public key to client host:ssh-keygen -t ed25519 -a 777 -f <filename1> # kali-machine
-generate SSH ed25519 keypair (high iterations) and copy public key to client host:ssh-copy-id -i <filename1> <user>@<target> -p <port> # kali-machine
-append public key file to authorized_keys:cat <filename1> >> ~/.ssh/authorized_keys # target-machine
-snmp:onesixtyone -c /usr/share/seclists/Discovery/SNMP/common-snmp-community-strings-onesixtyone.txt -i <target> # brute-force community names; kali-machine
-snmp:snmpwalk -v1 -c public <target> # kali-machine
-snmp:snmpwalk -v2c -c <community> <target> NET-SNMP-EXTEND-MIB::nsExtendOutputFull # kali-machine
-snmp:sudo snmpbulkwalk -c <community> -v2c <target> NET-SNMP-EXTEND-MIB::nsExtendOutputFull # kali-machine
-dns:nslookup <domain> <target> # query domain using specific DNS server; kali-machine
-dns:dig @<target> -p <port> <domain> ANY # query ANY records; kali-machine
-dns:dig @<target> -p <port> <domain> A # query A record; kali-machine
-dns:dig @<target> -p <port> <domain> MX # query MX record; kali-machine
-dns:dig @<target> -p <port> <domain> NS # query NS record; kali-machine
-dns:dig @<target> -p <port> <domain> SOA # query SOA / zone serial; kali-machine
-dns:dig +short @<target> -p <port> <domain> # short answer output; kali-machine
-dns:dig -x <target> -p <port> # reverse PTR lookup; kali-machine
-dns:dig AXFR @<target> -p <port> <domain> # attempt zone transfer (AXFR) on each discovered domain; kali-machine
-dns:host -l <domain> <target> -p <port> # zone transfer using host; kali-machine
-dns:host -t ANY <domain> <target> -p <port> # host ANY records; kali-machine
-dns:host -a <domain> <target> -p <port> # host verbose/debug output; kali-machine
-dns:dnsenum <domain> --dnsserver <target> --threads 10 # DNS enumeration and subdomain discovery; kali-machine
-dns:dnsrecon -d <domain> -n <target> # DNS reconnaissance; kali-machine
-dns:dnsrecon -d <domain> -D <filename1> -t brt # subdomain brute force; kali-machine
-dns:nmap -sU -p <port> --script=dns-recursion,dns-zone-transfer,dns-nsid <target> # DNS-related NSE scripts; kali-machine
-dns:dig +dnssec @<target> -p <port> <domain> # check DNSSEC support; kali-machine
-dns:dig @<target> -p <port> <domain> +short && dig @8.8.8.8 <domain> +short # compare authoritative vs public DNS; kali-machine
-WHOIS (IP Lookup):whois <target> #retrieve registration and ownership information for target IP address; kali-machine
-WHOIS (Domain Lookup):whois <domain> #retrieve domain registration, registrar, and nameserver details; kali-machine
-^nmap (quick start-tcp):nmap -sVC -p- -v -T4 -sT --open <target> -oN results_TCP # kali-machine
-^nmap (quick start-tcp-ligolo):nmap -sVC -p- -v -T4 -sT --open <target> --max-hostgroup 1 -oN results_TCP_internal # kali-machine
-^nmap (quick start-udp):sudo nmap -sU -p 1-1024 -v <target> -oA results_UDP # kali-machine
-^nmap (quick start-udp-ligolo):sudo nmap -sU -p 1-1024 -v <target> -oA results_UDP_internal # kali-machine
-^nmap (hbp-tcp):nmap -p- -Pn <target> -v -T5 --min-rate 1500 --max-rtt-timeout 500ms --max-retries 3 --open -oN results_TCP_fast
-^nmap (hbp-tcp):nmap -p- -Pn <target> -v --min-rate 1000 --max-rtt-timeout 1000ms --max-retries 5 -oN nmap_ports.txt && sleep 5 && nmap -Pn <target> -sVC -v -oN nmapsVsC.txt && sleep 5 && nmap -T5 -Pn <target> -v --script vuln -oN nmap_vuln.txt
-nmap:nmap -sV -p- -T4 <target> # full TCP port scan with service detection; kali-machine
-nmap:nmap --top-ports 100 -sV -T4 <target> # top 100 ports service scan; kali-machine
-nmap:nmap -p <port> -sV --script=default,vuln <target> # service + default and vuln scripts on port; kali-machine
-nmap:nmap -p <port> -sV --script=http-enum,http-title,http-vuln <target> # HTTP enumeration scripts; kali-machine
-nmap:nmap -p <port> -sV --script=smtp-open-relay,smtp-commands <target> # SMTP enumeration scripts; kali-machine
-nmap:nmap -p <port> -sV --script=mysql-info,mysql-enum <target> # MySQL enumeration scripts; kali-machine
-nmap:nmap -p <port> -sV --script=rdp-enum-encryption,rdp-ntlm-info <target> # RDP enumeration scripts; kali-machine
-nmap:nmap -p <port> -sV --script=pgsql-info <target> # PostgreSQL enumeration script; kali-machine
-nmap:sudo nmap --script-help http* # list HTTP-related NSE scripts; kali-machine
-nmap:sudo nmap --script <script> -p <ports> -oA <output> <target> # run specific NSE script; kali-machine
-nmap:sudo nmap --script vuln -sC -sV -vv -oA vuln_scan <target> # full vulnerability scan; kali-machine
-nmap:sudo nmap --script-update # update NSE script database; kali-machine
-nmap:sudo nmap --script "default and not safe" <target> # NSE category operators; kali-machine
-nmap:sudo nmap -p <http-port> --script http-title --script-args http.useragent="MyCustomAgent" <target> # custom script arguments; kali-machine
-nmap:nmap -A <target> # aggressive scan (OS, version, scripts, traceroute); kali-machine
-nmap:nmap -O <target> # OS detection; kali-machine
-nmap:nmap -Pn <target> # skip host discovery (treat host as online); kali-machine
-nmap:nmap -p <ports> -sC -sV -Pn <target> # targeted scan without ping; kali-machine
-nmap:nmap -T4 -sC -sV -p- --min-rate 1000 <target> # fast full scan tuned for speed; kali-machine
-nmap:nmap -sn <target>/24 # ping sweep subnet; kali-machine
-nmap:nmap -sn -T4 <target>/24 -oN active-hosts # identify live hosts in subnet; kali-machine
-nmap:nmap -sL <target>/24 # list targets without scanning; kali-machine
-nmap:nmap --source-port 53 <target>/24 # bypass firewall using DNS source port; kali-machine
-nmap:nmap -D RND:10 <target>/24 # decoy scan for IDS evasion; kali-machine
-nmap:nmap -f <target>/24 # fragment packets for evasion; kali-machine
-nmap:nmap --script malware <target> # malware detection scripts; kali-machine
-nmap:nmap --script vuln <target> # quick vulnerability scan; kali-machine
-nmap:nmap -sV --script nfs-showmount <target> # NFS share enumeration; kali-machine
-nmap:nmap -6 -sV -p- <target6> # full IPv6 port scan; kali-machine
-nmap:nmap -6 --script=ipv6* <target6> # run IPv6-related NSE scripts; kali-machine
-netcat:nc -nv <target> <port> # generic connect; kali-machine
-smtp:nc -vn <target> <port> # banner/ehlo; kali-machine
-smtp:swaks --server <target> --port <port> --command "VRFY <user>" # VRFY/EXPN check with swaks; kali-machine
-smtp:nmap -sV -p <port> --script=smtp-open-relay,smtp-commands <target> # open relay and commands with nmap; kali-machine
-smtp:medusa -h <target> -u <user> -P <wordlist1> -p <port> -M smtp # auth brute-force with medusa; kali-machine
-pop3:nc -vn <target> <port> # banner/connect; kali-machine
-pop3:openssl s_client -connect <target>:<port> # POP3S test with openssl; kali-machine
-pop3:telnet <target> <port> (then USER <user> PASS <password> ; LIST) # list via telnet; kali-machine
-imap:nc -vn <target> <port> # banner/connect; kali-machine
-imap:nmap -p <port> -sV --script=imap-capabilities,imap-brute <target> # IMAP enumeration scripts; kali-machine
-imap:openssl s_client -connect <target>:<port> # IMAPS with openssl; kali-machine
-^Domain info probe:nxc smb <target> # probe SMB to fingerprint domain/workgroup, host OS, SMB signing, and basic share/auth posture (no creds); kali-machine
-smb:nmblookup -A <target> # NetBIOS name lookup; kali-machine
-smb:nmap -p <port> --script=smb-enum-shares,smb-enum-users,smb-os-discovery <target> # SMB enumeration scripts; kali-machine
-smb:smbclient -L //<target> -N # list shares (anonymous); kali-machine
-smb:smbclient -L \\\\<target>\\ # list available SMB shares on target host (anonymous or authenticated depending on context); kali-machine (Linux)
-smb:smbclient -L //<target> -p <port> -U '<domain>/<user>'%'<password>' # list shares with credentials; kali-machine
-smb:smbclient -L //<target> -p <port> -U '<domain>/<user>'%'<ntlm>' --pw-nt-hash # list shares using NTLM hash; kali-machine
-smb:smbclient -L //<target> -p <port> -U '<domain>/<user>'%'<ntlm>' --pw-nt-hash --option='client min protocol=SMB2' # force SMB2 with NTLM auth; kali-machine
-smb:smbclient //<target>/<share> -U "" # attempt anonymous (null session) connection to specific SMB share; kali-machine (Linux)
-smb:smbclient //<target>/<share> -U '<domain>/<user>'%'<password>' # connect to SMB share (password); kali-machine
-smb:smbclient //<target>/<share> -U '<domain>/<user>'%'<ntlm>' --pw-nt-hash -p <port> # connect to SMB share (NTLM); kali-machine
-smb:smbclient //<target>/<share> -c 'put <filename1>' # upload file to SMB share; kali-machine
-smb:enum4linux -a -u <user> -p <password> <target> # SMB enumeration with credentials; kali-machine
-smb:smbmap -H <target> # enumerate SMB shares and permissions; kali-machine
-smbclient $>:mask "" # disable filename mask; kali-machine
-smbclient $>:recurse ON # enable recursive download; kali-machine
-smbclient $>:prompt OFF # disable prompts; kali-machine
-smbclient $>:cd <remote_path> # change remote directory; kali-machine
-smbclient $>:lcd <local_path> # change local directory; kali-machine
-smbclient $>:mget * # download all files; kali-machine
-mount CIFS guest:sudo mount -t cifs -o guest //<target>/<filename1> /mnt/point # kali-machine
-mount CIFS with username/password:sudo mount -t cifs -o username=<user>,password=<password> //<target>/<filename1> /mnt/point # kali-machine
-mount CIFS with domain:sudo mount -t cifs -o username=<user>,password=<password>,domain=<domain> //<target>/<filename1> /mnt/point # kali-machine
-rpcclient:rpcclient # kali-machine
-rpcclient:rpcclient -U "" -N <target> # anonymous connection; kali-machine
-rpcclient:rpcclient -U <domain>\<user>%<password> <target> # auth connection; kali-machine
-rpcclient:rpcclient -U '<domain>\<user>%<password>' --option='client min protocol=SMB2' --option='client max protocol=SMB2' <target> # force SMB2; kali-machine
-RPC Domain Enumeration:enumdomains #enumerate available domains; kali-machine
-RPC Domain Enumeration:querydominfo #retrieve domain information; kali-machine
-RPC Domain Enumeration:querydispinfo #display domain user information; kali-machine
-RPC Domain Enumeration:dsroledominfo #retrieve domain role information (DC/member server); kali-machine
-RPC User Enumeration:enumdomusers #enumerate domain users; kali-machine
-RPC User Enumeration:queryuser <RID> #query user details by RID; kali-machine
-RPC User Enumeration:queryuser <user> #query user details by username; kali-machine
-RPC User Enumeration:queryusergroups <RID> #enumerate groups for user by RID; kali-machine
-RPC User Enumeration:getusrdompwinfo <RID> #retrieve password info for user by RID; kali-machine
-RPC Group Enumeration:enumdomgroups #enumerate domain groups; kali-machine
-RPC Group Enumeration:enumalsgroups builtin #enumerate built-in local groups; kali-machine
-RPC Group Enumeration:querygroup <RID> #query group details by RID; kali-machine
-RPC Group Enumeration:querygroupmem <RID> #enumerate members of group by RID; kali-machine
-RPC Password Policy:getdompwinfo #retrieve domain password policy; kali-machine
-RPC SID Enumeration:lookupdomain <domain> #retrieve domain SID; kali-machine
-RPC SID Enumeration:lookupnames <name> #resolve name to RID/SID; kali-machine
-RPC SID Enumeration:lookupsids <sid> #resolve SID to name; kali-machine
-RPC LSA Enumeration:lsaquery #query LSA policy information; kali-machine
-RPC LSA Enumeration:lsaquerysecobj #query LSA security object; kali-machine
-RPC LSA Enumeration:lsaenumsid #enumerate SIDs from LSA; kali-machine
-RPC LSA Enumeration:lsaenumacctrights <sid> #enumerate account rights for SID; kali-machine
-RPC LSA Enumeration:enumprivs #enumerate privileges; kali-machine
-RPC Share Enumeration:netshareenum #enumerate shared resources; kali-machine
-RPC Share Enumeration:netshareenumall #enumerate all shared resources; kali-machine
-RPC Share Enumeration:netsharegetinfo <share> #retrieve detailed share information; kali-machine
-RPC Server Enumeration:srvinfo #retrieve server information; kali-machine
-RPC User Manipulation:createdomuser <user> #create new domain user (requires rights); kali-machine
-RPC User Manipulation:deletedomuser <user> #delete domain user (requires rights); kali-machine
-RPC User Manipulation:setuserinfo2 <user> 23 <password> #set/reset user password (level 23); kali-machine
-RPC User Manipulation:setuserinfo2 <user> 24 <password> #alternate password set method; kali-machine
-RPC Group Manipulation:createdomgroup <group> #create domain group (requires rights); kali-machine
-RPC Group Manipulation:deletedomgroup <group> #delete domain group (requires rights); kali-machine
-RPC Password Reset (Non-Interactive):rpcclient -U '<domain>/<user>%<password>' <dc-ip> -c "setuserinfo2 <target_user> 23 '<new_password>'" #reset another user’s password when having GenericAll/ResetPassword; kali-machine
-rpc command list:https://www.hackingarticles.in/active-directory-enumeration-rpcclient/ # lsa; kali-machine
-enum4linux:enum4linux-ng <target> # kali-machine
-pingsweep # 1:for i in {1..255}; do (ping -c 1 "$(echo <target>| cut -d. -f1-3).$i" | grep "bytes from" | cut -d' ' -f4 | tr -d ':' &); done # kali-machine
-pingsweep # 2:net=$(cut -d. -f1-3 <<< <target>); for i in {1..255}; do ping -c 1 -W 1 "$net.$i" >/dev/null && echo "$net.$i"; done # kali-machine
-Telnet Port Check:telnet <target> <port> # manually test TCP connectivity to target port using Telnet; target-machine
-dns:dnsrecon -d <domain> -t std,axfr,goo,bing,crtsh,snoop # comprehensive DNS enumeration with multiple techniques; kali-machine
-dns:dnsrecon -d <domain> -D <wordlist1> -t brt # DNS brute force with wordlist; kali-machine
-dns:nmap --script dns-brute --script-args dns-brute.domain=<domain>,dns-brute.threads=10 <target> # DNS brute force with nmap; kali-machine
-dns:host -t TXT <domain> <target> # retrieve TXT records (often contain SPF, verification keys); kali-machine
-dns:host -t SRV _kerberos._tcp.<domain> <target> # query Kerberos SRV records; kali-machine
-dns:host -t SRV _ldap._tcp.<domain> <target> # query LDAP SRV records; kali-machine
-dns:dig _ldap._tcp.dc._msdcs.<domain> SRV @<target> # find all domain controllers via SRV records; kali-machine
+^Network notes:rpc command list:https://www.hackingarticles.in/active-directory-enumeration-rpcclient/ # lsa; kali-machine
+^Reminder:Start on every target with full TCP discovery + default scripts/service detection → run: Nmap (start)
+^Reminder:If scanning through a tunnel/pivot and scans feel unstable → run: Nmap (ligolo)
+^Reminder:If you need quick port discovery before detailed -sC/-sV → run: Nmap
+^Reminder:If you discover a /24 or need live hosts in a subnet → run: Ping Sweep # 2
+^Reminder:If ICMP seems blocked but you are on the same L2 segment → run: ARP Scan
+^Reminder:If IPv6 is present on your interface/target → run: IPv6
+^Reminder:If nmap version detection is weak/ambiguous, manually banner-grab the port → run: Netcat
+^Reminder:If you need service-specific NSE enumeration → run: Nmap Scripts
+^Reminder:If DNS is open, attempt zone transfer and enumerate records → run: DNS Enum
+^Reminder:After DNS enum, query specific record types and SRV records → run: DNS Query
+^Reminder:If FTP is open, try anonymous and enumerate files/directories → run: FTP
+^Reminder:If FTP anonymous fails or creds suspected → run: FTP Brute
+^Reminder:If SSH is open, check auth methods/banner then connect with keys/creds if found → run: SSH
+^Reminder:If you have usernames/passwords for SSH → run: SSH Brute
+^Reminder:If SNMP is open, brute community strings and walk; check NET-SNMP-EXTEND output → run: SNMP
+^Reminder:If SMTP is open, enumerate commands/VRFY and open relay → run: SMTP
+^Reminder:If SMTP auth is required and you have users/passwords → run: SMTP Brute
+^Reminder:If POP3 is open, banner-grab and test encrypted POP3S if present → run: POP3
+^Reminder:If IMAP is open, enumerate capabilities and test IMAPS if present → run: IMAP
+^Reminder:If SMB is exposed on any port, fingerprint and enumerate shares/users → run: SMB Enum
+^Reminder:If you find accessible shares, connect and download loot → run: SMB Connect
+^Reminder:If RPC is accessible (often via SMB), enumerate domains/users/groups → run: RPC Enum
+^Reminder:If you obtain rights to modify users/groups via RPC → run: RPC Manipulate
+^Reminder:If you need IP/domain ownership context (rarely useful but quick) → run: WHOIS
+
+
+^AutoRecon:autorecon -v -t <filename1> --nmap # Automated reconnaissance tool that runs multiple scans in parallel. Use with target list file; kali-machine
+
+Ping Sweep # 1:for i in {1..255}; do (ping -c 1 "$(echo <target>| cut -d. -f1-3).$i" | grep "bytes from" | cut -d' ' -f4 | tr -d ':' &); done # Quick bash ping sweep to discover live hosts. Look for responses; kali-machine
+Ping Sweep # 1:net=$(cut -d. -f1-3 <<< <target>); for i in {1..255}; do ping -c 1 -W 1 "$net.$i" >/dev/null && echo "$net.$i"; done # Cleaner ping sweep with timeout. Outputs live IPs; kali-machine
+
+Ping Sweep # 2:nmap -sn <target>/24 # Nmap ping sweep. More reliable when ICMP is allowed; kali-machine
+Ping Sweep # 2:nmap -sn -T4 <target>/24 -oN active-hosts # Save live hosts to file for later scanning; kali-machine
+
+ARP Scan:arp-scan -l # Discover local network hosts via ARP requests. Useful when ICMP is blocked; kali-machine
+
+IPv6:ip addr show | grep inet6 # On Linux target, check if IPv6 is enabled; target-machine
+IPv6:netsh interface ipv6 show addresses # On Windows target, check IPv6 configuration. Often overlooked; target-machine
+IPv6:ping6 -c 2 <target6> # Test IPv6 connectivity. If successful, run IPv6 scans; kali-machine
+IPv6:nmap -6 -sV -p- <target6> # Full IPv6 port scan. May reveal different services than IPv4; kali-machine
+IPv6:nmap -6 --script=ipv6* <target6> # Run IPv6-specific NSE scripts. Look for misconfigurations; kali-machine
+
+Nmap:nmap -sV -p- -T4 <target> # Full TCP port scan with service version detection. Save output for reference; kali-machine
+^Nmap (start):nmap -sVC -p- -v -T4 -sT --open <target> -oN results_TCP # Full TCP scan with default scripts. Only shows open ports; kali-machine
+^Nmap (ligolo):nmap -sVC -p- -v -T4 -sT --open <target> --max-hostgroup 1 -oN results_TCP_internal # TCP scan through Ligolo tunnel. Use when pivoting; kali-machine
+Nmap:nmap -p- -Pn <target> -v -T5 --min-rate 1500 --max-rtt-timeout 500ms --max-retries 3 --open -oN results_TCP_fast # Fast port discovery. Use before detailed scan; kali-machine
+Nmap (start):nmap -p- -Pn <target> -v --min-rate 1000 --max-rtt-timeout 1000ms --max-retries 5 -oN nmap_ports.txt && sleep 5 && nmap -Pn <target> -sVC -v -oN nmapsVsC.txt && sleep 5 && nmap -T5 -Pn <target> -v --script vuln -oN nmap_vuln.txt # Staged scanning: ports → service → vulns. Wait between stages; kali-machine
+Nmap:nmap --top-ports 100 -sV -T4 <target> # Scan only top 100 ports. Faster than full scan; kali-machine
+Nmap:nmap -A <target> # Aggressive scan: OS, version, scripts, traceroute; kali-machine
+Nmap:nmap -O <target> # OS detection only. Look for OS guesses; kali-machine
+Nmap:nmap -Pn <target> # Skip host discovery. Use when ICMP is blocked; kali-machine
+Nmap:nmap -p <ports> -sC -sV -Pn <target> # Targeted scan on specific ports you already know; kali-machine
+Nmap:nmap -T4 -sC -sV -p- --min-rate 1000 <target> # Fast full scan. Good balance of speed and accuracy; kali-machine
+Nmap:nmap -sn <target>/24 # Simple ping sweep to discover live hosts in subnet; kali-machine
+Nmap:nmap -sn -T4 <target>/24 -oN active-hosts # Ping sweep with output file. Save list of live hosts; kali-machine
+Nmap:nmap -sL <target>/24 # List targets without scanning. Useful for hostname resolution; kali-machine
+Nmap:nmap --source-port 53 <target>/24 # Bypass firewall filters using DNS source port; kali-machine
+Nmap:nmap -D RND:10 <target>/24 # Decoy scan with random IPs. Helps hide your real address; kali-machine
+Nmap:nmap -f <target>/24 # Fragment packets to evade simple firewalls; kali-machine
+Nmap (start):sudo nmap -sU -p 1-1024 -v <target> -oA results_UDP # Scan top UDP ports. Often reveals services missed by TCP scans; kali-machine
+Nmap (ligolo):sudo nmap -sU -p 1-1024 -v <target> -oA results_UDP_internal # UDP scan through Ligolo tunnel. Use when pivoting; kali-machine
+Nmap:nmap -sV --script nfs-showmount <target> # Enumerate NFS shares. If successful, you may be able to mount them; kali-machine
+
+Nmap Scripts:sudo nmap --script <script> -p <ports> -oA <output> <target> # Run specific NSE script. Check output for vulnerabilities; kali-machine
+Nmap Scripts:sudo nmap --script vuln -sC -sV -vv -oA vuln_scan <target> # Comprehensive vulnerability scan. Look for "VULNERABLE"; kali-machine
+Nmap Scripts:nmap --script vuln <target> # Quick vulnerability scan. Good initial check; kali-machine
+Nmap Scripts:nmap --script malware <target> # Check for signs of malware or backdoors; kali-machine
+Nmap Scripts:sudo nmap --script-help http* # List available HTTP-related scripts; kali-machine
+Nmap Scripts:sudo nmap --script "default and not safe" <target> # Run default scripts excluding "safe" category; kali-machine
+Nmap Scripts:sudo nmap -p <http-port> --script http-title --script-args http.useragent="MyCustomAgent" <target> # Custom user-agent to bypass filters; kali-machine
+Nmap Scripts:nmap -p <port> -sV --script=http-enum,http-title,http-vuln <target> # HTTP enumeration scripts; kali-machine
+Nmap Scripts:nmap -p <port> -sV --script=smtp-open-relay,smtp-commands <target> # SMTP enumeration scripts; kali-machine
+Nmap Scripts:nmap -p <port> -sV --script=mysql-info,mysql-enum <target> # MySQL enumeration scripts; kali-machine
+Nmap Scripts:nmap -p <port> -sV --script=rdp-enum-encryption,rdp-ntlm-info <target> # RDP enumeration scripts; kali-machine
+Nmap Scripts:nmap -p <port> -sV --script=pgsql-info <target> # PostgreSQL enumeration script; kali-machine
+Nmap Scripts:nmap -p <port> --script=smb-enum-shares,smb-enum-users,smb-os-discovery <target> # SMB enumeration scripts; kali-machine
+
+Netcat:nc -nv <target> <port> # Manual banner grab. Often reveals more than nmap; kali-machine
+Netcat:nc -nvv <target> <port> # Verbose banner grab with extra details; kali-machine
+
+Telnet:telnet <target> <port> # Test TCP connectivity manually. Useful for checking if port is truly open; target-machine
+
+WHOIS:whois <target> # Retrieve IP registration info. May reveal organization names; kali-machine
+WHOIS:whois <domain> # Retrieve domain registration details. Look for expiration dates; kali-machine
+
+DNS Enum:dig AXFR @<target> -p <port> <domain> # Attempt DNS zone transfer. If successful, you get all DNS records for the domain; kali-machine
+DNS Enum:host -l <domain> <target> -p <port> # Alternative zone transfer attempt using host command; kali-machine
+DNS Enum:host -a <domain> <target> -p <port> # Host verbose/debug output; kali-machine
+DNS Enum:dnsrecon -d <domain> -t std,axfr,goo,bing,crtsh,snoop # Comprehensive DNS enumeration using multiple techniques; kali-machine
+DNS Enum:dnsrecon -d <domain> -n <target> # DNS reconnaissance against specific nameserver; kali-machine
+DNS Enum:dnsrecon -d <domain> -D <filename1> -t brt # Subdomain brute force using wordlist; kali-machine
+DNS Enum:nmap --script dns-brute --script-args dns-brute.domain=<domain>,dns-brute.threads=10 <target> # DNS brute force with nmap; kali-machine
+DNS Enum:dnsenum <domain> --dnsserver <target> --threads 10 # DNS enumeration with subdomain discovery; kali-machine
+DNS Enum:nmap -sU -p <port> --script=dns-recursion,dns-zone-transfer,dns-nsid <target> # DNS-related NSE scripts. Check for recursion and zone transfer vulns; kali-machine
+DNS Enum:dig +dnssec @<target> -p <port> <domain> # Check DNSSEC support. May reveal additional records; kali-machine
+DNS Enum:dig @<target> -p <port> <domain> +short && dig @8.8.8.8 <domain> +short # Compare authoritative vs public DNS. Look for discrepancies; kali-machine
+
+DNS Query:dig @<target> -p <port> <domain> ANY # Query all record types. Look for anything unusual; kali-machine
+DNS Query:dig @<target> -p <port> <domain> A # Query A records (IPv4 addresses); kali-machine
+DNS Query:dig @<target> -p <port> <domain> MX # Query mail exchange records. Reveals mail servers; kali-machine
+DNS Query:dig @<target> -p <port> <domain> NS # Query name server records. Reveals DNS servers; kali-machine
+DNS Query:dig @<target> -p <port> <domain> SOA # Query start of authority. Shows primary DNS server; kali-machine
+DNS Query:dig +short @<target> -p <port> <domain> # Short output format for quick results; kali-machine
+DNS Query:dig -x <target> -p <port> # Reverse PTR lookup. May reveal hostnames; kali-machine
+DNS Query:host -t TXT <domain> <target> # Query TXT records. Often contain SPF, DKIM, or verification keys; kali-machine
+DNS Query:host -t SRV _kerberos._tcp.<domain> <target> # Query Kerberos SRV records. Helps identify domain controllers; kali-machine
+DNS Query:host -t SRV _ldap._tcp.<domain> <target> # Query LDAP SRV records. Identifies LDAP servers; kali-machine
+DNS Query:dig _ldap._tcp.dc._msdcs.<domain> SRV @<target> # Find all domain controllers via SRV records; kali-machine
+DNS Query:nslookup <domain> <target> # Basic DNS lookup using specific server; kali-machine
+
+FTP:nc -vn <target> <port> # Grab FTP banner. Reveals version and anonymous login support; kali-machine
+FTP:ftp <target> # Try anonymous login (username: anonymous, password: anonymous); kali-machine
+FTP:ftp <target> <port> # connect to non-standard FTP port (e.g., 14020); kali-machine
+FTP:anonymous # attempt anonymous access when prompted; kali-machine
+ftp>: ls -la # List all files including hidden after login; kali-machine
+ftp>: binary # Switch to binary mode for exe/zip/img transfers; kali-machine
+ftp>: get <filename1> # Download single file; kali-machine
+ftp>: mget * # Download all files from current directory; kali-machine
+ftp>: passive off # Disable passive mode if active mode required; kali-machine
+ftp>: put <filename1> /upload/<filename2> # Upload file to remote path if write permissions exist; kali-machine
+FTP:wget -m --no-passive ftp://<target>:<port>/ # Recursive mirror download with anonymous access; kali-machine
+FTP:wget -m --no-passive ftp://<user>:<password>@<target>:<port>/ # Recursive mirror with credentials; kali-machine
+FTP:lftp -u <user>,<password> <target>:<port> -e "mirror -c -e / ./downloaded && bye" # Recursive mirror with resume capability; kali-machine
+FTP:ncftpget -R -v -u <user> -p <password> <target> ./download / # Recursive mirror with ncftpget; kali-machine
+
+FTP Brute:hydra -C /usr/share/seclists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt ftp://<target>/ # Test common default FTP credentials; kali-machine
+FTP Brute:medusa -h <target> -u <user> -P <wordlist1> -p <port> -M ftp # Brute-force FTP with medusa. Use when anonymous login fails; kali-machine
+FTP Brute:hydra -l <user> -P <wordlist1> <target> ftp # Hydra FTP brute force; kali-machine
+
+SSH:nc -vn <target> <port> # Grab SSH banner. Reveals version and OS info; kali-machine
+SSH:nmap -p <port> -sV --script=ssh-auth-methods,ssh-run <target> # Check supported auth methods; kali-machine
+SSH:ssh -i <filename1> <user>@<target> -p <port> # Connect with private key (chmod 400 first). Try if you found a private key; kali-machine
+SSH:ssh-keygen -t ed25519 -a 777 -f <filename1> # Generate ed25519 key with high iterations for persistence; kali-machine
+SSH:ssh-copy-id -i <filename1> <user>@<target> -p <port> # Copy public key to target for passwordless login; kali-machine
+SSH:cat <filename1> >> ~/.ssh/authorized_keys # Manually append public key if you have write access; target-machine
+
+SSH Brute:hydra -s <port> -l <user> -P <wordlist1> -t 10 <target> ssh # Brute force single user. Use when you have a username; kali-machine
+SSH Brute:hydra -s <port> -L <wordlist1> -p '<password>' -t 10 <target> ssh # Password spray one password against many users. Be careful of lockouts; kali-machine
+
+SNMP:onesixtyone -c /usr/share/seclists/Discovery/SNMP/common-snmp-community-strings-onesixtyone.txt -i <target> # Brute-force SNMP community strings. Look for "public" or "private" responses; kali-machine
+SNMP:snmpwalk -v1 -c public <target> # SNMP walk with public community. If successful, enumerate entire MIB tree; kali-machine
+SNMP:snmpwalk -v2c -c <community> <target> NET-SNMP-EXTEND-MIB::nsExtendOutputFull # Check for extended output. May reveal command execution results; kali-machine
+SNMP:sudo snmpbulkwalk -c <community> -v2c <target> NET-SNMP-EXTEND-MIB::nsExtendOutputFull # Bulk walk for extended MIB. Faster than snmpwalk; kali-machine
+
+SMTP:nc -vn <target> <port> # Grab SMTP banner. Reveals server type and version; kali-machine
+SMTP:swaks --server <target> --port <port> --command "VRFY <user>" # VRFY/EXPN check. If successful, confirms user existence; kali-machine
+SMTP:nmap -p <port> -sV --script=smtp-open-relay,smtp-commands <target> # Check for open relay and supported commands. Open relay can be abused for spam; kali-machine
+
+SMTP Brute:medusa -h <target> -u <user> -P <wordlist1> -p <port> -M smtp # Auth brute-force. Use if SMTP requires authentication; kali-machine
+
+POP3:nc -vn <target> <port> # Grab POP3 banner. Reveals server type; kali-machine
+POP3:openssl s_client -connect <target>:<port> # POP3S test with openssl. Use for encrypted POP3; kali-machine
+POP3:telnet <target> <port> # Manual POP3 enumeration. Commands: USER <user>, PASS <password>, LIST; kali-machine
+
+IMAP:nc -vn <target> <port> # Grab IMAP banner; kali-machine
+IMAP:nmap -p <port> -sV --script=imap-capabilities,imap-brute <target> # IMAP enumeration. Check capabilities and test brute force; kali-machine
+IMAP:openssl s_client -connect <target>:<port> # IMAPS with openssl for encrypted connections; kali-machine
+
+SMB Enum:nxc smb <target> # Probe SMB to fingerprint domain/workgroup, host OS, and SMB signing status. Look for "signing:False" for relay; kali-machine
+SMB Enum:nmblookup -A <target> # NetBIOS name lookup. Reveals computer name and logged-in users; kali-machine
+SMB Enum:nmap -p <port> --script=smb-enum-shares,smb-enum-users,smb-os-discovery <target> # SMB enumeration scripts. Look for accessible shares and user lists; kali-machine
+SMB Enum:smbclient -L //<target> -N # List shares with null session. If successful, you can enumerate without credentials; kali-machine
+SMB Enum:smbclient -L \\\\<target>\\ # List shares (Linux syntax). Alternative method; kali-machine
+SMB Enum:smbclient -L //<target> -p <port> -U '<domain>/<user>'%'<password>' # List shares with credentials. Use after obtaining creds; kali-machine
+SMB Enum:smbclient -L //<target> -p <port> -U '<domain>/<user>'%'<ntlm>' --pw-nt-hash # List shares using NTLM hash (pass-the-hash); kali-machine
+SMB Enum:enum4linux -a -u <user> -p <password> <target> # Comprehensive SMB enumeration with credentials; kali-machine
+SMB Enum:enum4linux-ng <target> # Modern enum4linux with more features and better output; kali-machine
+SMB Enum:smbmap -H <target> # Enumerate SMB shares and permissions. Shows read/write access; kali-machine
+
+SMB Connect:smbclient //<target>/<share> -U "" # Attempt null session connection to specific share; kali-machine
+SMB Connect:smbclient //<target>/<share> -U '<domain>/<user>'%'<password>' # Connect to share with password; kali-machine
+SMB Connect:smbclient //<target>/<share> -U '<domain>/<user>'%'<ntlm>' --pw-nt-hash -p <port> # Connect with NTLM hash; kali-machine
+SMB Connect:sudo mount -t cifs -o guest //<target>/<share> /mnt/point # Mount SMB share as guest. Requires cifs-utils; kali-machine
+SMB Connect:sudo mount -t cifs -o username=<user>,password=<password> //<target>/<share> /mnt/point # Mount with credentials; kali-machine
+SMB Connect:sudo mount -t cifs -o username=<user>,password=<password>,domain=<domain> //<target>/<share> /mnt/point # Mount with domain authentication; kali-machine
+
+SMBClient:mask "" # Disable filename mask in smbclient for mget operations; kali-machine
+SMBClient:recurse ON # Enable recursive download in smbclient; kali-machine
+SMBClient:prompt OFF # Disable prompts for mget to automate downloads; kali-machine
+SMBClient:cd <remote_path> # Change remote directory in smbclient; kali-machine
+SMBClient:lcd <local_path> # Change local directory in smbclient; kali-machine
+SMBClient:mget * # Download all files recursively from current remote directory; kali-machine
+
+RPC Enum:rpcclient -U "" -N <target> # Anonymous connection to RPC. If successful, you can enumerate users and groups; kali-machine
+RPC Enum:rpcclient -U <domain>\<user>%<password> <target> # Authenticated RPC connection; kali-machine
+RPC Enum:rpcclient -U '<domain>\<user>%<password>' --option='client min protocol=SMB2' --option='client max protocol=SMB2' <target> # Force SMB2 for RPC connection; kali-machine
+RPC Enum:enumdomains # Enumerate available domains. Use after RPC connection; kali-machine
+RPC Enum:querydominfo # Retrieve domain information including domain name and SID; kali-machine
+RPC Enum:querydispinfo # Display domain user information (usernames, full names, etc.); kali-machine
+RPC Enum:dsroledominfo # Retrieve domain role information (PDC, DC, etc.); kali-machine
+RPC Enum:enumdomusers # Enumerate domain users. Look for RIDs to identify accounts; kali-machine
+RPC Enum:queryuser <RID> # Query user details by RID. Reveals account flags, last logon, etc.; kali-machine
+RPC Enum:queryuser <user> # Query user details by username; kali-machine
+RPC Enum:queryusergroups <RID> # Enumerate groups for user by RID; kali-machine
+RPC Enum:getusrdompwinfo <RID> # Retrieve password info for user (last set, expiry, etc.); kali-machine
+RPC Enum:enumdomgroups # Enumerate domain groups. Look for privileged groups; kali-machine
+RPC Enum:enumalsgroups builtin # Enumerate built-in local groups; kali-machine
+RPC Enum:querygroup <RID> # Query group details by RID; kali-machine
+RPC Enum:querygroupmem <RID> # Enumerate members of group by RID; kali-machine
+RPC Enum:getdompwinfo # Retrieve domain password policy (lockout threshold, password length, etc.). Check before spraying; kali-machine
+RPC Enum:lookupdomain <domain> # Retrieve domain SID; kali-machine
+RPC Enum:lookupnames <name> # Resolve name to RID/SID; kali-machine
+RPC Enum:lookupsids <sid> # Resolve SID to name; kali-machine
+RPC Enum:lsaquery # Query LSA policy information; kali-machine
+RPC Enum:lsaquerysecobj # Query LSA security object; kali-machine
+RPC Enum:lsaenumsid # Enumerate SIDs from LSA; kali-machine
+RPC Enum:lsaenumacctrights <sid> # Enumerate account rights for SID; kali-machine
+RPC Enum:enumprivs # Enumerate privileges available; kali-machine
+RPC Enum:netshareenum # Enumerate shared resources; kali-machine
+RPC Enum:netshareenumall # Enumerate all shared resources including hidden shares; kali-machine
+RPC Enum:netsharegetinfo <share> # Retrieve detailed share information; kali-machine
+RPC Enum:srvinfo # Retrieve server information; kali-machine
+
+RPC Manipulate:createdomuser <user> # Create new domain user (requires appropriate rights). Generic version; kali-machine
+RPC Manipulate:setuserinfo2 <user> 23 <password> # Set password for newly created user (level 23); kali-machine
+RPC Manipulate:setuserinfo2 <user> 24 <password> # Alternate password set method; kali-machine
+RPC Manipulate:createdomgroup <group> # Create domain group (requires rights). Generic version; kali-machine
+RPC Manipulate:deletedomgroup <group> # Delete domain group (requires rights); kali-machine
+RPC Manipulate:rpcclient -U '<domain>/<user>%<password>' <dc-ip> -c "setuserinfo2 <target_user> 23 '<new_password>'" # Reset another user's password when you have GenericAll/ResetPassword rights; kali-machine
