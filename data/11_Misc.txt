@@ -148,6 +148,9 @@ Environment Variables PowerShell:echo $env:PATH # Display PATH; target-machine
 Python TTY:python3 -c 'import pty;pty.spawn("/bin/bash")' # Upgrade shell to interactive TTY; target-machine
 Python Web Server:python3 -m http.server <kaliPort> # Quick HTTP server; kali-machine
 
+SSL Test:openssl s_client -connect <target>:<port> -tls1_2 #test specific TLS version support; kali-
+SSL Test:openssl s_client -connect <target>:<port> -showcerts #retrieve SSL certificate chain; kali-machine
+
 SSH:ssh <user>@<target> # SSH login; kali-machine
 SSH Key:ssh -i <filename1> <user>@<target> # SSH with private key; kali-machine
 SSH Port Forward:ssh -L <kaliPort>:127.0.0.1:<port> <user>@<target> # Forward remote port to local; kali-machine

