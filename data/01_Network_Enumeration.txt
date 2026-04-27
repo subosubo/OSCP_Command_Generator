@@ -38,11 +38,23 @@
 
 ^AutoRecon:autorecon -v -t <filename1> --nmap # Automated reconnaissance tool that runs multiple scans in parallel. Use with target list file; kali-machine
 
-Ping Sweep # 1:for i in {1..255}; do (ping -c 1 "$(echo <target>| cut -d. -f1-3).$i" | grep "bytes from" | cut -d' ' -f4 | tr -d ':' &); done # Quick bash ping sweep to discover live hosts. Look for responses; kali-machine
-Ping Sweep # 1:net=$(cut -d. -f1-3 <<< <target>); for i in {1..255}; do ping -c 1 -W 1 "$net.$i" >/dev/null && echo "$net.$i"; done # Cleaner ping sweep with timeout. Outputs live IPs; kali-machine
-
-Ping Sweep # 2:nmap -sn <target>/24 # Nmap ping sweep. More reliable when ICMP is allowed; kali-machine
-Ping Sweep # 2:nmap -sn -T4 <target>/24 -oN active-hosts # Save live hosts to file for later scanning; kali-machine
+Host Discovery:net=$(cut -d. -f1-3 <<< "<target>"); for i in {1..255}; do ping -c 1 -W 1 "$net.$i" &>/dev/null && echo "$net.$i"; done # Linux ping sweep extracting subnet and iterating last octet; kali-machine
+Host Discovery:net=$(echo "<target>" | cut -d. -f1-3); for i in $(seq 1 255); do (ping -c 1 -W 1 "$net.$i" 2>/dev/null | awk -F'[ :]+' '/bytes from/ {print $4}' &); done #perform Linux ping sweep by deriving first 3 octets from <target>, iterating last octet, and printing responsive hosts; kali-machine
+Host Discovery:for /L %i in (1,1,255) do @for /f "tokens=1-3 delims=." %a in ("<target>") do @ping -n 1 -w 100 %a.%b.%c.%i 2>nul | find "TTL=" >nul && echo %a.%b.%c.%i # CMD ping sweep extracting subnet and iterating last octet; target-machine
+Host Discovery:$net = (("<target>" -split '\.')[0..2] -join '.'); 1..255 | ForEach-Object { if (Test-Connection -Count 1 -Quiet -TimeoutSeconds 1 "$net.$_") { "$net.$_" } } # PowerShell ping sweep using subnet prefix (PowerShell 4+); target-machine
+Host Discovery:$net = (("<target>" -split '\.')[0..2] -join '.'); 1..255 | ForEach-Object -Parallel { if (Test-Connection -Count 1 -Quiet -TimeoutSeconds 1 "$using:net.$_") { "$using:net.$_" } } -ThrottleLimit 50 # parallel PowerShell ping sweep (PowerShell 7+ only); target-machine
+Host Discovery:$net=(("<target>" -split '\.')[0..2] -join '.'); 1..255 | ForEach-Object { $ip="$net.$_"; if(Test-Connection -Count 1 -Quiet -Timeout 1000 $ip){$ip} } # perform PowerShell ping sweep using Test-Connection with timeout (older PS may not support -Timeout); target-machine
+Host Discovery:$net=(("<target>" -split '\.')[0..2] -join '.'); 1..255 | ForEach-Object { $ip="$net.$_"; if(ping -n 1 -w 1000 $ip | Select-String "TTL="){$ip} } # perform PowerShell ping sweep using ping.exe and Select-String to detect live hosts; target-machine
+Host Discovery:$net=(("<target>" -split '\.')[0..2] -join '.'); 1..255 | ForEach-Object { $ip="$net.$_"; if(ping -n 1 -w 1000 $ip 2>$null | Select-String "TTL="){$ip} } # perform PowerShell ping sweep suppressing errors and detecting live hosts via TTL response; target-machine
+Host Discovery:$net=(("<target>" -split '\.')[0..1] -join '.'); 1..255 | ForEach-Object { $oct3=$_; 1..255 | ForEach-Object { $ip="$net.$oct3.$_"; if(ping -n 1 -w 1000 $ip 2>$null | Select-String "TTL="){$ip} } } #perform PowerShell ping sweep across /16 network by iterating 3rd and 4th octets and printing responsive hosts; target-machine
+Host Discovery:net=$(cut -d. -f1-2 <<< "<target>"); for i in {1..255}; do for j in {1..255}; do ip="$net.$i.$j"; ping -c 1 -W 1 "$ip" &>/dev/null && echo "$ip"; done; done #perform Linux ping sweep across /16 network by iterating 3rd and 4th octets and printing responsive hosts; kali-machine
+Host Discovery:for /L %i in (1,1,255) do @for /L %j in (1,1,255) do @for /f "tokens=1-2 delims=." %a in ("<target>") do @ping -n 1 -w 100 %a.%b.%i.%j 2>nul | find "TTL=" >nul && echo %a.%b.%i.%j #perform CMD ping sweep across /16 network by iterating 3rd and 4th octets and printing responsive hosts; target-machine
+Host Discovery:$net=(("<target>" -split '\.')[0..1] -join '.'); 1..255 | ForEach-Object { $oct3=$_; 1..255 | ForEach-Object { $ip="$net.$oct3.$_"; if(ping -n 1 -w 1000 $ip 2>$null | Select-String "TTL="){$ip} } } #perform PowerShell (all versions) ping sweep across /16 network using ping.exe and Select-String; target-machine
+Host Discovery:$net=(("<target>" -split '\.')[0..1] -join '.'); 1..255 | ForEach-Object { $oct3=$_; 1..255 | ForEach-Object { $ip="$net.$oct3.$_"; if(Test-Connection -Count 1 -Quiet $ip){$ip} } } #perform PowerShell (v2/v3 compatible) ping sweep across /16 network using Test-Connection; target-machine
+Host Discovery:$net=(("<target>" -split '\.')[0..1] -join '.'); 1..255 | ForEach-Object { $oct3=$_; 1..255 | ForEach-Object { $ip="$net.$oct3.$_"; if(Test-Connection -Count 1 -Quiet -TimeoutSeconds 1 $ip){$ip} } } #perform PowerShell (v4+) ping sweep with timeout optimization; target-machine
+Host Discovery:$net=(("<target>" -split '\.')[0..1] -join '.'); 1..255 | ForEach-Object -Parallel { $oct3=$_; 1..255 | ForEach-Object { $ip="$using:net.$oct3.$_"; if(Test-Connection -Count 1 -Quiet -TimeoutSeconds 1 $ip){$ip} } } -ThrottleLimit 50 #perform PowerShell 7+ parallel ping sweep across /16 network for faster host discovery; target-machine
+Host Discovery:nmap -sn <target>/24 # Nmap ping sweep. More reliable when ICMP is allowed; kali-machine
+Host Discovery:nmap -sn -T4 <target>/24 -oN active-hosts # Save live hosts to file for later scanning; kali-machine
 
 ARP Scan:arp-scan -l # Discover local network hosts via ARP requests. Useful when ICMP is blocked; kali-machine
 
@@ -139,6 +151,7 @@ FTP:ncftpget -R -v -u <user> -p <password> <target> ./download / # Recursive mir
 FTP Brute:hydra -C /usr/share/seclists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt ftp://<target>/ # Test common default FTP credentials; kali-machine
 FTP Brute:medusa -h <target> -u <user> -P <wordlist1> -p <port> -M ftp # Brute-force FTP with medusa. Use when anonymous login fails; kali-machine
 FTP Brute:hydra -l <user> -P <wordlist1> <target> ftp # Hydra FTP brute force; kali-machine
+FTP Brute:nxc ftp <target> -u <wordlist1> -p <wordlist2> #nxc brute-force; kali-machine
 
 SSH:nc -vn <target> <port> # Grab SSH banner. Reveals version and OS info; kali-machine
 SSH:nmap -p <port> -sV --script=ssh-auth-methods,ssh-run <target> # Check supported auth methods; kali-machine
@@ -224,8 +237,9 @@ RPC Enum:netshareenumall # Enumerate all shared resources including hidden share
 RPC Enum:netsharegetinfo <share> # Retrieve detailed share information; kali-machine
 RPC Enum:srvinfo # Retrieve server information; kali-machine
 
-NFS Enum:nmap -sV --script nfs-showmount <target> #enumerate NFS exports via NSE script to identify shared directories and access permissions; kali-machine
-NFS Enum:showmount -e <target> #list NFS exported directories and allowed client hosts from the NFS server; kali-machine
+NFS Mount:nmap -sV --script nfs-showmount <target> #enumerate NFS exports via NSE script to identify shared directories and access permissions; kali-machine
+NFS Mount:rpcinfo -p <target> #enumerate RPC services and their ports; use during NFS enumeration to identify services like mountd (100005) and nfs (100003), which indicate NFS shares are available for further probing (e.g., showmount); kali-machine
+NFS Mount:showmount -e <target> #list NFS exported directories and allowed client hosts from the NFS server; kali-machine
 NFS Mount:mkdir /mnt/new_back #create local directory to mount remote NFS export; kali-machine
 NFS Mount:mount -t nfs [-o vers=2] <target>:/<remote folder> /mnt/new_back -o nolock #mount remote NFS share locally for file enumeration (nolock avoids RPC locking issues); kali-machine
 

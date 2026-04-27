@@ -166,9 +166,9 @@ Wordlist Hybrid:sed -n '1,1000p' /usr/share/wordlists/rockyou.txt > rockyou_top1
 Directory Busting Quick:ffuf -w short_words.txt -u http://<target>:<port>/FUZZ -c -v # Fast directory busting with small wordlist; kali-machine
 Directory Busting Quick:gobuster dir -u http://<target>:<port>/ -w short_words.txt -t 50 # Gobuster with targeted wordlist; kali-machine
 
-Username Anarchy:/home/kali/Tools/username-anarchy/username-anarchy -i <wordlist1> # Generate username permutations from names (first/last/full). Use for password spraying; kali-machine
-Username Anarchy:/home/kali/Tools/username-anarchy/username-anarchy --recognise <user> # Analyze existing username to infer naming scheme for generating more; kali-machine
-Username Anarchy:/home/kali/Tools/username-anarchy/username-anarchy -i names.txt --format first.last@domain.com # Generate email addresses; kali-machine
+Username Anarchy:/home/kali/Tools/git-tools/username-anarchy/username-anarchy -i <wordlist1> # Generate username permutations from names (first/last/full). Use for password spraying; kali-machine
+Username Anarchy:/home/kali/Tools/git-tools/username-anarchy/username-anarchy --recognise <user> # Analyze existing username to infer naming scheme for generating more; kali-machine
+Username Anarchy:/home/kali/Tools/git-tools/username-anarchy/username-anarchy -i names.txt --format first.last@domain.com # Generate email addresses; kali-machine
 
 Hydra HTTP:hydra -l admin -P <wordlist1> <target> -s <port> http-post-form '/admin/login.php:username=^USER^&password=^PASS^&login=:Invalid password' -V # Login brute force. Adjust form parameters and failure string; kali-machine
 Hydra HTTP:hydra -L <userlist> -P <wordlist1> <target> http-get / # Basic auth brute force; kali-machine

