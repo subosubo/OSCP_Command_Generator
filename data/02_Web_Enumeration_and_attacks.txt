@@ -73,6 +73,7 @@
 
 NC:nc -vn <target> <port> # Banner grab for web services. Reveals server header and sometimes version; kali-machine
 Curl:curl -I http://<target>:<port>/ # Fetch HTTP headers. Look for server version, cookies, and security headers; kali-machine
+Curl:curl -sk http://<target>:<port>/robots.txt #fetch robots.txt to identify disallowed paths and hidden web content before directory brute forcing; kali-machine
 Curl:curl http://<target>:<port>/ # Fetch full page. Review source code for comments and hidden inputs; kali-machine
 Curl:curl -k -v --path-as-is -I https://<target>:<port> # Probe HTTPS headers ignoring certificate errors. kali-machine
 Curl:curl -k -A 'Mozilla/5.0' http://<target>:<port>/ # Use custom User-Agent to bypass simple filtering; kali-machine

