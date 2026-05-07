@@ -10,6 +10,9 @@
 ^Network notes:If any username is confirmed, do dictionary attack. If any password is confirmed, do password spray # might lockout user and will need to revert machine
 ^Network notes:Rescan if stuck, verify tools are working properly and commands are correct
 ^Network notes:rpc command list:https://www.hackingarticles.in/active-directory-enumeration-rpcclient/ # lsa; kali-machine
+^Network notes:Finger runs on TCP/79 and may disclose logged-in users, full names, shells, home directories, last login times, and .plan/.project content.
+^Reminder:If Finger is open on TCP/79, try null query, specific usernames, long-format output, and username enumeration → run: Finger
+^Reminder:If Finger relay/bounce works, use the exposed Finger host to query internal users → run: Finger
 ^Reminder:Start on every target with full TCP discovery + default scripts/service detection → run: Nmap (start)
 ^Reminder:If scanning through a tunnel/pivot and scans feel unstable → run: Nmap (ligolo)
 ^Reminder:If you need quick port discovery before detailed -sC/-sV → run: Nmap
@@ -98,6 +101,7 @@ Nmap Scripts:nmap -p <port> -sV --script=mysql-info,mysql-enum <target> # MySQL 
 Nmap Scripts:nmap -p <port> -sV --script=rdp-enum-encryption,rdp-ntlm-info <target> # RDP enumeration scripts; kali-machine
 Nmap Scripts:nmap -p <port> -sV --script=pgsql-info <target> # PostgreSQL enumeration script; kali-machine
 Nmap Scripts:nmap -p <port> --script=smb-enum-shares,smb-enum-users,smb-os-discovery <target> # SMB enumeration scripts; kali-machine
+Nmap Scripts:nmap --script finger -p79 <target> #run Nmap Finger NSE script to recover current user list from TCP/79; kali-machine
 
 Netcat:nc -nv <target> <port> # Manual banner grab. Often reveals more than nmap; kali-machine
 Netcat:nc -nvv <target> <port> # Verbose banner grab with extra details; kali-machine
@@ -182,6 +186,20 @@ IMAP:nc -vn <target> <port> # Grab IMAP banner; kali-machine
 IMAP:nmap -p <port> -sV --script=imap-capabilities,imap-brute <target> # IMAP enumeration. Check capabilities and test brute force; kali-machine
 IMAP:openssl s_client -connect <target>:<port> # IMAPS with openssl for encrypted connections; kali-machine
 
+Finger:nc -vn <target> 79 #banner grab Finger service on TCP/79 and confirm basic connectivity; kali-machine
+Finger:printf '\r\n' | nc -vn <target> 79 #send null Finger query to enumerate logged-in users when daemon allows it; kali-machine
+Finger:printf '/W <user>\r\n' | nc -vn <target> 79 #request long-format Finger details for a specific user if daemon supports /W; kali-machine
+Finger:printf 'root admin oracle mysql ftp user test\r\n' | nc -vn <target> 79 #test multiple common usernames against permissive Finger daemons in one request; kali-machine
+Finger:finger @<target> #enumerate users using local finger client against TCP/79; kali-machine
+Finger:finger <user>@<target> #query Finger details for a specific username; kali-machine
+Finger:finger -l <user>@<target> #request long-format Finger output using common UNIX finger client syntax; kali-machine
+Finger:finger-user-enum.pl -U <wordlist1> -t <target> #enumerate valid usernames through Finger by comparing valid and invalid response patterns; kali-machine
+Finger:finger-user-enum.pl -u <user> -t <target> #check one username against Finger service for quick validation; kali-machine
+Finger:finger-user-enum.pl -U <wordlist1> -T <filename1> #enumerate Finger users across multiple targets from target list; kali-machine
+Finger:printf '<user>@<target2>\r\n' | nc -vn <target> 79 #test Finger relay by asking exposed Finger host to query another internal host; kali-machine
+Finger:finger-user-enum.pl -U <wordlist1> -t <target2> -r <target> #enumerate Finger users on internal target through exposed Finger relay host; kali-machine
+Finger:finger "|/bin/id@<target>" #test rare legacy Finger command execution through pipe-style username handling; kali-machine
+
 SMB Enum:nxc smb <target> # Probe SMB to fingerprint domain/workgroup, host OS, and SMB signing status. Look for "signing:False" for relay; kali-machine
 SMB Enum:nmblookup -A <target> # NetBIOS name lookup. Reveals computer name and logged-in users; kali-machine
 SMB Enum:nmap -p <port> --script=smb-enum-shares,smb-enum-users,smb-os-discovery <target> # SMB enumeration scripts. Look for accessible shares and user lists; kali-machine
@@ -249,3 +267,4 @@ RPC Manipulate:setuserinfo2 <user> 24 <password> # Alternate password set method
 RPC Manipulate:createdomgroup <group> # Create domain group (requires rights). Generic version; kali-machine
 RPC Manipulate:deletedomgroup <group> # Delete domain group (requires rights); kali-machine
 RPC Manipulate:rpcclient -U '<domain>/<user>%<password>' <dc-ip> -c "setuserinfo2 <target_user> 23 '<new_password>'" # Reset another user's password when you have GenericAll/ResetPassword rights; kali-machine
+

