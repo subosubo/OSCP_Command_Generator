@@ -1,9 +1,30 @@
 import { dom } from "./dom.js";
 
-const reIPv4 = /^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.|$)){4}$/;
 const reIPv6 = /^(([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4})$/;
 
-function isValidIPv4(ip) { return reIPv4.test(ip); }
+function isValidIPv4(ip) {
+  const parts = String(ip).trim().split(".");
+  return parts.length === 4 && parts.every((p) => {
+    if (!/^\d+$/.test(p)) return false;
+    if (p.length > 1 && p.startsWith("0")) return false;
+    const n = Number(p);
+    return n >= 0 && n <= 255;
+  });
+}
+
+function isValidIPv4Cidr(value) {
+  const [ip, prefix, extra] = String(value).trim().split("/");
+  if (extra !== undefined || prefix === undefined) return false;
+  if (!isValidIPv4(ip)) return false;
+  if (!/^\d+$/.test(prefix)) return false;
+  const n = Number(prefix);
+  return n >= 0 && n <= 32;
+}
+
+function isValidIPv4OrCidr(value) {
+  return isValidIPv4(value) || isValidIPv4Cidr(value);
+}
+
 function isValidIPv6(ip) { return reIPv6.test(ip); }
 function isValidPort(p) { return /^\d+$/.test(String(p)) && p >= 1 && p <= 65535; }
 
@@ -16,7 +37,10 @@ export function validateField(input) {
   if (!val) { clearError(input); return true; }
 
   let ok = true;
-  if ((id === "target" || id === "kali" || id === "dcIp") && !isValidIPv4(val)) {
+  if (id === "target" && !isValidIPv4OrCidr(val)) {
+    ok = false; showError(input, "Invalid IPv4 address or CIDR notation");
+  }
+  if ((id === "kali" || id === "dcIp") && !isValidIPv4(val)) {
     ok = false; showError(input, "Invalid IPv4 address");
   }
   if ((id === "target6" || id === "kali6") && !isValidIPv6(val)) {
@@ -46,6 +70,36 @@ export function clearSidebarInputs() {
   dom.qsa(".input-error").forEach((i) => i.classList.remove("input-error"));
 }
 
+function isPossibleIPv4Input(value) {
+  const parts = String(value).split(".");
+  return (
+    parts.length <= 4 &&
+    parts.every((p) => {
+      if (p === "") return true;
+      if (!/^\d+$/.test(p)) return false;
+      if (p.length > 3) return false;
+      if (p.length > 1 && p.startsWith("0")) return false;
+      return Number(p) <= 255;
+    })
+  );
+}
+
+function isPossibleIPv4CidrInput(value) {
+  const parts = String(value).split("/");
+  if (parts.length > 2) return false;
+  if (!isPossibleIPv4Input(parts[0])) return false;
+
+  if (parts.length === 2) {
+    const prefix = parts[1];
+    if (prefix === "") return true;
+    if (!/^\d+$/.test(prefix)) return false;
+    if (prefix.length > 2) return false;
+    return Number(prefix) <= 32;
+  }
+
+  return true;
+}
+
 function enableIPField(input, type) {
   input.addEventListener("keydown", (e) => {
     if (e.ctrlKey && ["c","v","a","x"].includes(e.key.toLowerCase())) return;
@@ -58,13 +112,25 @@ function enableIPField(input, type) {
 
       const caret = input.selectionStart;
       const next = input.value.slice(0, caret) + e.key + input.value.slice(caret);
-      const parts = next.split(".");
-      if (
-        parts.length > 4 ||
-        parts.some((p) => p.length > 3 || (p.length > 1 && p.startsWith("0")) || (p !== "" && Number(p) > 255))
-      ) return e.preventDefault();
+      if (!isPossibleIPv4Input(next)) return e.preventDefault();
 
       if (e.key === "." && (caret === 0 || input.value[caret - 1] === "." || input.value[caret] === ".")) {
+        return e.preventDefault();
+      }
+    }
+
+    if (type === "ipv4cidr") {
+      if (!/[0-9./]/.test(e.key)) return e.preventDefault();
+
+      const caret = input.selectionStart;
+      const next = input.value.slice(0, caret) + e.key + input.value.slice(caret);
+      if (!isPossibleIPv4CidrInput(next)) return e.preventDefault();
+
+      if (e.key === "." && (caret === 0 || input.value[caret - 1] === "." || input.value[caret] === ".")) {
+        return e.preventDefault();
+      }
+
+      if (e.key === "/" && (caret === 0 || input.value.includes("/") || input.value[caret - 1] === ".")) {
         return e.preventDefault();
       }
     }
@@ -94,7 +160,8 @@ function enablePortField(el) {
 }
 
 export function bindInputRestrictions() {
-  ["target","kali","dcIp"].forEach((id) => enableIPField(dom.$(id), "ipv4"));
+  enableIPField(dom.$("target"), "ipv4cidr");
+  ["kali","dcIp"].forEach((id) => enableIPField(dom.$(id), "ipv4"));
   ["target6","kali6"].forEach((id) => enableIPField(dom.$(id), "ipv6"));
   ["targetPort","kaliPort"].forEach((id) => enablePortField(dom.$(id)));
 }

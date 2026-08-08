@@ -50,14 +50,14 @@
       <details open class="panel">
         <summary>Target</summary>
 
-        <label for="target">Target IP (IPv4)</label>
-        <input type="text" id="target" placeholder="e.g. 192.168.1.10" />
+        <label for="target">Target IP / CIDR (IPv4)</label>
+        <input type="text" id="target" placeholder="e.g. 192.168.1.10 or 192.168.1.0/24" />
 
         <button
           id="copyTargetToDc"
           class="btn-secondary mini-btn"
           type="button"
-          title="Copy Target IPv4 into Domain Controller IP"
+          title="Copy Target IPv4 into Domain Controller IP; CIDR prefix is removed"
         >
           Copy Target → DC IP
         </button>

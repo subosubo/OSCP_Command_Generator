@@ -7,6 +7,7 @@ The tool loads command templates from simple `.txt` files and allows you to:
 
 - Quickly **search and filter commands**
 - **Fill placeholders** such as `<target>`, `<user>`, `<password>`
+- Accept a single IPv4 address or IPv4 CIDR notation for the Target field, such as `192.168.1.10` or `192.168.1.0/24`
 - Copy commands with **one-click clipboard support**
 - Group **multi‑step commands automatically**
 - Highlight **flags, placeholders, and comments**
@@ -141,6 +142,17 @@ becomes:
 ```
 nmap -sC -sV 10.10.10.10
 ```
+
+The **Target IP (IPv4)** field accepts both a single IPv4 address and IPv4 CIDR notation:
+
+```
+192.168.1.10
+192.168.1.0/24
+```
+
+CIDR notation is supported for `<target>` so subnet-oriented commands can use values like `192.168.1.0/24`. Fields that must represent one host, such as Kali IP and DC IP, remain single IPv4 values only.
+
+When using **Copy Target → DC IP**, a CIDR target is copied as the base IPv4 address without the prefix. For example, `192.168.1.0/24` copies to the DC IP field as `192.168.1.0`.
 
 ---
 

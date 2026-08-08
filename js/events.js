@@ -49,6 +49,7 @@ export function bindButtons({ toggleHelp }) {
 
       const val = String(target.value || "").trim();
       if (!val) return;
+      const dcVal = val.includes("/") ? val.split("/")[0] : val;
 
       // Expand any collapsed <details> that contains the DC field
       let node = dcIp;
@@ -59,7 +60,7 @@ export function bindButtons({ toggleHelp }) {
         node = d.parentElement;
       }
 
-      dcIp.value = val;
+      dcIp.value = dcVal;
       // Trigger normal validation + live updates
       dcIp.dispatchEvent(new Event("input", { bubbles: true }));
 

