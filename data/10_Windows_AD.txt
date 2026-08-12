@@ -147,7 +147,8 @@
 ^AD Reminder:If Kerberos tools fail with clock-skew errors → run: Kerberos NTPDate
 ^AD attack notes:See https://www.netexec.wiki/getting-started/selecting-and-using-a-protocol for available nxc protocols
 
-^NXC Sweep:nxc-sweep <target> -u <user> -p '<password>' [--local-auth] #sweep subnet/host list with NetExec to test credentials across SMB and identify accessible hosts (use --local-auth for local accounts); kali-machine
+^NXC Sweep:nxc-sweep <target> -u <user> -p '<password>' [--local-auth] #sweep target host with NetExec to test credentials across SMB and other services (use --local-auth for local accounts); kali-machine
+^NXC Sweep:nxc-sweep <target> -u <user> -p '<password>' --continue-on-success #sweep target host with NetExec to test credentials continuously accross SMB and other services; kali-machine
 Domain Info:nxc smb <target> # Probe SMB to fingerprint domain/workgroup and host OS; kali-machine
 Domain Info:nxc smb <target> -u '<user>' -p '<password>' --interfaces #enumerate remote network interfaces to identify additional pivot networks; kali-machine
 Domain Info:nxc smb <target> -u '<user>' -p '<password>' --users-export <filename1> #export enumerated SMB/domain users to file for reuse in spraying or roasting workflows; kali-machine
