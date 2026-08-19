@@ -115,7 +115,6 @@ FFUF:ffuf -u http://<target>:<port>/FUZZ -w /usr/share/seclists/Discovery/Web-Co
 FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/FUZZ -mc all -fs 42 -c -v # Filter by response size to hide false positives; kali-machine
 FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/ -X POST -H "Content-Type: application/x-www-form-urlencoded" -d '{"email":"FUZZ@casp.casp","password":"dummy"}' -r --fc 401 -t 50 -mr "incorrect" -o <filename1> #fuzz POST login parameter using wordlist by replacing FUZZ in email field, follow redirects (-r), filter out 401 responses (--fc 401), match responses containing "incorrect" (-mr), use -fr to filter regex, and save results to output file; kali-machine
 FFUF:ffuf -u http://<domain>:<port>/FUZZ/ -k -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt # Use raft wordlist for thorough discovery; kali-machine
-FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/ -H "Host: FUZZ" -mc 200 # Virtual host discovery. Look for different responses; kali-machine
 FFUF:ffuf -c -w "<wordlist1>:FILE" -H "X-Originating-IP: 127.0.0.1, X-Forwarded-For: 127.0.0.1" -fs 5682,0 -u http://<target>:<port>/FUZZ # Bypass IP-based filters with spoofed headers; kali-machine
 FFUF:ffuf -w <wordlist1>:FUZZOBJECTS,<wordlist2>:FUZZACTIONS -u http://<target>:<port>/api/FUZZOBJECTS/FUZZACTIONS -o <filename1> # Multi-parameter API path fuzzing; kali-machine
 FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/api/users/validate -X POST -H "Content-Type: application/json" -d '{"email":"FUZZ@casp.casp","password":"dummy"}' -mr "incorrect" -o <filename1> # API user enumeration. Look for different error messages; kali-machine
@@ -124,6 +123,8 @@ FFUF:ffuf -w /usr/share/seclists/Fuzzing/LFI/LFI-Jhaddix.txt -u http://<target>:
 FFUF:ffuf -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -u http://<target>:<port>/index.php?FUZZ=test -fc 404 -c #discover hidden parameters that may lead to LFI; kali-machine
 FFUF:ffuf -w /usr/share/seclists/Fuzzing/LFI/LFI-Jhaddix.txt -u http://<target>:<port>/index.php?page=FUZZ -fc 404 -c -t 40 #multi-threaded LFI fuzzing for faster enumeration; kali-machine
 FFUF:ffuf -u http://<target>:<port>/ -H "Host: FUZZ.<domain>" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -v #discover virtual hosts; kali-machine
+FFUF:ffuf -w <wordlist1> -u http://<target>/ -H "Host: FUZZ.<domain>" -fw <words> #fuzz virtual hosts by replacing FUZZ in Host header and filter baseline responses by word count; kali-machine
+FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/ -H "Host: FUZZ" -mc 200 # Virtual host discovery. Look for different responses; kali-machine
 
 WFuzz:wfuzz -u http://<target>:<port> -H "Host: FUZZ.<domain>" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt --hh 7069 # Subdomain fuzzing with size filter; kali-machine
 

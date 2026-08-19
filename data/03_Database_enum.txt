@@ -32,8 +32,8 @@ MySQL # 1:mysql -h <target> -P <port> -u <user> -p <password> # Connect to MySQL
 MySQL # 1:mysql -h <target> -P <port> -u root -p # Try connecting as root with password prompt. Try blank password first; kali-machine
 MySQL # 1:cd "C:\xampp\mysql\bin" # Change directory to XAMPP MySQL binaries; target-machine
 MySQL # 1:.\mysql -u root # Attempt local MySQL root (XAMPP often no password); target-machine
-MySQL # 1:.\mysql.exe -u<user> -p<password> -e 'show databases;' # Windows XAMPP connect and execute query; target-machine
-MySQL # 1:.\mysql.exe -u<user> -p<password> <database> -e 'show tables;' # Connect to specific database and list tables; target-machine
+MySQL # 1:.\mysql.exe -u <user> -p <password> -e 'show databases;' # Windows XAMPP connect and execute query; target-machine
+MySQL # 1:.\mysql.exe -u <user> -p <password> <database> -e 'show tables;' # Connect to specific database and list tables; target-machine
 MySQL # 2:select version(); # Get database version. Look for vulnerable versions; kali-machine
 MySQL # 2:select system_user(); # Get system user running database; kali-machine
 MySQL # 2:show databases; # List all databases. Look for interesting names; kali-machine

@@ -96,6 +96,9 @@ Service Enum:accesschk64.exe -uwcqv "username" * # Check all services for weak p
 Service Enum:accesschk64.exe -uwcqv "BUILTIN\Users" * # Check what Users group can modify; target-machine
 Service Enum:sc queryex type= service state= all # List all services with extended status; target-machine
 Service Enum:Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {$_.State -like 'Running*'} # enumerate running services + paths for hijacks; target-machine
+Service Enum:Get-CimInstance -ClassName Win32_Service | Where-Object {$_.Name -like '*<service>*'} | Select-Object Name,StartMode,State,PathName,StartName #search for Windows service by partial name and display start mode, state, binary path, and run-as account for privesc review; target-machine
+Service Enum:Get-CimInstance -ClassName Win32_Service | Where-Object {$_.Name -eq 'apache2.4'} | Select-Object Name,StartMode,State,PathName,StartName #check Apache service start mode, state, binary path, and run-as account for service privesc review; target-machine
+Service Enum:Get-CimInstance -ClassName Win32_Service | Where-Object {$_.Name -like '*apache*'} | Select-Object Name,StartMode,State,PathName,StartName #find Apache-related Windows services when the exact service name is unknown; target-machine
 Service Enum:wmic service get name,pathname | findstr /i /v "C:\Windows\" | findstr /i /v """ # spot services running outside system dirs (more likely writable); target-machine
 Scheduled Tasks:Get-ScheduledTask | ForEach-Object { $t=$_; $t.Actions | Select-Object @{n='Task';e={$t.TaskName}},Execute,Arguments,@{n='User';e={$t.Principal.UserId}} } #list scheduled task actions and run-as users to identify writable task abuse paths; target-machine
 Scheduled Tasks:schtasks /query /fo LIST /v # List all scheduled tasks with details; target-machine
