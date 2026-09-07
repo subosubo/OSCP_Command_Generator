@@ -70,6 +70,7 @@
 ^Reminder:If LFI exists → test php://filter for source disclosure first, then try data:// or php://input for LFI-to-RCE.
 ^Reminder:If LFI exists and file upload is not possible → try a php://filter chain payload for LFI-to-RCE.
 ^Reminder:If you have local access or can inspect /proc → check open file descriptors and try php://fd/<n> through LFI.
+^Reminder:If Windows LFI is confirmed, try common Windows config, web server, database, and credential file paths → run: Interesting Files on Windows
 
 NC:nc -vn <target> <port> # Banner grab for web services. Reveals server header and sometimes version; kali-machine
 Curl:curl -I http://<target>:<port>/ # Fetch HTTP headers. Look for server version, cookies, and security headers; kali-machine
@@ -115,6 +116,7 @@ FFUF:ffuf -u http://<target>:<port>/FUZZ -w /usr/share/seclists/Discovery/Web-Co
 FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/FUZZ -mc all -fs 42 -c -v # Filter by response size to hide false positives; kali-machine
 FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/ -X POST -H "Content-Type: application/x-www-form-urlencoded" -d '{"email":"FUZZ@casp.casp","password":"dummy"}' -r --fc 401 -t 50 -mr "incorrect" -o <filename1> #fuzz POST login parameter using wordlist by replacing FUZZ in email field, follow redirects (-r), filter out 401 responses (--fc 401), match responses containing "incorrect" (-mr), use -fr to filter regex, and save results to output file; kali-machine
 FFUF:ffuf -u http://<domain>:<port>/FUZZ/ -k -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt # Use raft wordlist for thorough discovery; kali-machine
+FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/ -H "Host: FUZZ" -mc 200 # Virtual host discovery. Look for different responses; kali-machine
 FFUF:ffuf -c -w "<wordlist1>:FILE" -H "X-Originating-IP: 127.0.0.1, X-Forwarded-For: 127.0.0.1" -fs 5682,0 -u http://<target>:<port>/FUZZ # Bypass IP-based filters with spoofed headers; kali-machine
 FFUF:ffuf -w <wordlist1>:FUZZOBJECTS,<wordlist2>:FUZZACTIONS -u http://<target>:<port>/api/FUZZOBJECTS/FUZZACTIONS -o <filename1> # Multi-parameter API path fuzzing; kali-machine
 FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/api/users/validate -X POST -H "Content-Type: application/json" -d '{"email":"FUZZ@casp.casp","password":"dummy"}' -mr "incorrect" -o <filename1> # API user enumeration. Look for different error messages; kali-machine
@@ -146,6 +148,7 @@ WPScan #1:wpscan --url http://<target>:<port>/ --enumerate vp # WordPress vulner
 WPScan #1:wpscan --url http://<target>:<port>/ --enumerate t # WordPress theme enumeration; kali-machine
 WPScan #1:wpscan --url http://<target>:<port>/ -e vt,tt,u,ap
 WPScan #1:wpscan --url http://<target>:<port>/ --api-token <token> # Use API token for better vulnerability detection; kali-machine
+WPScan #1:wpscan --url http://<target>:<port>/ --enumerate p --plugins-detection mixed -t 30 #enumerate WordPress plugins on specified port using mixed detection with 30 threads to improve plugin discovery speed; kali-machine
 
 WPScan #2:wpscan --url http://<target>:<port>/ --usernames <filename1> --passwords <wordlist1> # WordPress brute force with user and password lists; kali-machine
 WPScan #2:wpscan --url http://<target>:<port>/ --passwords <wordlist1> # Brute force with discovered usernames; kali-machine

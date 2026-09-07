@@ -217,9 +217,12 @@ SMB Enum:smbmap -H <target> # Enumerate SMB shares and permissions. Shows read/w
 SMB Connect:smbclient //<target>/<share> -U "" # Attempt null session connection to specific share; kali-machine
 SMB Connect:smbclient //<target>/<share> -U '<domain>/<user>'%'<password>' # Connect to share with password; kali-machine
 SMB Connect:smbclient //<target>/<share> -U '<domain>/<user>'%'<ntlm>' --pw-nt-hash -p <port> # Connect with NTLM hash; kali-machine
-SMB Connect:sudo mount -t cifs -o guest //<target>/<share> /mnt/point # Mount SMB share as guest. Requires cifs-utils; kali-machine
-SMB Connect:sudo mount -t cifs -o username=<user>,password=<password> //<target>/<share> /mnt/point # Mount with credentials; kali-machine
-SMB Connect:sudo mount -t cifs -o username=<user>,password=<password>,domain=<domain> //<target>/<share> /mnt/point # Mount with domain authentication; kali-machine
+SMB Connect:sudo mkdir -p /mnt/point #create local mount point before mounting an SMB share; kali-machine
+SMB Connect:sudo mount -t cifs -o guest //<target>/<share> /mnt/point #mount SMB share as guest to browse or copy accessible files; kali-machine
+SMB Connect:sudo mount -t cifs -o 'username=<user>,password=<password>' //<target>/<share> /mnt/point #mount SMB share with username and password credentials; kali-machine
+SMB Connect:sudo mount -t cifs -o 'username=<user>,password=<password>,domain=<domain>' //<target>/<share> /mnt/point #mount SMB share with domain credentials when local auth fails or domain context is required; kali-machine
+SMB Connect:mount | grep /mnt/point #verify SMB share is mounted at local mount point; kali-machine
+SMB Connect:sudo umount /mnt/point #unmount SMB share cleanly after looting or file transfer; kali-machine
 
 SMBClient:mask "" # Disable filename mask in smbclient for mget operations; kali-machine
 SMBClient:recurse ON # Enable recursive download in smbclient; kali-machine

